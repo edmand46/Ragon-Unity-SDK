@@ -9,21 +9,21 @@ namespace YohohoArena.Game
   {
     public  void Start()
     {
-      RagonManager.Instance.SetHandler(this);
+      RagonSDK.Ragon.Instance.SetHandler(this);
     }
 
     public void OnAuthorized(BitBuffer payload)
     {
       Debug.Log("Authorized");
       
-      RagonManager.Instance.FindOrJoin();
+      RagonSDK.Ragon.Instance.FindOrJoin();
     }
 
     public void OnJoined(BitBuffer payload)
     {
       Debug.Log("Joined");
       
-      RagonManager.Instance.Send(RagonOperation.SCENE_IS_LOADED);
+      RagonSDK.Ragon.Instance.Send(RagonOperation.SCENE_IS_LOADED);
     }
 
     public void OnReady()

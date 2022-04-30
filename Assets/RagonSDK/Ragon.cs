@@ -5,6 +5,7 @@ using NetStack.Serialization;
 using Ragon.Common.Protocol;
 using Ragon.Core;
 using Unity.VisualScripting;
+using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using YohohoArena.Game;
@@ -12,33 +13,25 @@ using YohohoArena.Game;
 namespace RagonSDK
 {
   [DefaultExecutionOrder(-9999)]
-  public class RagonManager : MonoBehaviour
+  public class Ragon : MonoBehaviour
   {
-    public static RagonManager Instance { get; private set; }
-    public static RagonConnection Connection => Instance._connection;
-    public static int RoomOwner => Instance._roomOwner;
-    public static int Id => Instance._id;
-
+    private static Ragon _instance;
+    public static RagonRoom Room => _instance._room;
+    public static RagonConnection Connection => _instance._connection;
+    
+    private RagonRoom _room;
     private RagonConnection _connection;
-    private int _roomOwner = -1;
-    private int _id = -1;
     private IRagonHandler _handler;
-    private BitBuffer _buffer = new BitBuffer(1024);
-    private byte[] _bytes = new byte[1024];
+    private BitBuffer _buffer = new BitBuffer(8192);
 
     public void SetHandler(IRagonHandler handler)
     {
       _handler = handler;
     }
 
-    public void Connect(string url, ushort port)
-    {
-      _connection.Connect(url, port);
-    }
-
     private void Awake()
     {
-      Instance = this;
+      _instance = this;
 
       _connection = new RagonConnection();
       _connection.OnData += OnData;
@@ -96,8 +89,7 @@ namespace RagonSDK
 
       ReadOnlySpan<byte> rawData = bytes.AsSpan();
       var operation = (RagonOperation) RagonHeader.ReadUShort(ref rawData);
-      // Debug.Log("Operation: " + operation);
-
+ 
       switch (operation)
       {
         case RagonOperation.AUTHORIZED_SUCCESS:
@@ -112,10 +104,14 @@ namespace RagonSDK
 
           var myId = RagonHeader.ReadInt(ref myIdData);
           var roomOwner = RagonHeader.ReadInt(ref roomOwnerData);
-
-          _id = myId;
-          _roomOwner = roomOwner;
-          _handler.OnJoined(_buffer);
+          
+          _room = new RagonRoom(roomOwner, myId);
+          
+          break;
+        }
+        case RagonOperation.LEAVE_ROOM:
+        {
+          _room = null;
           break;
         }
         case RagonOperation.LOAD_SCENE:
@@ -208,118 +204,7 @@ namespace RagonSDK
         }
       }
     }
-
-    private void Update()
-    {
-      _connection.Update();
-    }
-
-    private void OnDestroy()
-    {
-      _connection.Dispose();
-    }
-
-    public void CreateEntity(IPacket payload)
-    {
-      Span<byte> data = stackalloc byte[2];
-
-      RagonHeader.WriteUShort((ushort) RagonOperation.CREATE_ENTITY, ref data);
-
-      _connection.SendData(data.ToArray());
-    }
-
-    public void DestroyEntity(int entityId, IPacket payload)
-    {
-      Span<byte> data = stackalloc byte[6]; // 2 + 4
-      Span<byte> operationData = data.Slice(0, 2);
-      Span<byte> entityData = data.Slice(2, 4);
-
-      RagonHeader.WriteUShort((ushort) RagonOperation.DESTROY_ENTITY, ref operationData);
-      RagonHeader.WriteInt(entityId, ref entityData);
-
-      _connection.SendData(data.ToArray());
-    }
-
-    public void SendEntityEvent(ushort evntCode, int entityId)
-    {
-      Span<byte> rawData = stackalloc byte[8];
-      var operationData = rawData.Slice(0, 2);
-      var eventCodeData = rawData.Slice(2, 4);
-      var entityData = rawData.Slice(6, 4);
-
-      RagonHeader.WriteUShort((ushort) RagonOperation.REPLICATE_ENTITY_EVENT, ref operationData);
-      RagonHeader.WriteUShort(evntCode, ref eventCodeData);
-      RagonHeader.WriteInt(evntCode, ref entityData);
-
-      _connection.SendData(rawData.ToArray());
-    }
-
-    public void SendEntityEvent(ushort evntCode, int entityId, IPacket data)
-    {
-      _buffer.Clear();
-      data.Serialize(_buffer);
-
-      Span<byte> rawData = stackalloc byte[_buffer.Length + 8];
-      var operationData = rawData.Slice(0, 2);
-      var eventCodeData = rawData.Slice(2, 2);
-      var entityData = rawData.Slice(4, 4);
-      var eventPayload = rawData.Slice(8, _buffer.Length);
-
-      RagonHeader.WriteUShort((ushort) RagonOperation.REPLICATE_ENTITY_EVENT, ref operationData);
-      RagonHeader.WriteUShort(evntCode, ref eventCodeData);
-      RagonHeader.WriteInt(entityId, ref entityData);
-
-      _buffer.ToSpan(ref eventPayload);
-
-      _connection.SendData(rawData.ToArray());
-    }
-
-    public void SendEvent(ushort evntCode, IPacket data)
-    {
-      _buffer.Clear();
-      data.Serialize(_buffer);
-
-      Span<byte> rawData = stackalloc byte[_buffer.Length + 4];
-      var operationData = rawData.Slice(0, 2);
-      var eventCodeData = rawData.Slice(2, 2);
-      var eventData = rawData.Slice(4, _buffer.Length);
-
-      RagonHeader.WriteUShort((ushort) RagonOperation.REPLICATE_EVENT, ref operationData);
-      RagonHeader.WriteUShort(evntCode, ref eventCodeData);
-      _buffer.ToSpan(ref eventData);
-
-      _connection.SendData(rawData.ToArray());
-    }
-
-    public void SendEvent(ushort evntCode)
-    {
-      Span<byte> rawData = stackalloc byte[_buffer.Length + 4];
-      var operationData = rawData.Slice(0, 2);
-      var eventCodeData = rawData.Slice(2, 2);
-
-      RagonHeader.WriteUShort((ushort) RagonOperation.REPLICATE_EVENT, ref operationData);
-      RagonHeader.WriteUShort(evntCode, ref eventCodeData);
-
-      _connection.SendData(rawData.ToArray());
-    }
-
-    public void SendEntityState(int entityId, IPacket data)
-    {
-      _buffer.Clear();
-      data.Serialize(_buffer);
-
-      Span<byte> rawData = stackalloc byte[_buffer.Length + 6];
-      var operationData = rawData.Slice(0, 2);
-      var entityIdData = rawData.Slice(2, 4);
-      var entityData = rawData.Slice(6, _buffer.Length);
-
-      RagonHeader.WriteUShort((ushort) RagonOperation.REPLICATE_ENTITY_STATE, ref operationData);
-      RagonHeader.WriteInt(entityId, ref entityIdData);
-      _buffer.ToSpan(ref entityData);
-
-      _connection.SendData(rawData.ToArray());
-    }
-
+    
     public void Send(RagonOperation operation, IPacket data)
     {
       _buffer.Clear();
@@ -342,6 +227,16 @@ namespace RagonSDK
       RagonHeader.WriteUShort((ushort) operation, ref rawData);
 
       _connection.SendData(rawData.ToArray());
+    }
+
+    private void Update()
+    {
+      _connection.Update();
+    }
+
+    private void OnDestroy()
+    {
+      _connection.Dispose();
     }
   }
 }

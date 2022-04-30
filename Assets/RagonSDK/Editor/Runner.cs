@@ -4,16 +4,16 @@ using UnityEngine;
 
 namespace Sources.Editor
 {
-  public class MultiplayerTools : UnityEditor.Editor
+  public class Runner : UnityEditor.Editor
   {
-    public static void DebugEditorAndClient(int clients)
+    public static void RunEditorAndClients(int clients)
     {
       EditorApplication.isPlaying = true;
 
       RunApps(clients);
     }
 
-    public static void DebugOnlyClients(int clients)
+    public static void RunClients(int clients)
     {
       EditorApplication.isPlaying = false;
       RunApps(clients);

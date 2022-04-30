@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Sources.Editor
 {
-  public class ProjectBuilder : UnityEditor.Editor
+  public class Builder : UnityEditor.Editor
   {
     public static Dictionary<BuildTarget, (string, string, string)> Executables = new()
     {
@@ -32,12 +32,6 @@ namespace Sources.Editor
       var scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
 
       EditorUserBuildSettings.SwitchActiveBuildTarget(targetGroup, target);
-
-      // if (target == BuildTarget.StandaloneLinux64)
-      //   PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, "SERVER");
-      // else
-      //   PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone,
-      //     "CLIENT;STATS_ENABLED;UNITY_POST_PROCESSING_STACK_V2");
 
       if (!string.IsNullOrEmpty(currentMap)) scenes = new[] {currentMap};
 
