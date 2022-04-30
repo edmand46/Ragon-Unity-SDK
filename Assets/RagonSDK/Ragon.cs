@@ -18,7 +18,7 @@ namespace RagonSDK
     private static Ragon _instance;
     public static RagonRoom Room => _instance._room;
     public static RagonConnection Connection => _instance._connection;
-    
+
     private RagonRoom _room;
     private RagonConnection _connection;
     private IRagonHandler _handler;
@@ -57,11 +57,11 @@ namespace RagonSDK
       Span<byte> payload = payloadRaw.AsSpan();
       Span<byte> data = stackalloc byte[payload.Length + 2];
       Span<byte> payloadData = data.Slice(2, payload.Length);
-      
+
       RagonHeader.WriteUShort((ushort) RagonOperation.AUTHORIZE, ref data);
-      
+
       payload.CopyTo(payloadData);
-      
+
       _connection.SendData(data.ToArray());
     }
 
@@ -89,7 +89,7 @@ namespace RagonSDK
 
       ReadOnlySpan<byte> rawData = bytes.AsSpan();
       var operation = (RagonOperation) RagonHeader.ReadUShort(ref rawData);
- 
+
       switch (operation)
       {
         case RagonOperation.AUTHORIZED_SUCCESS:
@@ -104,9 +104,9 @@ namespace RagonSDK
 
           var myId = RagonHeader.ReadInt(ref myIdData);
           var roomOwner = RagonHeader.ReadInt(ref roomOwnerData);
-          
+
           _room = new RagonRoom(roomOwner, myId);
-          
+
           break;
         }
         case RagonOperation.LEAVE_ROOM:
@@ -198,35 +198,14 @@ namespace RagonSDK
         }
         case RagonOperation.RESTORE_END:
         {
-          Send(RagonOperation.RESTORED);
+          Span<byte> data = stackalloc byte[2];
+          RagonHeader.WriteUShort((ushort) RagonOperation.RESTORED, ref data);
+          
+          _connection.SendData(data.ToArray());
           _handler.OnReady();
           break;
         }
       }
-    }
-    
-    public void Send(RagonOperation operation, IPacket data)
-    {
-      _buffer.Clear();
-      data.Serialize(_buffer);
-
-      Span<byte> rawData = stackalloc byte[_buffer.Length + 2];
-      var operationData = rawData.Slice(0, 2);
-      var packetData = rawData.Slice(2, _buffer.Length);
-
-      _buffer.ToSpan(ref packetData);
-      RagonHeader.WriteUShort((ushort) operation, ref operationData);
-
-      _connection.SendData(rawData.ToArray());
-    }
-
-    public void Send(RagonOperation operation)
-    {
-      Span<byte> rawData = stackalloc byte[2];
-
-      RagonHeader.WriteUShort((ushort) operation, ref rawData);
-
-      _connection.SendData(rawData.ToArray());
     }
 
     private void Update()

@@ -6,13 +6,13 @@ namespace RagonSDK
 {
   public class RagonRoom
   {
-    private RagonConnection _connnection { get; set; }
+    private RagonConnection _connection { get; set; }
     public static int RoomOwner { get; private set; }
     public static int Id { get; private set; }
 
     public RagonRoom(int roomOwner, int myId)
     {
-      _connnection = Ragon.Connection;
+      _connection = Ragon.Connection;
     }
     
     public void CreateEntity(IPacket payload)
