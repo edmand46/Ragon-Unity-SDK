@@ -9,18 +9,22 @@ namespace Ragon.Client
   {
     private RagonConnection _connection;
     private BitBuffer _buffer = new BitBuffer(8192);
-    
+
     public int RoomOwner { get; private set; }
     public int MyId { get; private set; }
     public string Id { get; private set; }
+    public int MinPlayers { get; private set; }
+    public int MaxPlayers { get; private set; }
     
-    public RagonRoom(RagonConnection connection, int roomOwner, int myMyId)
+    public RagonRoom(RagonConnection connection, int roomOwner, int myMyId, int min, int max)
     {
       _connection = connection;
       
       RoomOwner = roomOwner;
       MyId = myMyId;
       Id = "";
+      MinPlayers = min;
+      MaxPlayers = max;
     }
     
     public void CreateEntity(IPacket payload)

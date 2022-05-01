@@ -97,11 +97,15 @@ namespace Ragon.Client
         {
           var myIdData = rawData.Slice(2, 4);
           var roomOwnerData = rawData.Slice(6, 4);
+          var minData = rawData.Slice(10, 4);
+          var maxData = rawData.Slice(14, 4);
 
           var myId = RagonHeader.ReadInt(ref myIdData);
           var roomOwner = RagonHeader.ReadInt(ref roomOwnerData);
+          var min = RagonHeader.ReadInt(ref minData);
+          var max = RagonHeader.ReadInt(ref maxData);
 
-          _room = new RagonRoom(_connection, roomOwner, myId);
+          _room = new RagonRoom(_connection, roomOwner, myId, min, max);
           // _connection.SendData(); // SCENE_LOADED
           break;
         }
