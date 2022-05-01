@@ -9,8 +9,8 @@ namespace Sources.Editor
   {
     public static Dictionary<BuildTarget, (string, string, string)> Executables = new()
     {
-      {BuildTarget.StandaloneWindows64, ("Arena", "Builds/Clients", ".exe")},
-      {BuildTarget.StandaloneOSX, ("Arena", "Builds/Clients", "")},
+      {BuildTarget.StandaloneWindows64, ("Game", "Builds/Clients", ".exe")},
+      {BuildTarget.StandaloneOSX, ("Game", "Builds/Clients", "")},
     };
 
     public static void BuildClientMacOnly() => Build(BuildTarget.StandaloneOSX, null);
