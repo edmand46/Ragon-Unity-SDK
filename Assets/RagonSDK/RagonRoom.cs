@@ -1,7 +1,6 @@
 using System;
 using NetStack.Serialization;
-using Ragon.Common.Protocol;
-using Ragon.Core;
+using Ragon.Common;
 
 namespace Ragon.Client
 {

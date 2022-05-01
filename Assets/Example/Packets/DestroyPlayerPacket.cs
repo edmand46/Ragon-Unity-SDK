@@ -1,5 +1,6 @@
 using NetStack.Serialization;
-using Ragon.Core;
+using Ragon.Common;
+
 
 namespace Example.Game
 {

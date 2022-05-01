@@ -1,10 +1,8 @@
 using System;
 using System.Text;
 using NetStack.Serialization;
-using Ragon.Common.Protocol;
-using Ragon.Core;
+using Ragon.Common;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace Ragon.Client
 {

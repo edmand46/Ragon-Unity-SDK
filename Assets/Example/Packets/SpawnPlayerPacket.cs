@@ -1,5 +1,6 @@
 using NetStack.Serialization;
-using Ragon.Core;
+using Ragon.Common;
+
 
 namespace Example.Game
 {
@@ -9,7 +10,6 @@ namespace Example.Game
     {
       
     }
-
     public void Deserialize(BitBuffer buffer)
     {
       
