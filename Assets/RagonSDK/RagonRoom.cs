@@ -15,23 +15,31 @@ namespace Ragon.Client
     public string Id { get; private set; }
     public int MinPlayers { get; private set; }
     public int MaxPlayers { get; private set; }
-    
+
     public RagonRoom(RagonConnection connection, int roomOwner, int myMyId, int min, int max)
     {
       _connection = connection;
-      
+
       RoomOwner = roomOwner;
       MyId = myMyId;
       Id = "";
       MinPlayers = min;
       MaxPlayers = max;
     }
-    
+
     public void CreateEntity(IPacket payload)
     {
-      Span<byte> data = stackalloc byte[2];
-
+      _buffer.Clear();
+      payload.Serialize(_buffer);
+      
+      Span<byte> data = stackalloc byte[_buffer.Length + 2];
       RagonHeader.WriteUShort((ushort) RagonOperation.CREATE_ENTITY, ref data);
+
+      if (_buffer.Length > 0)
+      {
+        Span<byte> payloadData = data.Slice(2, _buffer.Length);
+        _buffer.ToSpan(ref payloadData);
+      }
 
       _connection.SendData(data.ToArray());
     }
@@ -127,7 +135,7 @@ namespace Ragon.Client
 
       _connection.SendData(rawData.ToArray());
     }
-    
+
     // public void SendEntityProperty()
   }
 }
