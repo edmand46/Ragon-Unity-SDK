@@ -46,13 +46,22 @@ namespace Ragon.Client
 
     public void DestroyEntity(int entityId, IPacket payload)
     {
-      Span<byte> data = stackalloc byte[6]; // 2 + 4
+      _buffer.Clear();
+      payload.Serialize(_buffer);
+      
+      Span<byte> data = stackalloc byte[_buffer.Length + 6]; 
       Span<byte> operationData = data.Slice(0, 2);
       Span<byte> entityData = data.Slice(2, 4);
 
       RagonHeader.WriteUShort((ushort) RagonOperation.DESTROY_ENTITY, ref operationData);
       RagonHeader.WriteInt(entityId, ref entityData);
-
+      
+      if (_buffer.Length > 0)
+      {
+        Span<byte> payloadData = data.Slice(6, _buffer.Length);
+        _buffer.ToSpan(ref payloadData);
+      }
+      
       _connection.SendData(data.ToArray());
     }
 
@@ -102,6 +111,7 @@ namespace Ragon.Client
 
       RagonHeader.WriteUShort((ushort) RagonOperation.REPLICATE_EVENT, ref operationData);
       RagonHeader.WriteUShort(evntCode, ref eventCodeData);
+      
       _buffer.ToSpan(ref eventData);
 
       _connection.SendData(rawData.ToArray());
@@ -131,6 +141,7 @@ namespace Ragon.Client
 
       RagonHeader.WriteUShort((ushort) RagonOperation.REPLICATE_ENTITY_STATE, ref operationData);
       RagonHeader.WriteInt(entityId, ref entityIdData);
+      
       _buffer.ToSpan(ref entityData);
 
       _connection.SendData(rawData.ToArray());
