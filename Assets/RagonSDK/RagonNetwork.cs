@@ -99,13 +99,15 @@ namespace Ragon.Client
           var roomOwnerData = rawData.Slice(6, 4);
           var minData = rawData.Slice(10, 4);
           var maxData = rawData.Slice(14, 4);
-
+          var idData = rawData.Slice(18, rawData.Length - 18);
+          
           var myId = RagonHeader.ReadInt(ref myIdData);
           var roomOwner = RagonHeader.ReadInt(ref roomOwnerData);
           var min = RagonHeader.ReadInt(ref minData);
           var max = RagonHeader.ReadInt(ref maxData);
-
-          _room = new RagonRoom(_connection, roomOwner, myId, min, max);
+          var id = Encoding.UTF8.GetString(idData);
+          
+          _room = new RagonRoom(_connection, id, roomOwner, myId, min, max);
 
           Span<byte> operationData = stackalloc byte[2];
           RagonHeader.WriteUShort((ushort) RagonOperation.SCENE_IS_LOADED, ref operationData);

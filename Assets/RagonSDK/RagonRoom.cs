@@ -16,13 +16,13 @@ namespace Ragon.Client
     public int MinPlayers { get; private set; }
     public int MaxPlayers { get; private set; }
 
-    public RagonRoom(RagonConnection connection, int roomOwner, int myMyId, int min, int max)
+    public RagonRoom(RagonConnection connection, string id, int roomOwner, int myMyId, int min, int max)
     {
       _connection = connection;
 
       RoomOwner = roomOwner;
       MyId = myMyId;
-      Id = "";
+      Id = id;
       MinPlayers = min;
       MaxPlayers = max;
     }

@@ -61,8 +61,7 @@ namespace Example.Game
 
     public void OnReady()
     {
-      Debug.Log("Joined to room with id " + RagonNetwork.Room.Id);
-      // RagonNetwork.Room.
+      Debug.LogError("Joined to room with id " + RagonNetwork.Room.Id);
     }
 
     public void OnEntityCreated(int entityId, int ownerId, BitBuffer payload)
