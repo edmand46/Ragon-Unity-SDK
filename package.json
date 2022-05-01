@@ -1,0 +1,14 @@
+{
+  "name": "com.ragon.client",
+  "author": "Eduard Kargin",
+  "displayName": "Ragon Client SDK",
+  "description": "Client SDK For Ragon Server",
+  "unity": "2020.3",
+  "version": "2022.4.22",
+  "keywords": [],
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/edmand46/Ragon-Unity-SDK"
+  }
+}
