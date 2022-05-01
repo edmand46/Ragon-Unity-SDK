@@ -1,6 +1,6 @@
 using NetStack.Serialization;
 
-namespace RagonSDK
+namespace Ragon.Client
 {
   public interface IRagonHandler
   {

@@ -1,33 +1,27 @@
 using System;
-using System.Linq;
 using System.Text;
 using NetStack.Serialization;
 using Ragon.Common.Protocol;
 using Ragon.Core;
-using Unity.VisualScripting;
-using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using YohohoArena.Game;
 
-namespace RagonSDK
+namespace Ragon.Client
 {
   [DefaultExecutionOrder(-9999)]
-  public class Ragon : MonoBehaviour
+  public class RagonNetwork : MonoBehaviour
   {
-    private static Ragon _instance;
+    private static RagonNetwork _instance;
     public static RagonRoom Room => _instance._room;
-    public static RagonConnection Connection => _instance._connection;
+    public static void SetHandler(IRagonHandler handler) => _instance._handler = handler;
+    public static void ConnectToServer(string url, ushort port) => _instance._connection.Connect(url, port);
+    public static void AuthorizeWithData(byte[] data) => _instance.Authorize(data);
+    public static void FindRoomAndJoin(string map, int minPlayers, int maxPlayers) => _instance.FindOrJoin(map, minPlayers, maxPlayers);
 
     private RagonRoom _room;
     private RagonConnection _connection;
     private IRagonHandler _handler;
     private BitBuffer _buffer = new BitBuffer(8192);
-
-    public void SetHandler(IRagonHandler handler)
-    {
-      _handler = handler;
-    }
 
     private void Awake()
     {
@@ -48,11 +42,9 @@ namespace RagonSDK
     private void OnConnected()
     {
       _handler.OnConnected();
-
-      Authorize(Array.Empty<byte>());
     }
 
-    public void Authorize(byte[] payloadRaw)
+    private void Authorize(byte[] payloadRaw)
     {
       Span<byte> payload = payloadRaw.AsSpan();
       Span<byte> data = stackalloc byte[payload.Length + 2];
@@ -65,16 +57,20 @@ namespace RagonSDK
       _connection.SendData(data.ToArray());
     }
 
-    public void FindOrJoin()
+    private void FindOrJoin(string map, int min, int max)
     {
-      var data = Encoding.UTF8.GetBytes(SceneManager.GetActiveScene().name);
-      Span<byte> rawData = stackalloc byte[data.Length + 2];
+      var data = Encoding.UTF8.GetBytes(map);
+      Span<byte> rawData = stackalloc byte[data.Length + 6];
       Span<byte> operationData = rawData.Slice(0, 2);
-      Span<byte> sceneData = rawData.Slice(2, data.Length);
-
+      Span<byte> minData = rawData.Slice(2, 2);
+      Span<byte> maxData = rawData.Slice(4, 2);
+      Span<byte> sceneData = rawData.Slice(6, data.Length);
+      
       data.AsSpan().CopyTo(sceneData);
 
       RagonHeader.WriteUShort((ushort) RagonOperation.JOIN_ROOM, ref operationData);
+      RagonHeader.WriteUShort((ushort) min, ref minData);
+      RagonHeader.WriteUShort((ushort) max, ref maxData);
 
       _connection.SendData(rawData.ToArray());
     }
@@ -105,8 +101,8 @@ namespace RagonSDK
           var myId = RagonHeader.ReadInt(ref myIdData);
           var roomOwner = RagonHeader.ReadInt(ref roomOwnerData);
 
-          _room = new RagonRoom(roomOwner, myId);
-
+          _room = new RagonRoom(_connection, roomOwner, myId);
+          // _connection.SendData(); // SCENE_LOADED
           break;
         }
         case RagonOperation.LEAVE_ROOM:
@@ -116,10 +112,9 @@ namespace RagonSDK
         }
         case RagonOperation.LOAD_SCENE:
         {
-          // var data = new byte[rawData.Length - 2];
-          // Array.Copy(rawData, 2, data, 0, rawData.Length - 2);
-          // var sceneName = Encoding.UTF8.GetString(data);
-          // _handler.OnLevel(sceneName);
+          var sceneData = rawData.Slice(2, rawData.Length - 2);
+          var sceneName = Encoding.UTF8.GetString(sceneData);
+          _handler.OnLevel(sceneName);
           break;
         }
         case RagonOperation.CREATE_ENTITY:
@@ -134,15 +129,18 @@ namespace RagonSDK
           var entityId = RagonHeader.ReadInt(ref entityData);
           var ownerId = RagonHeader.ReadInt(ref ownerData);
 
-          Debug.Log("EntityId: " + entityId + " OwnerId " + ownerId);
           _handler.OnEntityCreated(entityId, ownerId, _buffer);
           break;
         }
         case RagonOperation.DESTROY_ENTITY:
         {
-          var entityData = rawData.Slice(2, 4);
-          var entityId = RagonHeader.ReadInt(ref entityData);
+          var entityIdData = rawData.Slice(2, 4);
+          var entityId = RagonHeader.ReadInt(ref entityIdData);
+          var entityPayload = rawData.Slice(6, rawData.Length - 6);
+
           _buffer.Clear();
+          _buffer.FromSpan(ref entityPayload, entityPayload.Length);
+
           _handler.OnEntityDestroyed(entityId, _buffer);
           break;
         }
@@ -200,7 +198,7 @@ namespace RagonSDK
         {
           Span<byte> data = stackalloc byte[2];
           RagonHeader.WriteUShort((ushort) RagonOperation.RESTORED, ref data);
-          
+
           _connection.SendData(data.ToArray());
           _handler.OnReady();
           break;

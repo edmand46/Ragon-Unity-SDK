@@ -5,8 +5,14 @@ using UnityEngine;
 using Event = ENet.Event;
 using EventType = ENet.EventType;
 
-namespace RagonSDK
+namespace Ragon.Client
 {
+  public enum DeliveryType
+  {
+    Reliable,
+    Unreliable,
+  } 
+  
   public class RagonConnection
   {
     private Host _host;
@@ -17,12 +23,20 @@ namespace RagonSDK
     public Action OnConnected;
     public Action OnDisconnected;
 
-    public void SendData(byte[] data)
+    public void SendData(byte[] data, DeliveryType deliveryType = DeliveryType.Unreliable)
     {
       var packet = new Packet();
-      packet.Create(data, PacketFlags.Reliable);
 
-      _peer.Send(0, ref packet);
+      if (deliveryType == DeliveryType.Reliable)
+      {
+        packet.Create(data, PacketFlags.Reliable);
+        _peer.Send(0, ref packet);
+      }
+      else
+      {
+        packet.Create(data, PacketFlags.Instant);
+        _peer.Send(1, ref packet);
+      }
     }
 
     public void Prepare()
@@ -79,36 +93,6 @@ namespace RagonSDK
             break;
         }
       }
-    }
-
-    public void Send(ushort code, IPacket payload)
-    {
-      // _bitBuffer.Clear();
-      // payload.Serialize(_bitBuffer);
-      // _bitBuffer.ToArray(_sendBuffer);
-      //
-      // var data = new byte[_bitBuffer.Length + 2];
-      // Array.Copy(_sendBuffer, 0, data, 2, _bitBuffer.Length);
-      // ProtocolHeader.WriteOperation(code, data);
-      //
-      // var packet = default(Packet);
-      // packet.Create(data, data.Length, PacketFlags.Instant);
-      // _peer.Send(0, ref packet);
-    }
-
-    public void Send(ushort code, byte[] payload)
-    {
-      // _bitBuffer.Clear();
-      // // payload.Serialize(_bitBuffer);
-      // _bitBuffer.ToArray(_sendBuffer);
-      //
-      // var data = new byte[_bitBuffer.Length + 2];
-      // Array.Copy(_sendBuffer, 0, data, 2, _bitBuffer.Length);
-      // ProtocolHeader.WriteOperation(code, data);
-      //
-      // var packet = default(Packet);
-      // packet.Create(data, data.Length, PacketFlags.Instant);
-      // _peer.Send(0, ref packet);
     }
 
     public void Dispose()

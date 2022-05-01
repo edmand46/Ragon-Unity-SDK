@@ -1,18 +1,26 @@
 using System;
+using NetStack.Serialization;
 using Ragon.Common.Protocol;
 using Ragon.Core;
 
-namespace RagonSDK
+namespace Ragon.Client
 {
   public class RagonRoom
   {
-    private RagonConnection _connection { get; set; }
-    public static int RoomOwner { get; private set; }
-    public static int Id { get; private set; }
-
-    public RagonRoom(int roomOwner, int myId)
+    private RagonConnection _connection;
+    private BitBuffer _buffer = new BitBuffer(8192);
+    
+    public int RoomOwner { get; private set; }
+    public int MyId { get; private set; }
+    public string Id { get; private set; }
+    
+    public RagonRoom(RagonConnection connection, int roomOwner, int myMyId)
     {
-      _connection = Ragon.Connection;
+      _connection = connection;
+      
+      RoomOwner = roomOwner;
+      MyId = myMyId;
+      Id = "";
     }
     
     public void CreateEntity(IPacket payload)
