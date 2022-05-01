@@ -76,7 +76,6 @@ namespace Ragon.Client
           case EventType.None:
             break;
           case EventType.Connect:
-            Debug.Log("Event connected");
             OnConnected?.Invoke();
             break;
           case EventType.Disconnect:

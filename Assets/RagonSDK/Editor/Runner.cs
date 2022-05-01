@@ -22,7 +22,7 @@ namespace Sources.Editor
     static void RunApps(int num)
     {
       var buildTarget = EditorUserBuildSettings.activeBuildTarget;
-      var tuple = ProjectBuilder.Executables[buildTarget];
+      var tuple = Builder.Executables[buildTarget];
       var buildExe = tuple.Item1;
       var buildPath = tuple.Item2;
       var projectPath = Application.dataPath.Replace("Assets", "");

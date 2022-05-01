@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using NetStack.Serialization;
 using Ragon.Client;
 using UnityEngine;
@@ -10,14 +11,15 @@ namespace Example.Game
     public void Start()
     {
       RagonNetwork.SetHandler(this);
-      RagonNetwork.ConnectToServer("'127.0.0.1", 5000);
+      RagonNetwork.ConnectToServer("127.0.0.1", 5000);
     }
 
     public void OnConnected()
     {
       Debug.Log("Connected");
       
-      RagonNetwork.AuthorizeWithData(Array.Empty<byte>());
+      var apiKey = Encoding.UTF8.GetBytes("");
+      RagonNetwork.AuthorizeWithData(apiKey);
     }
 
     public void OnDisconnected()
@@ -36,7 +38,7 @@ namespace Example.Game
     {
       Debug.Log("Joined to room with id " + RagonNetwork.Room.Id);
       
-      RagonNetwork.Room.
+      // RagonNetwork.Room.
     }
 
     public void OnEntityCreated(int entityId, int ownerId, BitBuffer payload)
