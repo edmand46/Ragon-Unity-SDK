@@ -52,12 +52,12 @@ namespace Ragon.Client
     {
       Span<byte> rawData = stackalloc byte[8];
       var operationData = rawData.Slice(0, 2);
-      var eventCodeData = rawData.Slice(2, 4);
-      var entityData = rawData.Slice(6, 4);
+      var eventCodeData = rawData.Slice(2, 2);
+      var entityData = rawData.Slice(4, 4);
 
       RagonHeader.WriteUShort((ushort) RagonOperation.REPLICATE_ENTITY_EVENT, ref operationData);
       RagonHeader.WriteUShort(evntCode, ref eventCodeData);
-      RagonHeader.WriteInt(evntCode, ref entityData);
+      RagonHeader.WriteInt(entityId, ref entityData);
 
       _connection.SendData(rawData.ToArray());
     }
@@ -127,5 +127,7 @@ namespace Ragon.Client
 
       _connection.SendData(rawData.ToArray());
     }
+    
+    // public void SendEntityProperty()
   }
 }
