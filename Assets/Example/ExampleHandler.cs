@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using NetStack.Serialization;
 using Ragon.Client;
+using Unity.Collections;
 using UnityEngine;
 
 namespace Example.Game
@@ -12,6 +13,7 @@ namespace Example.Game
     
     public void Start()
     {
+      NativeArray<>
       RagonNetwork.SetHandler(this);
       RagonNetwork.ConnectToServer("127.0.0.1", 5000);
     }
@@ -32,10 +34,18 @@ namespace Example.Game
       {
         RagonNetwork.Room.SendEvent(123);
       }
-
+      
       if (Input.GetKeyDown(KeyCode.Alpha4))
       {
         RagonNetwork.Room.SendEntityEvent(123, lastEntityId);
+      }
+      
+      if (Input.GetKeyDown(KeyCode.Alpha5))
+      {
+        RagonNetwork.Room.SendEvent(123, new TestEvent()
+        {
+          TestData = "Allooo"
+        });
       }
     }
 
@@ -93,7 +103,16 @@ namespace Example.Game
 
     public void OnEvent(uint evntCode, BitBuffer payload)
     {
-      Debug.Log($"Event: {evntCode}");
+      if (evntCode == 123)
+      {
+        var testData = new TestEvent();
+        testData.Deserialize(payload);
+        Debug.Log($"Event: {evntCode} with Data {testData.TestData}");
+      }
+      else
+      {
+        Debug.Log($"Event: {evntCode}");
+      }
     }
 
     public void OnLevel(string sceneName)

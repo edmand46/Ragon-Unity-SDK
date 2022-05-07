@@ -59,10 +59,11 @@ namespace Ragon.Client
     {
       var data = Encoding.UTF8.GetBytes(map);
       Span<byte> rawData = stackalloc byte[data.Length + 6];
-      Span<byte> operationData = rawData.Slice(0, 2);
-      Span<byte> minData = rawData.Slice(2, 2);
-      Span<byte> maxData = rawData.Slice(4, 2);
-      Span<byte> sceneData = rawData.Slice(6, data.Length);
+      
+      var operationData = rawData.Slice(0, 2);
+      var minData = rawData.Slice(2, 2);
+      var maxData = rawData.Slice(4, 2);
+      var sceneData = rawData.Slice(6, data.Length);
       
       data.AsSpan().CopyTo(sceneData);
 
@@ -186,12 +187,13 @@ namespace Ragon.Client
         case RagonOperation.REPLICATE_EVENT:
         {
           var eventData = rawData.Slice(2, 2);
-          var eventPayload = rawData.Slice(2, rawData.Length - 2);
-          var eventCode = RagonHeader.ReadUShort(ref eventData);
-
+          var payloadData = rawData.Slice(4, rawData.Length - 4);
+          
           _buffer.Clear();
-          _buffer.FromSpan(ref eventPayload, eventPayload.Length);
+          _buffer.FromSpan(ref payloadData, payloadData.Length);
 
+          var eventCode = RagonHeader.ReadUShort(ref eventData);
+          
           _handler.OnEvent(eventCode, _buffer);
           break;
         }

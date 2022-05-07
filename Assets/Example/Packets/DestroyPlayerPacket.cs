@@ -4,7 +4,7 @@ using Ragon.Common;
 
 namespace Example.Game
 {
-  public class DestroyPlayerPacket: IPacket
+  public class DestroyPlayerPacket: IRagonSerializable
   {
     public void Serialize(BitBuffer buffer)
     {

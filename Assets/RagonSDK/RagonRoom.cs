@@ -26,10 +26,10 @@ namespace Ragon.Client
       MaxPlayers = max;
     }
 
-    public void CreateEntity(IPacket payload)
+    public void CreateEntity(ushort entityType, IRagonSerializable spawnPayload)
     {
       _buffer.Clear();
-      payload.Serialize(_buffer);
+      spawnPayload.Serialize(_buffer);
       
       Span<byte> data = stackalloc byte[_buffer.Length + 2];
       RagonHeader.WriteUShort((ushort) RagonOperation.CREATE_ENTITY, ref data);
@@ -43,10 +43,10 @@ namespace Ragon.Client
       _connection.SendData(data.ToArray());
     }
 
-    public void DestroyEntity(int entityId, IPacket payload)
+    public void DestroyEntity(int entityId, IRagonSerializable destroyPayload)
     {
       _buffer.Clear();
-      payload.Serialize(_buffer);
+      destroyPayload.Serialize(_buffer);
       
       Span<byte> data = stackalloc byte[_buffer.Length + 6]; 
       Span<byte> operationData = data.Slice(0, 2);
@@ -78,7 +78,7 @@ namespace Ragon.Client
       _connection.SendData(rawData.ToArray());
     }
 
-    public void SendEntityEvent(ushort evntCode, int entityId, IPacket data)
+    public void SendEntityEvent(ushort evntCode, int entityId, IRagonSerializable data)
     {
       _buffer.Clear();
       data.Serialize(_buffer);
@@ -98,7 +98,7 @@ namespace Ragon.Client
       _connection.SendData(rawData.ToArray());
     }
 
-    public void SendEvent(ushort evntCode, IPacket data)
+    public void SendEvent(ushort evntCode, IRagonSerializable data)
     {
       _buffer.Clear();
       data.Serialize(_buffer);
@@ -128,7 +128,7 @@ namespace Ragon.Client
       _connection.SendData(rawData.ToArray());
     }
 
-    public void SendEntityState(int entityId, IPacket data)
+    public void SendEntityState(int entityId, IRagonSerializable data)
     {
       _buffer.Clear();
       data.Serialize(_buffer);
