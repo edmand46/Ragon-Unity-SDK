@@ -12,7 +12,7 @@ namespace Ragon.Client
     private static RagonNetwork _instance;
     public static RagonRoom Room => _instance._room;
     public static RagonServerState State => _instance._state;
-    public static void SetManager(IRagonHandler handler) => _instance._handler = handler;
+    public static void SetManager(IRagonManager manager) => _instance._manager = manager;
     public static void ConnectToServer(string url, ushort port) => _instance._connection.Connect(url, port);
     public static void Disconnect() => _instance._connection.Dispose();
     public static void AuthorizeWithData(byte[] data) => _instance.Authorize(data);
@@ -21,7 +21,7 @@ namespace Ragon.Client
     private RagonServerState _state;
     private RagonRoom _room;
     private RagonConnection _connection;
-    private IRagonHandler _handler;
+    private IRagonManager _manager;
     private BitBuffer _buffer = new BitBuffer(8192);
 
     private void Awake()
@@ -37,13 +37,13 @@ namespace Ragon.Client
 
     private void OnDisconnected()
     {
-      _handler.OnDisconnected();
+      _manager.OnDisconnected();
       _state = RagonServerState.DISCONNECTED;
     }
 
     private void OnConnected()
     {
-      _handler.OnConnected();
+      _manager.OnConnected();
       _state = RagonServerState.CONNECTED;
     }
 
@@ -81,7 +81,7 @@ namespace Ragon.Client
 
     private void OnData(byte[] bytes)
     {
-      if (_handler == null)
+      if (_manager == null)
       {
         Debug.LogWarning("Handler is null");
         return;
@@ -94,7 +94,7 @@ namespace Ragon.Client
       {
         case RagonOperation.AUTHORIZED_SUCCESS:
         {
-          _handler.OnAuthorized(_buffer);
+          _manager.OnAuthorized(_buffer);
           break;
         }
         case RagonOperation.JOIN_ROOM:
@@ -129,20 +129,20 @@ namespace Ragon.Client
           var sceneData = rawData.Slice(2, rawData.Length - 2);
           // var sceneData = rawData.Slice(2, rawData.Length - 2);
           var sceneName = Encoding.UTF8.GetString(sceneData);
-          _handler.OnLevel(sceneName);
+          _manager.OnLevel(sceneName);
           break;
         }
         case RagonOperation.CREATE_ENTITY:
         {
           _buffer.Clear();
-
+          
           var entityTypeData = rawData.Slice(2, 2);
           var entityIdData = rawData.Slice(4, 4);
-          var ownerData = rawData.Slice(8, 2);
+          var ownerData = rawData.Slice(8, 4);
           
-          if (rawData.Length - 10 > 0)
+          if (rawData.Length - 12 > 0)
           {
-            var entityPayload = rawData.Slice(8, rawData.Length - 10);
+            var entityPayload = rawData.Slice(12, rawData.Length - 12);
             _buffer.FromSpan(ref entityPayload, entityPayload.Length);
           }
 
@@ -150,7 +150,7 @@ namespace Ragon.Client
           var entityId = RagonHeader.ReadInt(ref entityIdData);
           var ownerId = RagonHeader.ReadUShort(ref ownerData);
 
-          _handler.OnEntityCreated(entityId, entityType, ownerId, _buffer);
+          _manager.OnEntityCreated(entityId, entityType, ownerId, _buffer);
           break;
         }
         case RagonOperation.DESTROY_ENTITY:
@@ -165,7 +165,7 @@ namespace Ragon.Client
             _buffer.FromSpan(ref entityPayload, entityPayload.Length);
           }
 
-          _handler.OnEntityDestroyed(entityId, _buffer);
+          _manager.OnEntityDestroyed(entityId, _buffer);
           break;
         }
         case RagonOperation.REPLICATE_ENTITY_STATE:
@@ -178,7 +178,7 @@ namespace Ragon.Client
           _buffer.Clear();
           _buffer.FromSpan(ref entityStateData, entityStateData.Length);
 
-          _handler.OnEntityState(entityId, _buffer);
+          _manager.OnEntityState(entityId, _buffer);
           break;
         }
         case RagonOperation.REPLICATE_ENTITY_PROPERTY:
@@ -189,7 +189,7 @@ namespace Ragon.Client
           var property = RagonHeader.ReadInt(ref propertyData);
 
           _buffer.Clear();
-          _handler.OnEntityProperty(entityId, property, _buffer);
+          _manager.OnEntityProperty(entityId, property, _buffer);
           break;
         }
         case RagonOperation.REPLICATE_EVENT:
@@ -205,7 +205,7 @@ namespace Ragon.Client
             _buffer.FromSpan(ref payloadData, payloadData.Length);
           }
           
-          _handler.OnEvent(eventCode, _buffer);
+          _manager.OnEvent(eventCode, _buffer);
           break;
         }
         case RagonOperation.REPLICATE_ENTITY_EVENT:
@@ -224,7 +224,7 @@ namespace Ragon.Client
             _buffer.FromSpan(ref eventPayload, eventPayload.Length);
           }
 
-          _handler.OnEntityEvent(entityId, eventCode, _buffer);
+          _manager.OnEntityEvent(entityId, eventCode, _buffer);
           break;
         }
         case RagonOperation.RESTORE_END:
@@ -234,7 +234,7 @@ namespace Ragon.Client
           RagonHeader.WriteUShort((ushort) RagonOperation.RESTORED, ref data);
 
           _connection.SendData(data.ToArray());
-          _handler.OnReady();
+          _manager.OnReady();
           break;
         }
       }

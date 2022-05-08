@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Example.Game
 {
-  public class ExampleHandler : MonoBehaviour, IRagonHandler
+  public class CustomManager : MonoBehaviour, IRagonManager
   {
     private int lastEntityId = -1;
 
@@ -26,7 +26,10 @@ namespace Example.Game
     {
       if (Input.GetKeyDown(KeyCode.Alpha1))
       {
-        RagonNetwork.Room.CreateEntity(0, new SpawnPlayerPacket());
+        RagonNetwork.Room.CreateEntity(0, new SpawnPlayerPacket()
+        {
+          TestData = "alloo",
+        });
       }
 
       if (Input.GetKeyDown(KeyCode.Alpha2))
@@ -82,7 +85,11 @@ namespace Example.Game
     public void OnEntityCreated(int entityId, ushort entityType, ushort ownerId, BitBuffer payload)
     {
       Debug.Log($"Entity created with id {entityId} and type {entityType}");
+      var test = new SpawnPlayerPacket();
+      test.Deserialize(payload);
 
+      Debug.Log(test.TestData);
+      
       lastEntityId = entityId;
     }
 

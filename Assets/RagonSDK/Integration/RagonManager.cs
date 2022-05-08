@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 namespace Ragon.Client.Integration
 {
   [DefaultExecutionOrder(-1000)]
-  public class RagonManager : MonoBehaviour, IRagonHandler
+  public class RagonManager : MonoBehaviour, IRagonManager
   {
     public static RagonManager Instance { get; private set; }
 

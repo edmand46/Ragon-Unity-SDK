@@ -2,7 +2,7 @@ using NetStack.Serialization;
 
 namespace Ragon.Client
 {
-  public interface IRagonHandler
+  public interface IRagonManager
   {
     void OnAuthorized(BitBuffer payload);
     void OnReady();

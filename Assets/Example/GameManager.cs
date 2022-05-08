@@ -25,11 +25,7 @@ namespace Example.Game
     
     private void Start()
     {
-      RagonManager.Instance.PrefabCallback((type) =>
-      {
-        return _prefabs.First(p => (ushort) p.PrefabId == type).Prefab;
-      });  
-      
+      RagonManager.Instance.PrefabCallback(GetPrefab);
       RagonNetwork.ConnectToServer("127.0.0.1", 5000);
     }
 
@@ -39,6 +35,11 @@ namespace Example.Game
       {
         RagonNetwork.Room.CreateEntity((ushort) GamePrefab.CHARACTER, new TestEvent() { TestData = "Item0"});
       }
+    }
+    
+    private GameObject GetPrefab(ushort type)
+    {
+      return _prefabs.First(p => (ushort) p.PrefabId == type).Prefab;
     }
   }
 }

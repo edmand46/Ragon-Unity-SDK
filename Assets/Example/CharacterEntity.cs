@@ -9,6 +9,7 @@ namespace Example.Game
   {
     public override void OnSpawn()
     {
+      
     }
 
     public override void OnDespawn()
@@ -23,14 +24,18 @@ namespace Example.Game
     {
       if (IsOwner)
       {
+        var direction = Vector3.zero;
         if (Input.GetKey(KeyCode.A))
-          transform.position = new Vector3(transform.position.x - 1f * Time.deltaTime, transform.position.y, transform.position.z);
-        
+        {
+          direction += Vector3.left;
+        }
         if (Input.GetKey(KeyCode.D))
-          transform.position = new Vector3(transform.position.x + 1f * Time.deltaTime, transform.position.y, transform.position.z) ; 
-        
-        State.Position = transform.position;
-        
+        {
+          direction += Vector3.right;
+        }
+
+        State.Position = transform.position += direction * Time.deltaTime;
+
         RagonNetwork.Room.SendEntityState(EntityId, State);
       }
       else
