@@ -17,6 +17,11 @@ namespace Example.Game
       RagonNetwork.ConnectToServer("127.0.0.1", 5000);
     }
 
+    private void OnDestroy()
+    {
+      RagonNetwork.Disconnect();
+    }
+
     private void Update()
     {
       if (Input.GetKeyDown(KeyCode.Alpha1))
@@ -59,6 +64,7 @@ namespace Example.Game
     public void OnDisconnected()
     {
       Debug.Log("Disconnected");
+      
     }
 
     public void OnAuthorized(BitBuffer payload)

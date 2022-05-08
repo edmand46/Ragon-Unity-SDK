@@ -157,7 +157,5 @@ namespace Ragon.Client
 
       _connection.SendData(sendData);
     }
-
-    // public void SetEntityProperty()
   }
 }
