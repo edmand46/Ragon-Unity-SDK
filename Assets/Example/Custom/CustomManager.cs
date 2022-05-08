@@ -13,7 +13,7 @@ namespace Example.Game
 
     public void Start()
     {
-      RagonNetwork.SetHandler(this);
+      RagonNetwork.SetManager(this);
       RagonNetwork.ConnectToServer("127.0.0.1", 5000);
     }
 
@@ -73,7 +73,7 @@ namespace Example.Game
       Debug.LogError("Joined to room with id " + RagonNetwork.Room.Id);
     }
 
-    public void OnEntityCreated(int entityId, ushort entityType, int ownerId, BitBuffer payload)
+    public void OnEntityCreated(int entityId, ushort entityType, ushort ownerId, BitBuffer payload)
     {
       Debug.Log($"Entity created with id {entityId} and type {entityType}");
 
@@ -95,12 +95,12 @@ namespace Example.Game
       Debug.Log("Entity property updated");
     }
 
-    public void OnEntityEvent(int entityId, int evntCode, BitBuffer payload)
+    public void OnEntityEvent(int entityId, ushort evntCode, BitBuffer payload)
     {
       Debug.Log($"Entity event {entityId} {evntCode}");
     }
 
-    public void OnEvent(uint evntCode, BitBuffer payload)
+    public void OnEvent(ushort evntCode, BitBuffer payload)
     {
       Debug.Log($"Event: {evntCode} with payload {payload.Length}");
     }

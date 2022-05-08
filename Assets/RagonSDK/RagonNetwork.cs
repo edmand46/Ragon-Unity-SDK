@@ -11,7 +11,8 @@ namespace Ragon.Client
   {
     private static RagonNetwork _instance;
     public static RagonRoom Room => _instance._room;
-    public static void SetHandler(IRagonHandler handler) => _instance._handler = handler;
+    
+    public static void SetManager(IRagonHandler handler) => _instance._handler = handler;
     public static void ConnectToServer(string url, ushort port) => _instance._connection.Connect(url, port);
     public static void AuthorizeWithData(byte[] data) => _instance.Authorize(data);
     public static void FindRoomAndJoin(string map, int minPlayers, int maxPlayers) => _instance.FindOrJoin(map, minPlayers, maxPlayers);

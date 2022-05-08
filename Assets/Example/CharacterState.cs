@@ -9,7 +9,7 @@ namespace Example.Game
   
   public class CharacterState : IRagonSerializable
   {
-    private static BoundedRange _compressor = new BoundedRange(100.0f, 100.0f, 0.01f)
+    private static BoundedRange _compressor = new BoundedRange(100.0f, 100.0f, 0.01f);
     
     public Vector3 Position;
     public void Serialize(BitBuffer buffer)

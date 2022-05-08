@@ -1,4 +1,5 @@
-using Ragon.Client;
+using System;
+using Ragon.Client.Integration;
 
 namespace Example.Game
 {
@@ -15,6 +16,11 @@ namespace Example.Game
     }
 
     public override void OnStateUpdated(CharacterState prev, CharacterState current)
+    {
+      
+    }
+
+    private void Update()
     {
       
     }
