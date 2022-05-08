@@ -10,10 +10,9 @@ namespace Example.Game
   public class ExampleHandler : MonoBehaviour, IRagonHandler
   {
     private int lastEntityId = -1;
-    
+
     public void Start()
     {
-      NativeArray<>
       RagonNetwork.SetHandler(this);
       RagonNetwork.ConnectToServer("127.0.0.1", 5000);
     }
@@ -22,24 +21,24 @@ namespace Example.Game
     {
       if (Input.GetKeyDown(KeyCode.Alpha1))
       {
-        RagonNetwork.Room.CreateEntity(new SpawnPlayerPacket());  
+        RagonNetwork.Room.CreateEntity(0, new SpawnPlayerPacket());
       }
 
       if (Input.GetKeyDown(KeyCode.Alpha2))
       {
         RagonNetwork.Room.DestroyEntity(lastEntityId, new DestroyPlayerPacket());
       }
-      
+
       if (Input.GetKeyDown(KeyCode.Alpha3))
       {
-        RagonNetwork.Room.SendEvent(123);
+        RagonNetwork.Room.SendEvent(500);
       }
-      
+
       if (Input.GetKeyDown(KeyCode.Alpha4))
       {
-        RagonNetwork.Room.SendEntityEvent(123, lastEntityId);
+        RagonNetwork.Room.SendEntityEvent(500, lastEntityId);
       }
-      
+
       if (Input.GetKeyDown(KeyCode.Alpha5))
       {
         RagonNetwork.Room.SendEvent(123, new TestEvent()
@@ -52,7 +51,7 @@ namespace Example.Game
     public void OnConnected()
     {
       Debug.Log("Connected");
-      
+
       var apiKey = Encoding.UTF8.GetBytes("123");
       RagonNetwork.AuthorizeWithData(apiKey);
     }
@@ -61,11 +60,11 @@ namespace Example.Game
     {
       Debug.Log("Disconnected");
     }
-    
+
     public void OnAuthorized(BitBuffer payload)
     {
       RagonNetwork.FindRoomAndJoin("Example Map", 1, 2);
-      
+
       Debug.Log("Authorized");
     }
 
@@ -74,9 +73,9 @@ namespace Example.Game
       Debug.LogError("Joined to room with id " + RagonNetwork.Room.Id);
     }
 
-    public void OnEntityCreated(int entityId, int ownerId, BitBuffer payload)
+    public void OnEntityCreated(int entityId, ushort entityType, int ownerId, BitBuffer payload)
     {
-      Debug.Log("Entity created with id " + entityId);
+      Debug.Log($"Entity created with id {entityId} and type {entityType}");
 
       lastEntityId = entityId;
     }
@@ -103,16 +102,7 @@ namespace Example.Game
 
     public void OnEvent(uint evntCode, BitBuffer payload)
     {
-      if (evntCode == 123)
-      {
-        var testData = new TestEvent();
-        testData.Deserialize(payload);
-        Debug.Log($"Event: {evntCode} with Data {testData.TestData}");
-      }
-      else
-      {
-        Debug.Log($"Event: {evntCode}");
-      }
+      Debug.Log($"Event: {evntCode} with payload {payload.Length}");
     }
 
     public void OnLevel(string sceneName)

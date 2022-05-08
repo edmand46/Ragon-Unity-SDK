@@ -130,8 +130,9 @@ namespace Ragon.Client
         case RagonOperation.CREATE_ENTITY:
         {
           _buffer.Clear();
-          
-          var entityData = rawData.Slice(2, 4);
+
+          var entityTypeData = rawData.Slice(2, 2);
+          var entityIdData = rawData.Slice(4, 4);
           var ownerData = rawData.Slice(6, 4);
           
           if (rawData.Length - 10 > 0)
@@ -139,11 +140,12 @@ namespace Ragon.Client
             var entityPayload = rawData.Slice(10, rawData.Length - 10);
             _buffer.FromSpan(ref entityPayload, entityPayload.Length);
           }
-          
-          var entityId = RagonHeader.ReadInt(ref entityData);
+
+          var entityType = RagonHeader.ReadUShort(ref entityTypeData);
+          var entityId = RagonHeader.ReadInt(ref entityIdData);
           var ownerId = RagonHeader.ReadInt(ref ownerData);
 
-          _handler.OnEntityCreated(entityId, ownerId, _buffer);
+          _handler.OnEntityCreated(entityId, entityType, ownerId, _buffer);
           break;
         }
         case RagonOperation.DESTROY_ENTITY:
@@ -186,13 +188,16 @@ namespace Ragon.Client
         }
         case RagonOperation.REPLICATE_EVENT:
         {
-          var eventData = rawData.Slice(2, 2);
-          var payloadData = rawData.Slice(4, rawData.Length - 4);
-          
           _buffer.Clear();
-          _buffer.FromSpan(ref payloadData, payloadData.Length);
-
-          var eventCode = RagonHeader.ReadUShort(ref eventData);
+          
+          var entityCodeData = rawData.Slice(2, 2);
+          var eventCode = RagonHeader.ReadUShort(ref entityCodeData);
+          
+          if (rawData.Length - 4 > 0)
+          {
+            var payloadData = rawData.Slice(4, rawData.Length - 4);
+            _buffer.FromSpan(ref payloadData, payloadData.Length);
+          }
           
           _handler.OnEvent(eventCode, _buffer);
           break;

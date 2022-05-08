@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using NetStack.Serialization;
 using UnityEngine;
 
@@ -13,9 +14,20 @@ namespace Ragon.Client
       Instance = this;
     }
 
-    public void OnAuthorized(BitBuffer payload)
+    public void OnConnected()
+    {
+      var apiKey = Encoding.UTF8.GetBytes("123");
+      RagonNetwork.AuthorizeWithData(apiKey);
+    }
+
+    public void OnDisconnected()
     {
       
+    }
+    
+    public void OnAuthorized(BitBuffer payload)
+    {
+      RagonNetwork.FindRoomAndJoin("Example Map", 1, 2);
     }
 
     public void OnReady()
@@ -23,7 +35,7 @@ namespace Ragon.Client
       
     }
 
-    public void OnEntityCreated(int entityId, int ownerId, BitBuffer payload)
+    public void OnEntityCreated(int entityId, ushort entityType, int ownerId, BitBuffer payload)
     {
      
     }
@@ -58,14 +70,6 @@ namespace Ragon.Client
       
     }
 
-    public void OnConnected()
-    {
-      
-    }
-
-    public void OnDisconnected()
-    {
-      
-    }
+    
   }
 }

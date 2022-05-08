@@ -6,7 +6,7 @@ namespace Ragon.Client
   {
     void OnAuthorized(BitBuffer payload);
     void OnReady();
-    void OnEntityCreated(int entityId, int ownerId, BitBuffer payload);
+    void OnEntityCreated(int entityId, ushort entityType, int ownerId, BitBuffer payload);
     void OnEntityDestroyed(int entityId, BitBuffer payload);
     void OnEntityState(int entityId, BitBuffer payload);
     void OnEntityProperty(int entityId, int property, BitBuffer payload);

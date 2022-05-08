@@ -30,64 +30,73 @@ namespace Ragon.Client
     {
       _buffer.Clear();
       spawnPayload.Serialize(_buffer);
+
+      var sendData = new byte[_buffer.Length + 4];
+      var data = sendData.AsSpan();
+      var operationData = data.Slice(0, 2);
+      var entityTypeData = data.Slice(2, 2);
       
-      Span<byte> data = stackalloc byte[_buffer.Length + 2];
-      RagonHeader.WriteUShort((ushort) RagonOperation.CREATE_ENTITY, ref data);
+      RagonHeader.WriteUShort((ushort) RagonOperation.CREATE_ENTITY, ref operationData);
+      RagonHeader.WriteUShort(entityType, ref entityTypeData);
 
       if (_buffer.Length > 0)
       {
-        Span<byte> payloadData = data.Slice(2, _buffer.Length);
+        Span<byte> payloadData = data.Slice(4, _buffer.Length);
         _buffer.ToSpan(ref payloadData);
       }
 
-      _connection.SendData(data.ToArray());
+      _connection.SendData(sendData);
     }
 
     public void DestroyEntity(int entityId, IRagonSerializable destroyPayload)
     {
       _buffer.Clear();
       destroyPayload.Serialize(_buffer);
-      
-      Span<byte> data = stackalloc byte[_buffer.Length + 6]; 
-      Span<byte> operationData = data.Slice(0, 2);
-      Span<byte> entityData = data.Slice(2, 4);
+
+      var sendData = new byte[_buffer.Length + 6];
+      var data = sendData.AsSpan();
+      var operationData = data.Slice(0, 2);
+      var entityData = data.Slice(2, 4);
 
       RagonHeader.WriteUShort((ushort) RagonOperation.DESTROY_ENTITY, ref operationData);
       RagonHeader.WriteInt(entityId, ref entityData);
-      
+
       if (_buffer.Length > 0)
       {
         Span<byte> payloadData = data.Slice(6, _buffer.Length);
         _buffer.ToSpan(ref payloadData);
       }
-      
-      _connection.SendData(data.ToArray());
+
+      _connection.SendData(sendData);
     }
 
     public void SendEntityEvent(ushort evntCode, int entityId)
     {
-      Span<byte> rawData = stackalloc byte[8];
-      var operationData = rawData.Slice(0, 2);
-      var eventCodeData = rawData.Slice(2, 2);
-      var entityData = rawData.Slice(4, 4);
+      var sendData = new byte[8];
+
+      var data = sendData.AsSpan();
+      var operationData = data.Slice(0, 2);
+      var eventCodeData = data.Slice(2, 2);
+      var entityData = data.Slice(4, 4);
 
       RagonHeader.WriteUShort((ushort) RagonOperation.REPLICATE_ENTITY_EVENT, ref operationData);
       RagonHeader.WriteUShort(evntCode, ref eventCodeData);
       RagonHeader.WriteInt(entityId, ref entityData);
 
-      _connection.SendData(rawData.ToArray());
+      _connection.SendData(sendData);
     }
 
-    public void SendEntityEvent(ushort evntCode, int entityId, IRagonSerializable data)
+    public void SendEntityEvent(ushort evntCode, int entityId, IRagonSerializable payload)
     {
       _buffer.Clear();
-      data.Serialize(_buffer);
+      payload.Serialize(_buffer);
 
-      Span<byte> rawData = stackalloc byte[_buffer.Length + 8];
-      var operationData = rawData.Slice(0, 2);
-      var eventCodeData = rawData.Slice(2, 2);
-      var entityData = rawData.Slice(4, 4);
-      var eventPayload = rawData.Slice(8, _buffer.Length);
+      var sendData = new byte[_buffer.Length + 8];
+      var data = sendData.AsSpan();
+      var operationData = data.Slice(0, 2);
+      var eventCodeData = data.Slice(2, 2);
+      var entityData = data.Slice(4, 4);
+      var eventPayload = data.Slice(8, _buffer.Length);
 
       RagonHeader.WriteUShort((ushort) RagonOperation.REPLICATE_ENTITY_EVENT, ref operationData);
       RagonHeader.WriteUShort(evntCode, ref eventCodeData);
@@ -95,57 +104,60 @@ namespace Ragon.Client
 
       _buffer.ToSpan(ref eventPayload);
 
-      _connection.SendData(rawData.ToArray());
+      _connection.SendData(sendData);
     }
 
-    public void SendEvent(ushort evntCode, IRagonSerializable data)
+    public void SendEvent(ushort evntCode, IRagonSerializable payload)
     {
       _buffer.Clear();
-      data.Serialize(_buffer);
+      payload.Serialize(_buffer);
 
-      Span<byte> rawData = stackalloc byte[_buffer.Length + 4];
-      var operationData = rawData.Slice(0, 2);
-      var eventCodeData = rawData.Slice(2, 2);
-      var eventData = rawData.Slice(4, _buffer.Length);
+      var sendData = new byte[_buffer.Length + 4];
+      var data = sendData.AsSpan();
+      var operationData = data.Slice(0, 2);
+      var eventCodeData = data.Slice(2, 2);
+      var eventData = data.Slice(4, _buffer.Length);
 
       RagonHeader.WriteUShort((ushort) RagonOperation.REPLICATE_EVENT, ref operationData);
       RagonHeader.WriteUShort(evntCode, ref eventCodeData);
-      
+
       _buffer.ToSpan(ref eventData);
 
-      _connection.SendData(rawData.ToArray());
+      _connection.SendData(sendData);
     }
 
     public void SendEvent(ushort evntCode)
     {
-      Span<byte> rawData = stackalloc byte[_buffer.Length + 4];
-      var operationData = rawData.Slice(0, 2);
-      var eventCodeData = rawData.Slice(2, 2);
+      var sendData = new byte[_buffer.Length + 4];
+      var data = sendData.AsSpan();
+      var operationData = data.Slice(0, 2);
+      var eventCodeData = data.Slice(2, 2);
 
       RagonHeader.WriteUShort((ushort) RagonOperation.REPLICATE_EVENT, ref operationData);
       RagonHeader.WriteUShort(evntCode, ref eventCodeData);
 
-      _connection.SendData(rawData.ToArray());
+      _connection.SendData(sendData);
     }
 
-    public void SendEntityState(int entityId, IRagonSerializable data)
+    public void SendEntityState(int entityId, IRagonSerializable payload)
     {
       _buffer.Clear();
-      data.Serialize(_buffer);
+      payload.Serialize(_buffer);
 
-      Span<byte> rawData = stackalloc byte[_buffer.Length + 6];
-      var operationData = rawData.Slice(0, 2);
-      var entityIdData = rawData.Slice(2, 4);
-      var entityData = rawData.Slice(6, _buffer.Length);
+      var sendData = new byte[_buffer.Length + 6];
+      var data = sendData.AsSpan();
+      var operationData = data.Slice(0, 2);
+      var entityIdData = data.Slice(2, 4);
+      var entityData = data.Slice(6, _buffer.Length);
 
       RagonHeader.WriteUShort((ushort) RagonOperation.REPLICATE_ENTITY_STATE, ref operationData);
       RagonHeader.WriteInt(entityId, ref entityIdData);
-      
+
       _buffer.ToSpan(ref entityData);
 
-      _connection.SendData(rawData.ToArray());
+      _connection.SendData(sendData);
     }
 
-    // public void SendEntityProperty()
+    // public void SetEntityProperty()
   }
 }

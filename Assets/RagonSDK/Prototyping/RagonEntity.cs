@@ -50,7 +50,7 @@ namespace Ragon.Client
       
     }
     
-    public virtual void StateUpdated(T prev, T current)
+    public virtual void OnStateUpdated(T prev, T current)
     {
       
     }
