@@ -6,18 +6,19 @@ using UnityEngine;
 
 namespace Ragon.Client
 {
-  [DefaultExecutionOrder(-9999)]
+  [DefaultExecutionOrder(-1500)]
   public class RagonNetwork : MonoBehaviour
   {
     private static RagonNetwork _instance;
     public static RagonRoom Room => _instance._room;
-    
+    public static RagonServerState State => _instance._state;
     public static void SetManager(IRagonHandler handler) => _instance._handler = handler;
     public static void ConnectToServer(string url, ushort port) => _instance._connection.Connect(url, port);
     public static void Disconnect() => _instance._connection.Dispose();
     public static void AuthorizeWithData(byte[] data) => _instance.Authorize(data);
     public static void FindRoomAndJoin(string map, int minPlayers, int maxPlayers) => _instance.FindOrJoin(map, minPlayers, maxPlayers);
 
+    private RagonServerState _state;
     private RagonRoom _room;
     private RagonConnection _connection;
     private IRagonHandler _handler;
@@ -37,11 +38,13 @@ namespace Ragon.Client
     private void OnDisconnected()
     {
       _handler.OnDisconnected();
+      _state = RagonServerState.DISCONNECTED;
     }
 
     private void OnConnected()
     {
       _handler.OnConnected();
+      _state = RagonServerState.CONNECTED;
     }
 
     private void Authorize(byte[] payloadRaw)
@@ -135,17 +138,17 @@ namespace Ragon.Client
 
           var entityTypeData = rawData.Slice(2, 2);
           var entityIdData = rawData.Slice(4, 4);
-          var ownerData = rawData.Slice(6, 4);
+          var ownerData = rawData.Slice(8, 2);
           
           if (rawData.Length - 10 > 0)
           {
-            var entityPayload = rawData.Slice(10, rawData.Length - 10);
+            var entityPayload = rawData.Slice(8, rawData.Length - 10);
             _buffer.FromSpan(ref entityPayload, entityPayload.Length);
           }
 
           var entityType = RagonHeader.ReadUShort(ref entityTypeData);
           var entityId = RagonHeader.ReadInt(ref entityIdData);
-          var ownerId = RagonHeader.ReadInt(ref ownerData);
+          var ownerId = RagonHeader.ReadUShort(ref ownerData);
 
           _handler.OnEntityCreated(entityId, entityType, ownerId, _buffer);
           break;
@@ -167,9 +170,10 @@ namespace Ragon.Client
         }
         case RagonOperation.REPLICATE_ENTITY_STATE:
         {
-          var entityData = rawData.Slice(2, 4);
-          var entityId = RagonHeader.ReadInt(ref entityData);
+          var entityIdData = rawData.Slice(2, 4);
           var entityStateData = rawData.Slice(6, rawData.Length - 6);
+          
+          var entityId = RagonHeader.ReadInt(ref entityIdData);
 
           _buffer.Clear();
           _buffer.FromSpan(ref entityStateData, entityStateData.Length);
@@ -225,7 +229,8 @@ namespace Ragon.Client
         }
         case RagonOperation.RESTORE_END:
         {
-          Span<byte> data = stackalloc byte[2];
+          var sendData = new byte[2];
+          var data = sendData.AsSpan();
           RagonHeader.WriteUShort((ushort) RagonOperation.RESTORED, ref data);
 
           _connection.SendData(data.ToArray());

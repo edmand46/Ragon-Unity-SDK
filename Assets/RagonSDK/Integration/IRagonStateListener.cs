@@ -2,7 +2,7 @@ using NetStack.Serialization;
 
 namespace Ragon.Client.Integration
 {
-  public interface IRagonStateHandler
+  public interface IRagonStateListener
   {
     public void ProcessState(BitBuffer buffer);
   }

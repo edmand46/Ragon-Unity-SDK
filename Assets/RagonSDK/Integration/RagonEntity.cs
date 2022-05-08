@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Ragon.Client.Integration
 {
-  public class RagonEntity<T>: MonoBehaviour, IRagonEventHandler, IRagonStateHandler where T: IRagonSerializable, new()
+  public class RagonEntity<T>: MonoBehaviour, IRagonEventListener, IRagonStateListener, IRagonEntity where T: IRagonSerializable, new()
   {
     private delegate void SubscribeDelegate(BitBuffer buffer);
 
@@ -16,22 +16,25 @@ namespace Ragon.Client.Integration
     [SerializeField] protected int EntityId;
     [SerializeField] protected uint OwnerId;
     [SerializeField] protected RagonRoom Room;
-    [SerializeField] protected bool Attached; 
+    
+    [SerializeField] protected bool Attached;
+    [SerializeField] protected bool IsOwner;
     
     protected T State;
-    
     private T prevState;
+    
     private Dictionary<int, SubscribeDelegate> _events = new();
     
-    public void Attach(int entityType, uint ownerId, int entityId, RagonManager manager)
+    public void Attach(int entityType, uint ownerId, int entityId)
     {
       EntityType = entityType;
       EntityId = entityId;
       OwnerId = ownerId;
       Attached = true;
+      IsOwner = RagonNetwork.Room.MyId == OwnerId;
       
-      manager.AddStateListener(EntityId, this);
-      manager.AddEntityEventListener(EntityId, this);
+      RagonManager.Instance.AddStateListener(EntityId, this);
+      RagonManager.Instance.AddEntityEventListener(EntityId, this);
       
       State = new T();
       
@@ -51,13 +54,14 @@ namespace Ragon.Client.Integration
         _events[eventCode]?.Invoke(data);
     }
 
-    public void Detach(RagonManager manager)
+    public void Detach()
     {
+      RagonManager.Instance.RemoveStateListener(EntityId);
+      RagonManager.Instance.RemoveEntityEventListener(EntityId);
       
-      manager.RemoveStateListener(EntityId);
-      manager.RemoveEntityEventListener(EntityId);
+      OnDespawn();
       
-     OnDespawn(); 
+      Destroy(gameObject);
     }
 
     public virtual void OnSpawn()
@@ -75,9 +79,20 @@ namespace Ragon.Client.Integration
       
     }
 
-    public void Subscribe<Event>(ushort eventCode, Event evnt) where Event: IRagonSerializable, new()
+    public void Subscribe<Event>(ushort eventCode, Action<Event> callback) where Event: IRagonSerializable, new()
     {
-      
+      if (_events.ContainsKey(eventCode))
+      {
+        Debug.LogWarning($"Event already {eventCode} subscribed");
+        return; 
+      }
+
+      var t = new Event();
+      _events.Add(eventCode, (buffer) =>
+      {
+          t.Deserialize(buffer);
+          callback.Invoke(t);
+      });
     }
 
     public void SendEvent<Event>(ushort eventCode, Event evnt) where Event : IRagonSerializable, new()
