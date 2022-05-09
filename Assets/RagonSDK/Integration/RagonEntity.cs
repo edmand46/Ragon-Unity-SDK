@@ -98,6 +98,11 @@ namespace Ragon.Client.Integration
     public void SendEvent<Event>(ushort eventCode, Event evnt) where Event : IRagonSerializable, new()
     {
       RagonNetwork.Room.SendEntityEvent(eventCode, EntityId, evnt);
-    } 
+    }
+
+    public void ReplicateState()
+    {
+      RagonNetwork.Room.SendEntityState(EntityId, State);
+    }
   }
 }

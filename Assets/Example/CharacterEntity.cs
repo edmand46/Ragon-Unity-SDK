@@ -36,7 +36,7 @@ namespace Example.Game
 
         State.Position = transform.position += direction * Time.deltaTime;
 
-        RagonNetwork.Room.SendEntityState(EntityId, State);
+        ReplicateState();
       }
       else
       {

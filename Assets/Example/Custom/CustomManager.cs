@@ -26,7 +26,7 @@ namespace Example.Game
     {
       if (Input.GetKeyDown(KeyCode.Alpha1))
       {
-        RagonNetwork.Room.CreateEntity(0, new SpawnPlayerPacket()
+        RagonNetwork.Room.CreateEntity(100, new SpawnPlayerPacket()
         {
           TestData = "alloo",
         });
@@ -84,7 +84,7 @@ namespace Example.Game
 
     public void OnEntityCreated(int entityId, ushort entityType, ushort ownerId, BitBuffer payload)
     {
-      Debug.Log($"Entity created with id {entityId} and type {entityType}");
+      Debug.Log($"Entity created with id {entityId} and type {entityType} and owner {ownerId}");
       var test = new SpawnPlayerPacket();
       test.Deserialize(payload);
 
