@@ -4,8 +4,14 @@
   "displayName": "Ragon Client SDK",
   "description": "Client SDK For Ragon Server",
   "unity": "2020.3",
-  "version": "2022.4.22",
-  "keywords": [],
+  "category": "Networking",
+  "keywords": [
+    "multiplayer",
+    "networking",
+    "authoritative",
+    "netcode"
+  ],
+  "version": "1.0.0-rc",
   "dependencies": {},
   "repository": {
     "type": "git",
