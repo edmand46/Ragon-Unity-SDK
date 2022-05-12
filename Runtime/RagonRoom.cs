@@ -157,5 +157,7 @@ namespace Ragon.Client
 
       _connection.SendData(sendData);
     }
+    
+    public bool OwnerIsMe() => RoomOwner == MyId;
   }
 }
