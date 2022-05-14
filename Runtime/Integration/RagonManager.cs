@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Example.Game;
 using NetStack.Serialization;
 using Ragon.Common;
 using UnityEngine;
