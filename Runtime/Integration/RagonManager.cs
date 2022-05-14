@@ -39,7 +39,7 @@ namespace Ragon.Client.Integration
     
     public void OnConnected()
     {
-      var apiKey = Encoding.UTF8.GetBytes("123");
+      var apiKey = Encoding.UTF8.GetBytes("defaultkey");
       RagonNetwork.AuthorizeWithData(apiKey);
     }
 
