@@ -111,7 +111,7 @@ namespace Ragon.Client
           var max = RagonHeader.ReadInt(ref maxData);
           var id = Encoding.UTF8.GetString(idData);
           
-          _room = new RagonRoom(_connection, id, roomOwner, myId, min, max);
+          _room = new RagonRoom(_manager, _connection, id, roomOwner, myId, min, max);
 
           Span<byte> operationData = stackalloc byte[2];
           RagonHeader.WriteUShort((ushort) RagonOperation.SCENE_IS_LOADED, ref operationData);
@@ -181,17 +181,6 @@ namespace Ragon.Client
           _manager.OnEntityState(entityId, _buffer);
           break;
         }
-        case RagonOperation.REPLICATE_ENTITY_PROPERTY:
-        {
-          var entityData = rawData.Slice(2, 4);
-          var propertyData = rawData.Slice(6, 4);
-          var entityId = RagonHeader.ReadInt(ref entityData);
-          var property = RagonHeader.ReadInt(ref propertyData);
-
-          _buffer.Clear();
-          _manager.OnEntityProperty(entityId, property, _buffer);
-          break;
-        }
         case RagonOperation.REPLICATE_EVENT:
         {
           _buffer.Clear();
@@ -234,6 +223,7 @@ namespace Ragon.Client
           RagonHeader.WriteUShort((ushort) RagonOperation.RESTORED, ref data);
 
           _connection.SendData(data.ToArray());
+          
           _manager.OnReady();
           break;
         }

@@ -1,12 +1,15 @@
 using System;
 using NetStack.Serialization;
+using Ragon.Client.Integration;
 using Ragon.Common;
+using Unity.Jobs.LowLevel.Unsafe;
 
 namespace Ragon.Client
 {
   public class RagonRoom
   {
     private RagonConnection _connection;
+    private IRagonManager _manager;
     private BitBuffer _buffer = new BitBuffer(8192);
 
     public int RoomOwner { get; private set; }
@@ -15,8 +18,9 @@ namespace Ragon.Client
     public int MinPlayers { get; private set; }
     public int MaxPlayers { get; private set; }
 
-    public RagonRoom(RagonConnection connection, string id, int roomOwner, int myMyId, int min, int max)
+    public RagonRoom(IRagonManager manager, RagonConnection connection, string id, int roomOwner, int myMyId, int min, int max)
     {
+      _manager = manager;
       _connection = connection;
 
       RoomOwner = roomOwner;
@@ -26,19 +30,28 @@ namespace Ragon.Client
       MaxPlayers = max;
     }
 
-    public void CreateEntity(ushort entityType, IRagonSerializable spawnPayload)
+    public void CreateEntity(
+      ushort entityType,
+      IRagonSerializable spawnPayload,
+      RagonAuthority state = RagonAuthority.OWNER_ONLY,
+      RagonAuthority events = RagonAuthority.OWNER_ONLY
+    )
     {
       _buffer.Clear();
       spawnPayload.Serialize(_buffer);
 
-      var sendData = new byte[_buffer.Length + 4];
+      var sendData = new byte[_buffer.Length + 6];
       var data = sendData.AsSpan();
       var operationData = data.Slice(0, 2);
       var entityTypeData = data.Slice(2, 2);
+      var authorityData = data.Slice(4, 2);
       
       RagonHeader.WriteUShort((ushort) RagonOperation.CREATE_ENTITY, ref operationData);
       RagonHeader.WriteUShort(entityType, ref entityTypeData);
 
+      authorityData[0] = (byte) state;
+      authorityData[1] = (byte) events;
+      
       if (_buffer.Length > 0)
       {
         Span<byte> payloadData = data.Slice(4, _buffer.Length);
@@ -70,8 +83,15 @@ namespace Ragon.Client
       _connection.SendData(sendData);
     }
 
-    public void SendEntityEvent(ushort evntCode, int entityId)
+    public void SendEntityEvent(ushort evntCode, int entityId, RagonExecutionMode eventMode = RagonExecutionMode.SERVER_ONLY)
     {
+      if (eventMode == RagonExecutionMode.LOCAL_ONLY)
+      {
+        _buffer.Clear();
+        _manager.OnEntityEvent(entityId, evntCode, _buffer);
+        return;
+      }
+
       var sendData = new byte[8];
 
       var data = sendData.AsSpan();
@@ -83,13 +103,25 @@ namespace Ragon.Client
       RagonHeader.WriteUShort(evntCode, ref eventCodeData);
       RagonHeader.WriteInt(entityId, ref entityData);
 
+      if (eventMode == RagonExecutionMode.LOCAL_AND_SERVER)
+      {
+        _buffer.Clear();
+        _manager.OnEntityEvent(entityId, evntCode, _buffer);
+      }
+
       _connection.SendData(sendData);
     }
 
-    public void SendEntityEvent(ushort evntCode, int entityId, IRagonSerializable payload)
+    public void SendEntityEvent(ushort evntCode, int entityId, IRagonSerializable payload, RagonExecutionMode eventMode = RagonExecutionMode.SERVER_ONLY)
     {
       _buffer.Clear();
       payload.Serialize(_buffer);
+
+      if (eventMode == RagonExecutionMode.LOCAL_ONLY)
+      {
+        _manager.OnEntityEvent(entityId, evntCode, _buffer);
+        return;
+      }
 
       var sendData = new byte[_buffer.Length + 8];
       var data = sendData.AsSpan();
@@ -104,13 +136,24 @@ namespace Ragon.Client
 
       _buffer.ToSpan(ref eventPayload);
 
+      if (eventMode == RagonExecutionMode.LOCAL_AND_SERVER)
+      {
+        _manager.OnEntityEvent(entityId, evntCode, _buffer);
+      }
+
       _connection.SendData(sendData);
     }
 
-    public void SendEvent(ushort evntCode, IRagonSerializable payload)
+    public void SendEvent(ushort evntCode, IRagonSerializable payload, RagonExecutionMode eventMode = RagonExecutionMode.SERVER_ONLY)
     {
       _buffer.Clear();
       payload.Serialize(_buffer);
+      
+      if (eventMode == RagonExecutionMode.LOCAL_ONLY)
+      {
+        _manager.OnEvent(evntCode, _buffer);
+        return;
+      }
 
       var sendData = new byte[_buffer.Length + 4];
       var data = sendData.AsSpan();
@@ -123,11 +166,23 @@ namespace Ragon.Client
 
       _buffer.ToSpan(ref eventData);
 
+      if (eventMode == RagonExecutionMode.LOCAL_AND_SERVER)
+      {
+        _manager.OnEvent(evntCode, _buffer);
+      }
+
       _connection.SendData(sendData);
     }
 
-    public void SendEvent(ushort evntCode)
+    public void SendEvent(ushort evntCode, RagonExecutionMode eventMode = RagonExecutionMode.SERVER_ONLY)
     {
+      if (eventMode == RagonExecutionMode.LOCAL_ONLY)
+      {
+        _buffer.Clear();
+        _manager.OnEvent(evntCode, _buffer);
+        return;
+      }
+      
       var sendData = new byte[_buffer.Length + 4];
       var data = sendData.AsSpan();
       var operationData = data.Slice(0, 2);
@@ -136,6 +191,12 @@ namespace Ragon.Client
       RagonHeader.WriteUShort((ushort) RagonOperation.REPLICATE_EVENT, ref operationData);
       RagonHeader.WriteUShort(evntCode, ref eventCodeData);
 
+      if (eventMode == RagonExecutionMode.LOCAL_AND_SERVER)
+      {
+        _buffer.Clear();
+        _manager.OnEvent(evntCode, _buffer);
+      }
+
       _connection.SendData(sendData);
     }
 
@@ -143,7 +204,7 @@ namespace Ragon.Client
     {
       _buffer.Clear();
       payload.Serialize(_buffer);
-
+      
       var sendData = new byte[_buffer.Length + 6];
       var data = sendData.AsSpan();
       var operationData = data.Slice(0, 2);
