@@ -1,9 +1,7 @@
 {
-    "name": "Edmand46.RagonSDK.Runtime",
+    "name": "Ragon.Common",
     "rootNamespace": "",
-    "references": [
-        "GUID:021c12a94e84c46bba0f2b0b9704e97a"
-    ],
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
