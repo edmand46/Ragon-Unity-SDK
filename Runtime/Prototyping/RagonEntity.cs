@@ -21,7 +21,6 @@ namespace Ragon.Client.Integration
     [SerializeField] protected bool IsOwner;
     
     protected T State;
-    private T prevState;
     
     private Dictionary<int, SubscribeDelegate> _events = new();
     
@@ -38,45 +37,30 @@ namespace Ragon.Client.Integration
       
       State = new T();
       
-      OnSpawn();
+      OnCreatedEntity();
     }
-
+    
+    public void Detach()
+    {
+      RagonManager.Instance.RemoveStateListener(EntityId);
+      RagonManager.Instance.RemoveEntityEventListener(EntityId);
+      
+      OnDestroyedEntity();
+      
+      Destroy(gameObject);
+    }
+    
     public void ProcessState(BitBuffer data)
     {
       State.Deserialize(data);   
       
-      OnStateUpdated(prevState, State);
+      OnStateUpdated();
     }
 
     public void ProcessEvent(ushort eventCode, BitBuffer data)
     {
       if (_events.ContainsKey(eventCode))
         _events[eventCode]?.Invoke(data);
-    }
-
-    public void Detach()
-    {
-      RagonManager.Instance.RemoveStateListener(EntityId);
-      RagonManager.Instance.RemoveEntityEventListener(EntityId);
-      
-      OnDespawn();
-      
-      Destroy(gameObject);
-    }
-
-    public virtual void OnSpawn()
-    {
-      
-    }
-
-    public virtual void OnDespawn()
-    {
-      
-    }
-    
-    public virtual void OnStateUpdated(T prev, T current)
-    {
-      
     }
 
     public void Subscribe<Event>(ushort eventCode, Action<Event> callback) where Event: IRagonSerializable, new()
@@ -95,14 +79,29 @@ namespace Ragon.Client.Integration
       });
     }
 
-    public void SendEvent<Event>(ushort eventCode, Event evnt) where Event : IRagonSerializable, new()
+    public void InvokeEvent<Event>(ushort eventCode, Event evnt, RagonExecutionMode executionMode = RagonExecutionMode.SERVER_ONLY) where Event : IRagonSerializable, new()
     {
-      RagonNetwork.Room.SendEntityEvent(eventCode, EntityId, evnt);
+      RagonNetwork.Room.SendEntityEvent(eventCode, EntityId, evnt, executionMode);
     }
 
     public void ReplicateState()
     {
       RagonNetwork.Room.SendEntityState(EntityId, State);
+    }
+    
+    public virtual void OnCreatedEntity()
+    {
+      
+    }
+
+    public virtual void OnDestroyedEntity()
+    {
+      
+    }
+    
+    public virtual void OnStateUpdated()
+    {
+      
     }
   }
 }

@@ -11,6 +11,14 @@ namespace Ragon.Client.Integration
   [DefaultExecutionOrder(-1000)]
   public class RagonManager : MonoBehaviour, IRagonManager
   {
+    [Header("Connection")] 
+    [SerializeField] private string _key = "defaultkey";
+    
+    [Header("Room")]
+    [SerializeField] private string _map = "defaultmap";
+    [SerializeField] private int _maxPlayers = 1; 
+    [SerializeField] private int _minPlayers = 2; 
+    
     public static RagonManager Instance { get; private set; }
 
     private Dictionary<int, IRagonStateListener> _stateListeners = new Dictionary<int, IRagonStateListener>();
@@ -39,7 +47,7 @@ namespace Ragon.Client.Integration
     
     public void OnConnected()
     {
-      var apiKey = Encoding.UTF8.GetBytes("defaultkey");
+      var apiKey = Encoding.UTF8.GetBytes(_key);
       RagonNetwork.AuthorizeWithData(apiKey);
     }
 
@@ -50,7 +58,7 @@ namespace Ragon.Client.Integration
     
     public void OnAuthorized(BitBuffer payload)
     {
-      RagonNetwork.FindRoomAndJoin("Example Map", 1, 2);
+      RagonNetwork.FindRoomAndJoin(_map, _minPlayers, _maxPlayers);
     }
 
     public void OnReady()
