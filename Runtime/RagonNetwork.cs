@@ -12,11 +12,21 @@ namespace Ragon.Client
     private static RagonNetwork _instance;
     public static RagonRoom Room => _instance._room;
     public static RagonServerState State => _instance._state;
+    
     public static void SetManager(IRagonManager manager) => _instance._manager = manager;
-    public static void ConnectToServer(string url, ushort port) => _instance._connection.Connect(url, port);
-    public static void Disconnect() => _instance._connection.Dispose();
     public static void AuthorizeWithData(byte[] data) => _instance.Authorize(data);
     public static void FindRoomAndJoin(string map, int minPlayers, int maxPlayers) => _instance.FindOrJoin(map, minPlayers, maxPlayers);
+    
+    public static void ConnectToServer(string url, ushort port)
+    {
+      _instance._connection.Connect(url, port);
+    }
+
+    public static void Disconnect()
+    {
+      _instance.OnDisconnected();
+      _instance._connection.Dispose();
+    }
 
     private RagonServerState _state;
     private RagonRoom _room;
