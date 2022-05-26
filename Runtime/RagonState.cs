@@ -1,6 +1,6 @@
 namespace Ragon.Client
 {
-  public enum RagonServerState
+  public enum RagonState
   {
     DISCONNECTED,
     CONNECTED,

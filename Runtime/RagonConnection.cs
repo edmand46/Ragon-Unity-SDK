@@ -24,7 +24,7 @@ namespace Ragon.Client
     public void SendData(byte[] data, DeliveryType deliveryType = DeliveryType.Unreliable)
     {
       var packet = new Packet();
-
+      
       if (deliveryType == DeliveryType.Reliable)
       {
         packet.Create(data, PacketFlags.Reliable);
@@ -95,10 +95,15 @@ namespace Ragon.Client
     public void Dispose()
     {
       if (_peer.IsSet)
+      {
         _peer.DisconnectNow(0);
+      }
 
-      _host?.Flush();
-      _host?.Dispose();
+      if (_host.IsSet)
+      {
+        _host?.Flush();
+        _host?.Dispose();
+      }
 
       Library.Deinitialize();
     }

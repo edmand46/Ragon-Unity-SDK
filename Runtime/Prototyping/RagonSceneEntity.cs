@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Ragon.Client.Integration
 {
-  public class RagonEntity<T>: MonoBehaviour, IRagonEventListener, IRagonStateListener, IRagonEntity where T: IRagonSerializable, new()
+  public class RagonSceneEntity<T>: MonoBehaviour, IRagonSceneEventListener, IRagonStateListener, IRagonEntity where T: IRagonSerializable, new()
   {
     private delegate void SubscribeDelegate(BitBuffer buffer);
 
@@ -14,7 +14,7 @@ namespace Ragon.Client.Integration
     
     [SerializeField] protected int EntityType;
     [SerializeField] protected int EntityId;
-    [SerializeField] protected uint OwnerId;
+    [SerializeField] protected RagonPlayer Owner;
     [SerializeField] protected RagonRoom Room;
     
     [SerializeField] protected bool Attached;
@@ -24,13 +24,13 @@ namespace Ragon.Client.Integration
     
     private Dictionary<int, SubscribeDelegate> _events = new();
     
-    public void Attach(int entityType, uint ownerId, int entityId)
+    public void Attach(int entityType, RagonPlayer owner, int entityId)
     {
       EntityType = entityType;
       EntityId = entityId;
-      OwnerId = ownerId;
+      Owner = owner;
       Attached = true;
-      IsOwner = RagonNetwork.Room.MyId == OwnerId;
+      IsOwner = RagonNetwork.Room.LocalPlayer.IsOwner;
       
       RagonManager.Instance.AddStateListener(EntityId, this);
       RagonManager.Instance.AddEntityEventListener(EntityId, this);
