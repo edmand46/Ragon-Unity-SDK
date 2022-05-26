@@ -130,6 +130,7 @@ namespace Ragon.Client.Integration
     public void OnLevel(string sceneName)
     {
       // SceneManager.LoadScene(sceneName);
+      RagonNetwork.Room.SceneLoaded();
     }
   }
 }

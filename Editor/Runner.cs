@@ -2,7 +2,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace Sources.Editor
+namespace Ragon.Editor
 {
   public class Runner : UnityEditor.Editor
   {

@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Sources.Editor
+namespace Ragon.Editor
 {
   public class RagonTools : EditorWindow
   {
