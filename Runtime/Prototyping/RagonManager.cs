@@ -22,8 +22,8 @@ namespace Ragon.Client.Integration
     public static RagonManager Instance { get; private set; }
 
     private Dictionary<int, IRagonStateListener> _stateListeners = new Dictionary<int, IRagonStateListener>();
-    private Dictionary<int, IRagonSceneEventListener> _eventListeners = new Dictionary<int, IRagonSceneEventListener>();
-    private List<IRagonSceneEventListener> _globalListeners = new List<IRagonSceneEventListener>();
+    private Dictionary<int, IRagonEventListener> _eventListeners = new Dictionary<int, IRagonEventListener>();
+    private List<IRagonEventListener> _globalListeners = new List<IRagonEventListener>();
     private Dictionary<int, IRagonEntity> _entities = new Dictionary<int, IRagonEntity>();
     private Func<ushort, GameObject> _prefabCallback;
 
@@ -37,11 +37,11 @@ namespace Ragon.Client.Integration
     public void AddStateListener(int entityId , IRagonStateListener listener) => _stateListeners.Add(entityId, listener);
     public void RemoveStateListener(int entityId) => _stateListeners.Remove(entityId);
 
-    public void AddEntityEventListener(int entityId, IRagonSceneEventListener listener) => _eventListeners.Add(entityId, listener);
+    public void AddEntityEventListener(int entityId, IRagonEventListener listener) => _eventListeners.Add(entityId, listener);
     public void RemoveEntityEventListener(int entityId) => _eventListeners.Remove(entityId);
 
-    public void AddGlobalEventListener(IRagonSceneEventListener listener) => _globalListeners.Add(listener);
-    public void RemoveGlobalEventListener(IRagonSceneEventListener listener) => _globalListeners.Remove(listener);
+    public void AddGlobalEventListener(IRagonEventListener listener) => _globalListeners.Add(listener);
+    public void RemoveGlobalEventListener(IRagonEventListener listener) => _globalListeners.Remove(listener);
     
     public void PrefabCallback(Func<ushort, GameObject> action) => _prefabCallback = action;
 

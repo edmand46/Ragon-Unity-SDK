@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Ragon.Client.Integration
 {
-  public class RagonSceneEntity<T>: MonoBehaviour, IRagonSceneEventListener, IRagonStateListener, IRagonEntity where T: IRagonSerializable, new()
+  public class RagonEntity<T>: MonoBehaviour, IRagonEventListener, IRagonStateListener, IRagonEntity where T: IRagonSerializable, new()
   {
     private delegate void SubscribeDelegate(BitBuffer buffer);
 
