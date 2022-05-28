@@ -6,14 +6,14 @@ namespace Ragon.Client
     public string Id { get; private set; }
     public string Name { get; set; }
     public uint PeerId { get; set; }
-    public bool IsOwner { get; set; }
-    public bool IsLocal { get; set; }
+    public bool IsRoomOwner { get; set; }
+    public bool IsMe { get; set; }
     
-    public RagonPlayer(uint peerId, string playerId, string name, bool isOwner, bool isLocal)
+    public RagonPlayer(uint peerId, string playerId, string name, bool isRoomOwner, bool isMe)
     {
       PeerId = peerId;
-      IsOwner = isOwner;
-      IsLocal = isLocal;
+      IsRoomOwner = isRoomOwner;
+      IsMe = isMe;
       Name = name;
       Id = playerId;
     } 

@@ -16,11 +16,16 @@ namespace Ragon.Client.Integration
     
     [Header("Room")]
     [SerializeField] private string _map = "defaultmap";
-    [SerializeField] private int _maxPlayers = 1; 
-    [SerializeField] private int _minPlayers = 2; 
+    [SerializeField] private int _maxPlayers = 2; 
+    [SerializeField] private int _minPlayers = 1; 
     
     public static RagonManager Instance { get; private set; }
+    
+    public void PrefabCallback(Func<ushort, GameObject> action) => _prefabCallback = action;
 
+    public event Action OnJoinSuccess;
+    public event Action OnJoinFailed;
+    
     private Dictionary<int, IRagonStateListener> _stateListeners = new Dictionary<int, IRagonStateListener>();
     private Dictionary<int, IRagonEventListener> _eventListeners = new Dictionary<int, IRagonEventListener>();
     private List<IRagonEventListener> _globalListeners = new List<IRagonEventListener>();
@@ -43,16 +48,15 @@ namespace Ragon.Client.Integration
     public void AddGlobalEventListener(IRagonEventListener listener) => _globalListeners.Add(listener);
     public void RemoveGlobalEventListener(IRagonEventListener listener) => _globalListeners.Remove(listener);
     
-    public void PrefabCallback(Func<ushort, GameObject> action) => _prefabCallback = action;
-
     public void OnJoined()
     {
-      Debug.Log($"Room {RagonNetwork.Room.Id}"); 
+      Debug.Log($"Room {RagonNetwork.Room.Id} {RagonNetwork.Room.LocalPlayer.Id}:{RagonNetwork.Room.LocalPlayer.PeerId}"); 
+      OnJoinSuccess?.Invoke();
     }
 
     public void OnFailed()
     {
-      
+      OnJoinFailed?.Invoke();
     }
 
     public void OnLeaved()
@@ -88,6 +92,8 @@ namespace Ragon.Client.Integration
 
     public void OnEntityCreated(int entityId, ushort entityType, RagonAuthority state, RagonAuthority evnt, RagonPlayer creator, BitBuffer payload)
     {
+      Debug.Log($"Entity {entityId} Type:{entityType} Authority:{state}|{evnt} Owner:{creator.Name}");
+      
       var prefab = _prefabCallback?.Invoke(entityType);
       var go = Instantiate(prefab);
       var component = go.GetComponent<IRagonEntity>();
@@ -117,6 +123,8 @@ namespace Ragon.Client.Integration
 
     public void OnEntityEvent(int entityId, ushort evntCode, BitBuffer payload)
     {
+      Debug.Log($"{entityId} {evntCode} {payload.Length}");
+      
       if (_eventListeners.ContainsKey(entityId)) 
         _eventListeners[entityId].ProcessEvent(evntCode, payload);
     }

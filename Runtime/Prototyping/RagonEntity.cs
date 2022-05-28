@@ -18,7 +18,7 @@ namespace Ragon.Client.Integration
     [SerializeField] protected RagonRoom Room;
     
     [SerializeField] protected bool Attached;
-    [SerializeField] protected bool IsOwner;
+    [SerializeField] protected bool IsMine;
     
     protected T State;
     
@@ -30,7 +30,7 @@ namespace Ragon.Client.Integration
       EntityId = entityId;
       Owner = owner;
       Attached = true;
-      IsOwner = RagonNetwork.Room.LocalPlayer.IsOwner;
+      IsMine = RagonNetwork.Room.LocalPlayer.Id == owner.Id;
       
       RagonManager.Instance.AddStateListener(EntityId, this);
       RagonManager.Instance.AddEntityEventListener(EntityId, this);
@@ -79,7 +79,7 @@ namespace Ragon.Client.Integration
       });
     }
 
-    public void InvokeEvent<Event>(ushort eventCode, Event evnt, RagonExecutionMode executionMode = RagonExecutionMode.SERVER_ONLY) where Event : IRagonSerializable, new()
+    public void ReplicateEvent<TEvent>(ushort eventCode, TEvent evnt, RagonExecutionMode executionMode = RagonExecutionMode.SERVER_ONLY) where TEvent : IRagonSerializable, new()
     {
       RagonNetwork.Room.SendEntityEvent(eventCode, EntityId, evnt, executionMode);
     }

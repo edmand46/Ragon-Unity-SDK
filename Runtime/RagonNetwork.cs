@@ -139,6 +139,7 @@ namespace Ragon.Client
       _serializer.FromSpan(ref rawData);
       
       var operation = _serializer.ReadOperation();
+      // Debug.Log(operation);
       switch (operation)
       {
         case RagonOperation.AUTHORIZED_SUCCESS:
@@ -158,8 +159,6 @@ namespace Ragon.Client
           
           _room = room;
           _roomInternal = room;
-          
-          _eventsListener.OnJoined();
           break;
         }
         case RagonOperation.JOIN_FAILED:
@@ -194,9 +193,9 @@ namespace Ragon.Client
         case RagonOperation.PLAYER_LEAVED:
         {
           var playerId = _serializer.ReadString();
-          _roomInternal.RemovePlayer(playerId);
-          
           var player = _room.PlayersMap[playerId];
+          
+          _roomInternal.RemovePlayer(playerId);
           _eventsListener.OnPlayerLeft(player);
           break;
         }
@@ -225,7 +224,7 @@ namespace Ragon.Client
           if (_room.Connections.TryGetValue(ownerId, out var owner))
             _eventsListener.OnEntityCreated(entityId, entityType, stateAuthority, eventAuthority, owner, _buffer);
           else
-            Debug.LogWarning("Owner not found in players");
+            Debug.LogWarning($"Owner {ownerId} not found in players");
           break;
         }
         case RagonOperation.DESTROY_ENTITY:
@@ -313,12 +312,16 @@ namespace Ragon.Client
             
             _eventsListener.OnEntityCreated(entityId, entityType, stateAuthority, eventAuthority, ragonPlayer, _buffer);
             
-            _buffer.Clear();
-            _buffer.FromSpan(ref stateData, stateData.Length);
-            
-            _eventsListener.OnEntityState(entityId, _buffer);
+            if (stateLenght > 0)
+            {
+              _buffer.Clear();
+              _buffer.FromSpan(ref stateData, stateData.Length);
+
+              _eventsListener.OnEntityState(entityId, _buffer);
+            }
           }
           
+          _eventsListener.OnJoined();
           Debug.Log("Snapshot received");
           break;
         }

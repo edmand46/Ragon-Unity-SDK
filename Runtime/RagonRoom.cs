@@ -51,10 +51,10 @@ namespace Ragon.Client
       
       var player = new RagonPlayer(peerId, playerId, playerName, isOwner, isLocal);
       
-      if (player.IsLocal)
+      if (player.IsMe)
         LocalPlayer = player;
 
-      if (player.IsOwner)
+      if (player.IsRoomOwner)
         Owner = player;
         
       _players.Add(player);
@@ -75,13 +75,13 @@ namespace Ragon.Client
       {
         if (player.Id == playerId)
           Owner = player;
-        player.IsOwner = player.Id == playerId;
+        player.IsRoomOwner = player.Id == playerId;
       }
     }
 
     public void LoadScene(string map)
     {
-      if (!LocalPlayer.IsOwner)
+      if (!LocalPlayer.IsRoomOwner)
       {
         Debug.LogWarning("Only owner can change map");
         return;
