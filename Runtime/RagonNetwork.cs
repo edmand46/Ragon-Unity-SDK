@@ -177,6 +177,8 @@ namespace Ragon.Client
         {
           var newOwnerId = _serializer.ReadString();
           _roomInternal.OnOwnershipChanged(newOwnerId);
+          var player = _room.PlayersMap[newOwnerId];
+          _eventsListener.OnOwnerShipChanged(player);
           break;
         }
         case RagonOperation.PLAYER_JOINED:
@@ -197,6 +199,14 @@ namespace Ragon.Client
           
           _roomInternal.RemovePlayer(playerId);
           _eventsListener.OnPlayerLeft(player);
+
+          _buffer.Clear();
+          var entities = _serializer.ReadUShort();
+          for (var i = 0; i < entities; i++)
+          {
+            var entityId = _serializer.ReadInt();
+            _eventsListener.OnEntityDestroyed(entityId, _buffer);
+          }
           break;
         }
         case RagonOperation.LOAD_SCENE:

@@ -29,7 +29,9 @@ namespace Ragon.Client.Integration
     private Dictionary<int, IRagonStateListener> _stateListeners = new Dictionary<int, IRagonStateListener>();
     private Dictionary<int, IRagonEventListener> _eventListeners = new Dictionary<int, IRagonEventListener>();
     private List<IRagonEventListener> _globalListeners = new List<IRagonEventListener>();
-    private Dictionary<int, IRagonEntity> _entities = new Dictionary<int, IRagonEntity>();
+    private Dictionary<int, IRagonEntity> _entitiesDict = new Dictionary<int, IRagonEntity>();
+    private List<IRagonEntity> _entitiesList = new List<IRagonEntity>();
+    
     private Func<ushort, GameObject> _prefabCallback;
 
     private void Awake()
@@ -90,24 +92,33 @@ namespace Ragon.Client.Integration
       
     }
 
+    public void OnOwnerShipChanged(RagonPlayer player)
+    {
+      foreach (var ent in _entitiesList)
+        ent.ChangeOwner(player);
+    }
+
     public void OnEntityCreated(int entityId, ushort entityType, RagonAuthority state, RagonAuthority evnt, RagonPlayer creator, BitBuffer payload)
     {
-      Debug.Log($"Entity {entityId} Type:{entityType} Authority:{state}|{evnt} Owner:{creator.Name}");
-      
+      Debug.Log($"Created Entity {entityId} Type:{entityType} Authority:{state}|{evnt} Owner:{creator.Name}");
       var prefab = _prefabCallback?.Invoke(entityType);
       var go = Instantiate(prefab);
       var component = go.GetComponent<IRagonEntity>();
       
-      component.Attach(entityType, creator, entityId);
+      component.Attach(entityType, creator, entityId, payload);
       
-      _entities.Add(entityId, component);
+      _entitiesDict.Add(entityId, component);
     }
 
   
     public void OnEntityDestroyed(int entityId, BitBuffer payload)
     {
-      if (_entities.Remove(entityId, out var entity))
+      Debug.Log($"Destoyed Entity {entityId}");
+      if (_entitiesDict.Remove(entityId, out var entity))
+      {
+        _entitiesList.Remove(entity);
         entity.Detach();
+      }
     }
 
     public void OnEntityState(int entityId, BitBuffer payload)
@@ -115,12 +126,7 @@ namespace Ragon.Client.Integration
       if (_stateListeners.ContainsKey(entityId)) 
         _stateListeners[entityId].ProcessState(payload);
     }
-
-    public void OnEntityProperty(int entityId, int property, BitBuffer payload)
-    {
-      
-    }
-
+    
     public void OnEntityEvent(int entityId, ushort evntCode, BitBuffer payload)
     {
       Debug.Log($"{entityId} {evntCode} {payload.Length}");

@@ -24,12 +24,12 @@ namespace Ragon.Client.Integration
     
     private Dictionary<int, SubscribeDelegate> _events = new();
     
-    public void Attach(int entityType, RagonPlayer owner, int entityId)
+    public void Attach(int entityType, RagonPlayer owner, int entityId, BitBuffer payload)
     {
       EntityType = entityType;
       EntityId = entityId;
-      Owner = owner;
       Attached = true;
+      Owner = owner;
       IsMine = RagonNetwork.Room.LocalPlayer.Id == owner.Id;
       
       RagonManager.Instance.AddStateListener(EntityId, this);
@@ -39,7 +39,13 @@ namespace Ragon.Client.Integration
       
       OnCreatedEntity();
     }
-    
+
+    public void ChangeOwner(RagonPlayer newOwner)
+    {
+      Owner = newOwner;
+      IsMine = RagonNetwork.Room.LocalPlayer.Id == newOwner.Id;
+    }
+
     public void Detach()
     {
       RagonManager.Instance.RemoveStateListener(EntityId);

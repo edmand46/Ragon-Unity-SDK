@@ -14,10 +14,10 @@ namespace Ragon.Client
     
     void OnPlayerJoined(RagonPlayer player);
     void OnPlayerLeft(RagonPlayer player);
+    void OnOwnerShipChanged(RagonPlayer player);
     void OnEntityCreated(int entityId, ushort entityType, RagonAuthority state, RagonAuthority evnt, RagonPlayer creator, BitBuffer payload);
     void OnEntityDestroyed(int entityId, BitBuffer payload);
     void OnEntityState(int entityId, BitBuffer payload);
-    void OnEntityProperty(int entityId, int property, BitBuffer payload);
     void OnEntityEvent(int entityId, ushort evntCode, BitBuffer payload);
     void OnEvent(ushort evntCode, BitBuffer payload);
     void OnLevel(string sceneName);
