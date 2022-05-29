@@ -6,7 +6,10 @@ using UnityEngine;
 
 namespace Ragon.Client.Integration
 {
-  public class RagonEntity<T>: MonoBehaviour, IRagonEventListener, IRagonStateListener, IRagonEntity where T: IRagonSerializable, new()
+  public class RagonEntity<TState, TSpawnPayload, TDestroyPayload>: MonoBehaviour, IRagonEventListener, IRagonStateListener, IRagonEntity 
+    where TState: IRagonSerializable, new()
+    where TSpawnPayload: IRagonSerializable, new()
+    where TDestroyPayload: IRagonSerializable, new()
   {
     private delegate void SubscribeDelegate(BitBuffer buffer);
 
@@ -20,11 +23,11 @@ namespace Ragon.Client.Integration
     [SerializeField] protected bool Attached;
     [SerializeField] protected bool IsMine;
     
-    protected T State;
+    protected TState State;
     
     private Dictionary<int, SubscribeDelegate> _events = new();
     
-    public void Attach(int entityType, RagonPlayer owner, int entityId, BitBuffer payload)
+    public void Attach(int entityType, RagonPlayer owner, int entityId, BitBuffer payloadData)
     {
       EntityType = entityType;
       EntityId = entityId;
@@ -35,9 +38,11 @@ namespace Ragon.Client.Integration
       RagonManager.Instance.AddStateListener(EntityId, this);
       RagonManager.Instance.AddEntityEventListener(EntityId, this);
       
-      State = new T();
+      State = new TState();
       
-      OnCreatedEntity();
+      var payload = new TSpawnPayload();
+      payload.Deserialize(payloadData);
+      OnCreatedEntity(payload);
     }
 
     public void ChangeOwner(RagonPlayer newOwner)
@@ -46,12 +51,14 @@ namespace Ragon.Client.Integration
       IsMine = RagonNetwork.Room.LocalPlayer.Id == newOwner.Id;
     }
 
-    public void Detach()
+    public void Detach(BitBuffer payloadData)
     {
       RagonManager.Instance.RemoveStateListener(EntityId);
       RagonManager.Instance.RemoveEntityEventListener(EntityId);
-      
-      OnDestroyedEntity();
+
+      var payload = new TDestroyPayload();
+      payload.Deserialize(payloadData);
+      OnDestroyedEntity(payload);
       
       Destroy(gameObject);
     }
@@ -94,13 +101,13 @@ namespace Ragon.Client.Integration
     {
       RagonNetwork.Room.SendEntityState(EntityId, State);
     }
-    
-    public virtual void OnCreatedEntity()
+
+    public virtual void OnCreatedEntity(TSpawnPayload payload) 
     {
       
     }
 
-    public virtual void OnDestroyedEntity()
+    public virtual void OnDestroyedEntity(TDestroyPayload payload)
     {
       
     }

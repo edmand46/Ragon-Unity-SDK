@@ -98,7 +98,7 @@ namespace Ragon.Client.Integration
         ent.ChangeOwner(player);
     }
 
-    public void OnEntityCreated(int entityId, ushort entityType, RagonAuthority state, RagonAuthority evnt, RagonPlayer creator, BitBuffer payload)
+    public void OnEntityCreated(int entityId, ushort entityType, RagonAuthority state, RagonAuthority evnt, RagonPlayer creator, byte[] payload)
     {
       Debug.Log($"Created Entity {entityId} Type:{entityType} Authority:{state}|{evnt} Owner:{creator.Name}");
       var prefab = _prefabCallback?.Invoke(entityType);
@@ -117,7 +117,7 @@ namespace Ragon.Client.Integration
       if (_entitiesDict.Remove(entityId, out var entity))
       {
         _entitiesList.Remove(entity);
-        entity.Detach();
+        entity.Detach(payload);
       }
     }
 

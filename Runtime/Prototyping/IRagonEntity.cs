@@ -6,6 +6,6 @@ namespace Ragon.Client.Integration
   {
     public void Attach(int entityType, RagonPlayer player, int entityId, BitBuffer payload);
     public void ChangeOwner(RagonPlayer newOwner);
-    public void Detach();
+    public void Detach(BitBuffer payload);
   }
 }
