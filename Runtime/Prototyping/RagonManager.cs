@@ -37,7 +37,6 @@ namespace Ragon.Client.Integration
     private void Awake()
     {
       Instance = this;
-      
       RagonNetwork.SetListener(this);
     }
 
@@ -98,16 +97,17 @@ namespace Ragon.Client.Integration
         ent.ChangeOwner(player);
     }
 
-    public void OnEntityCreated(int entityId, ushort entityType, RagonAuthority state, RagonAuthority evnt, RagonPlayer creator, byte[] payload)
+    public void OnEntityCreated(int entityId, ushort entityType, RagonAuthority state, RagonAuthority evnt, RagonPlayer creator, BitBuffer payload)
     {
       Debug.Log($"Created Entity {entityId} Type:{entityType} Authority:{state}|{evnt} Owner:{creator.Name}");
       var prefab = _prefabCallback?.Invoke(entityType);
       var go = Instantiate(prefab);
-      var component = go.GetComponent<IRagonEntity>();
       
+      var component = go.GetComponent<IRagonEntity>();
       component.Attach(entityType, creator, entityId, payload);
       
       _entitiesDict.Add(entityId, component);
+      _entitiesList.Add(component);
     }
 
   
