@@ -34,9 +34,10 @@ namespace Ragon.Client.Integration
       Attached = true;
       Owner = owner;
       IsMine = RagonNetwork.Room.LocalPlayer.Id == owner.Id;
-      
-      RagonManager.Instance.AddStateListener(EntityId, this);
-      RagonManager.Instance.AddEntityEventListener(EntityId, this);
+
+      RagonEntityManager manager = (RagonEntityManager) RagonNetwork.Manager;
+      manager.AddStateListener(EntityId, this);
+      manager.AddEntityEventListener(EntityId, this);
       
       State = new TState();
       
@@ -53,8 +54,9 @@ namespace Ragon.Client.Integration
 
     public void Detach(BitBuffer payloadData)
     {
-      RagonManager.Instance.RemoveStateListener(EntityId);
-      RagonManager.Instance.RemoveEntityEventListener(EntityId);
+      RagonEntityManager manager = (RagonEntityManager) RagonNetwork.Manager;
+      manager.RemoveStateListener(EntityId);
+      manager.RemoveEntityEventListener(EntityId);
 
       var payload = new TDestroyPayload();
       payload.Deserialize(payloadData);

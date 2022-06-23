@@ -13,16 +13,18 @@ namespace Ragon.Client
   {
     private RagonConnection _connection;
     private IRagonNetworkListener _events;
-    private BitBuffer _buffer = new BitBuffer(8192);
-    private RagonSerializer _serializer = new RagonSerializer(8192);
-    private List<RagonPlayer> _players = new List<RagonPlayer>();
+    private IRagonEntityManager _entityManager;
+    private BitBuffer _buffer = new();
+    private RagonSerializer _serializer = new();
+    private List<RagonPlayer> _players = new();
     private Dictionary<string, RagonPlayer> _playersMap = new();
     private Dictionary<uint, RagonPlayer> _connections = new();
     private string _ownerId;
     private string _localId;
     
-    public RagonRoom(IRagonNetworkListener events, RagonConnection connection, string id, string ownerId, string localPlayerId, int min, int max)
+    public RagonRoom(IRagonNetworkListener events, IRagonEntityManager manager, RagonConnection connection, string id, string ownerId, string localPlayerId, int min, int max)
     {
+      _entityManager = manager; 
       _events = events;
       _connection = connection;
       _ownerId = ownerId;
@@ -151,8 +153,14 @@ namespace Ragon.Client
       if (eventMode == RagonExecutionMode.LOCAL_ONLY)
       {
         _buffer.Clear();
-        _events.OnEntityEvent(entityId, evntCode, _buffer);
+        _entityManager.OnEntityEvent(entityId, evntCode, _buffer);
         return;
+      }
+      
+      if (eventMode == RagonExecutionMode.LOCAL_AND_SERVER)
+      {
+        _buffer.Clear();
+        _entityManager.OnEntityEvent(entityId, evntCode, _buffer);
       }
       
       _serializer.Clear();
@@ -160,12 +168,6 @@ namespace Ragon.Client
       _serializer.WriteUShort(evntCode);
       _serializer.WriteInt(entityId);
       
-      if (eventMode == RagonExecutionMode.LOCAL_AND_SERVER)
-      {
-        _buffer.Clear();
-        _events.OnEntityEvent(entityId, evntCode, _buffer);
-      }
-
       var sendData = _serializer.ToArray();
       _connection.SendData(sendData);
     }
@@ -204,7 +206,7 @@ namespace Ragon.Client
       
       if (eventMode == RagonExecutionMode.LOCAL_ONLY)
       {
-        _events.OnEntityEvent(entityId, evntCode, _buffer);
+        _entityManager.OnEntityEvent(entityId, evntCode, _buffer);
         return;
       }
       
@@ -218,7 +220,7 @@ namespace Ragon.Client
       
       if (eventMode == RagonExecutionMode.LOCAL_AND_SERVER)
       {
-        _events.OnEntityEvent(entityId, evntCode, _buffer);
+        _entityManager.OnEntityEvent(entityId, evntCode, _buffer);
       }
 
       var sendData = _serializer.ToArray();

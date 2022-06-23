@@ -1,5 +1,8 @@
 using System;
+using DisruptorUnity3d;
 using ENet;
+using Ragon.Common;
+using UnityEngine;
 using Event = ENet.Event;
 using EventType = ENet.EventType;
 
@@ -18,6 +21,8 @@ namespace Ragon.Client
     private Event _netEvent;
 
     public Action<byte[]> OnData;
+    public RingBuffer<Event> SendBuffer;
+    public RingBuffer<Event> ReceiveBuffer;
     public Action OnConnected;
     public Action OnDisconnected;
 
@@ -86,6 +91,9 @@ namespace Ragon.Client
             var data = new byte[_netEvent.Packet.Length];
             _netEvent.Packet.CopyTo(data);
             _netEvent.Packet.Dispose();
+            
+            Console.WriteLine(data[0]);
+            
             OnData?.Invoke(data);
             break;
         }
