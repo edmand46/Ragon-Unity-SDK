@@ -25,7 +25,7 @@ namespace Ragon.Client.Integration
     {
       Instance = this;
     }
-
+    
     public void AddStateListener(int entityId , IRagonStateListener listener) => _stateListeners.Add(entityId, listener);
     public void RemoveStateListener(int entityId) => _stateListeners.Remove(entityId);
 

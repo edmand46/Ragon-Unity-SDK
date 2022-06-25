@@ -6,10 +6,10 @@ using UnityEngine;
 
 namespace Ragon.Client.Integration
 {
-  public class RagonEntity<TState, TSpawnPayload, TDestroyPayload>: MonoBehaviour, IRagonEventListener, IRagonStateListener, IRagonEntity 
+  public class RagonEntityExtended<TState, TSpawnPayload, TDestroyPayload>: MonoBehaviour, IRagonEventListener, IRagonStateListener, IRagonEntity 
     where TState: IRagonSerializable, new()
-    where TSpawnPayload: IRagonSerializable, new()
-    where TDestroyPayload: IRagonSerializable, new()
+    where TSpawnPayload: IRagonPayload, new()
+    where TDestroyPayload: IRagonPayload, new()
   {
     private delegate void SubscribeDelegate(BitBuffer buffer);
 
@@ -43,6 +43,7 @@ namespace Ragon.Client.Integration
       
       var payload = new TSpawnPayload();
       payload.Deserialize(payloadData);
+      
       OnCreatedEntity(payload);
     }
 
@@ -104,12 +105,12 @@ namespace Ragon.Client.Integration
       RagonNetwork.Room.SendEntityState(EntityId, State);
     }
 
-    public virtual void OnCreatedEntity(TSpawnPayload payload) 
+    public virtual void OnCreatedEntity(IRagonPayload payload) 
     {
       
     }
 
-    public virtual void OnDestroyedEntity(TDestroyPayload payload)
+    public virtual void OnDestroyedEntity(IRagonPayload payload)
     {
       
     }

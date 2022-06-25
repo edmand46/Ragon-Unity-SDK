@@ -37,7 +37,7 @@ namespace Ragon.Client
       }
       else
       {
-        packet.Create(data, PacketFlags.Instant);
+        packet.Create(data, PacketFlags.None);
         _peer.Send(1, ref packet);
       }
     }
