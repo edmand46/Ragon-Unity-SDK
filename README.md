@@ -1,7 +1,7 @@
 <div align="center">
   <h3>
     <a href="https://github.com/edmand46/Ragon">
-        <img src="https://github.com/edmand46/Ragon/raw/main/Images/ragon-logo.png"/>
+        <img src="https://github.com/edmand46/Ragon/raw/main/Images/ragon-logo.png" width="200"/>
     </a>
     <br>
     Ragon Client SDK for <a href="https://unity3d.com/">Unity</a>
