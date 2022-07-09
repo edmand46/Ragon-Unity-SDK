@@ -14,8 +14,8 @@ namespace Ragon.Client
     
     void OnPlayerJoined(RagonPlayer player);
     void OnPlayerLeft(RagonPlayer player);
+    void OnEvent(RagonPlayer player, ushort evntCode, BitBuffer payload);
     void OnOwnerShipChanged(RagonPlayer player);
-    void OnEvent(ushort evntCode, BitBuffer payload);
     void OnLevel(string sceneName);
   }
 }

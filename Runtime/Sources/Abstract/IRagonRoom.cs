@@ -23,10 +23,10 @@ namespace Ragon.Client
     public void SceneLoaded();
     public void CreateEntity(ushort type, IRagonSerializable spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY, RagonAuthority events = RagonAuthority.OWNER_ONLY);
     public void DestroyEntity(int entityId, IRagonSerializable destroyPayload);
-    public void SendEntityEvent(ushort evntCode, int entityId, RagonExecutionMode eventMode = RagonExecutionMode.SERVER_ONLY);
-    public void SendEntityEvent(ushort evntCode, int entityId, IRagonSerializable payload, RagonExecutionMode eventMode = RagonExecutionMode.SERVER_ONLY);
-    public void SendEvent(ushort evntCode, IRagonSerializable payload, RagonExecutionMode eventMode = RagonExecutionMode.SERVER_ONLY);
-    public void SendEvent(ushort evntCode, RagonExecutionMode eventMode = RagonExecutionMode.SERVER_ONLY);
-    public void SendEntityState(int entityId, IRagonSerializable payload);
+    public void ReplicateEntityEvent(ushort evntCode, int entityId, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY);
+    public void ReplicateEntityEvent(ushort evntCode, int entityId, IRagonSerializable payload, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY);
+    public void ReplicateEvent(ushort evntCode, IRagonSerializable payload, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY);
+    public void ReplicateEvent(ushort evntCode, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY);
+    public void ReplicateEntityState(int entityId, IRagonSerializable payload);
   }
 }

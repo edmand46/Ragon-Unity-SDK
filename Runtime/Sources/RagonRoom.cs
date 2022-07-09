@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Text;
 using NetStack.Serialization;
 using Ragon.Common;
-using UnityEditor;
 using UnityEngine;
 
 namespace Ragon.Client
@@ -148,19 +147,19 @@ namespace Ragon.Client
       _connection.SendData(sendData);
     }
 
-    public void SendEntityEvent(ushort evntCode, int entityId, RagonExecutionMode eventMode = RagonExecutionMode.SERVER_ONLY)
+    public void ReplicateEntityEvent(ushort evntCode, int entityId, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY)
     {
-      if (eventMode == RagonExecutionMode.LOCAL_ONLY)
+      if (eventMode == RagonEventMode.LOCAL_ONLY)
       {
         _buffer.Clear();
-        _entityManager.OnEntityEvent(entityId, evntCode, _buffer);
+        _entityManager.OnEntityEvent(LocalPlayer, entityId, evntCode, _buffer);
         return;
       }
       
-      if (eventMode == RagonExecutionMode.LOCAL_AND_SERVER)
+      if (eventMode == RagonEventMode.LOCAL_AND_SERVER)
       {
         _buffer.Clear();
-        _entityManager.OnEntityEvent(entityId, evntCode, _buffer);
+        _entityManager.OnEntityEvent(LocalPlayer, entityId, evntCode, _buffer);
       }
       
       _serializer.Clear();
@@ -172,85 +171,88 @@ namespace Ragon.Client
       _connection.SendData(sendData);
     }
 
-    public void SendEvent(ushort evntCode, IRagonSerializable payload, RagonExecutionMode eventMode = RagonExecutionMode.SERVER_ONLY)
+    public void ReplicateEvent(ushort evntCode, IRagonSerializable payload, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY)
     {
       _buffer.Clear();
       payload.Serialize(_buffer);
       
-      if (eventMode == RagonExecutionMode.LOCAL_ONLY)
+      if (eventMode == RagonEventMode.LOCAL_ONLY)
       {
-        _events.OnEvent(evntCode, _buffer);
+        _events.OnEvent(RagonNetwork.Room.LocalPlayer, evntCode, _buffer);
         return;
       }
       
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.REPLICATE_EVENT);
       _serializer.WriteUShort(evntCode);
+      _serializer.WriteByte((byte) eventMode);_serializer.WriteByte((byte) eventMode);
       
       var eventData = _serializer.GetWritableData(_buffer.Length);
       _buffer.ToSpan(ref eventData);
       
-      if (eventMode == RagonExecutionMode.LOCAL_AND_SERVER)
+      if (eventMode == RagonEventMode.LOCAL_AND_SERVER)
       {
-        _events.OnEvent(evntCode, _buffer);
+        _events.OnEvent(RagonNetwork.Room.LocalPlayer, evntCode, _buffer);
       }
 
       var sendData = _serializer.ToArray();
       _connection.SendData(sendData);
     }
 
-    public void SendEntityEvent(ushort evntCode, int entityId, IRagonSerializable payload, RagonExecutionMode eventMode = RagonExecutionMode.SERVER_ONLY)
+    public void ReplicateEntityEvent(ushort evntCode, int entityId, IRagonSerializable payload, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY)
     {
       _buffer.Clear();
       payload.Serialize(_buffer);
       
-      if (eventMode == RagonExecutionMode.LOCAL_ONLY)
+      if (eventMode == RagonEventMode.LOCAL_ONLY)
       {
-        _entityManager.OnEntityEvent(entityId, evntCode, _buffer);
+        _entityManager.OnEntityEvent(LocalPlayer, entityId, evntCode, _buffer);
         return;
       }
       
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
       _serializer.WriteUShort(evntCode);
+      _serializer.WriteByte((byte) eventMode);
       _serializer.WriteInt(entityId);
       
       var eventPayload = _serializer.GetWritableData(_buffer.Length);
       _buffer.ToSpan(ref eventPayload);
       
-      if (eventMode == RagonExecutionMode.LOCAL_AND_SERVER)
+      if (eventMode == RagonEventMode.LOCAL_AND_SERVER)
       {
-        _entityManager.OnEntityEvent(entityId, evntCode, _buffer);
+        _entityManager.OnEntityEvent(LocalPlayer, entityId, evntCode, _buffer);
       }
 
       var sendData = _serializer.ToArray();
       _connection.SendData(sendData);
     }
 
-    public void SendEvent(ushort evntCode, RagonExecutionMode eventMode = RagonExecutionMode.SERVER_ONLY)
+    public void ReplicateEvent(ushort evntCode, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY)
     {
-      if (eventMode == RagonExecutionMode.LOCAL_ONLY)
+      if (eventMode == RagonEventMode.LOCAL_ONLY)
       {
         _buffer.Clear();
-        _events.OnEvent(evntCode, _buffer);
+        _events.OnEvent(RagonNetwork.Room.LocalPlayer, evntCode, _buffer);
         return;
       }
       
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.REPLICATE_EVENT);
       _serializer.WriteUShort(evntCode);
+      _serializer.WriteByte((byte) eventMode);
       
-      if (eventMode == RagonExecutionMode.LOCAL_AND_SERVER)
+      if (eventMode == RagonEventMode.LOCAL_AND_SERVER)
       {
         _buffer.Clear();
-        _events.OnEvent(evntCode, _buffer);
+        _events.OnEvent(RagonNetwork.Room.LocalPlayer, evntCode, _buffer);
       }
 
       var sendData = _serializer.ToArray();
       _connection.SendData(sendData);
     }
 
-    public void SendEntityState(int entityId, IRagonSerializable payload)
+    public void ReplicateEntityState(int entityId, IRagonSerializable payload)
     {
       _buffer.Clear();
       payload.Serialize(_buffer);

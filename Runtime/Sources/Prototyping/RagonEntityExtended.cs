@@ -4,14 +4,19 @@ using NetStack.Serialization;
 using Ragon.Common;
 using UnityEngine;
 
-namespace Ragon.Client.Integration
+namespace Ragon.Client.Prototyping
 {
-  public class RagonEntityExtended<TState, TSpawnPayload, TDestroyPayload>: MonoBehaviour, IRagonEventListener, IRagonStateListener, IRagonEntity 
+  public class RagonEntityExtended<TState, TSpawnPayload, TDestroyPayload>: 
+    MonoBehaviour,
+    IRagonEntity,
+    IRagonEntityInternal
+    
     where TState: IRagonSerializable, new()
     where TSpawnPayload: IRagonPayload, new()
     where TDestroyPayload: IRagonPayload, new()
   {
-    private delegate void SubscribeDelegate(BitBuffer buffer);
+    private delegate void SubscribeDelegate(RagonPlayer player, BitBuffer buffer);
+    public bool AutoReplication => _replication;
 
     [Header("Ragon Properties")]
     
@@ -23,10 +28,15 @@ namespace Ragon.Client.Integration
     [SerializeField] protected bool Attached;
     [SerializeField] protected bool IsMine;
     
+    [Header("Other Properties")]
+    
     protected TState State;
     
+    private bool _replication;
     private Dictionary<int, SubscribeDelegate> _events = new();
     
+    public int GetId() => EntityId;
+
     public void Attach(int entityType, RagonPlayer owner, int entityId, BitBuffer payloadData)
     {
       EntityType = entityType;
@@ -34,12 +44,9 @@ namespace Ragon.Client.Integration
       Attached = true;
       Owner = owner;
       IsMine = RagonNetwork.Room.LocalPlayer.Id == owner.Id;
-
-      RagonEntityManager manager = (RagonEntityManager) RagonNetwork.Manager;
-      manager.AddStateListener(EntityId, this);
-      manager.AddEntityEventListener(EntityId, this);
-      
       State = new TState();
+      
+      _replication = true;
       
       var payload = new TSpawnPayload();
       payload.Deserialize(payloadData);
@@ -55,10 +62,6 @@ namespace Ragon.Client.Integration
 
     public void Detach(BitBuffer payloadData)
     {
-      RagonEntityManager manager = (RagonEntityManager) RagonNetwork.Manager;
-      manager.RemoveStateListener(EntityId);
-      manager.RemoveEntityEventListener(EntityId);
-
       var payload = new TDestroyPayload();
       payload.Deserialize(payloadData);
       OnDestroyedEntity(payload);
@@ -73,13 +76,13 @@ namespace Ragon.Client.Integration
       OnStateUpdated();
     }
 
-    public void ProcessEvent(ushort eventCode, BitBuffer data)
+    public void ProcessEvent(RagonPlayer player, ushort eventCode, BitBuffer data)
     {
       if (_events.ContainsKey(eventCode))
-        _events[eventCode]?.Invoke(data);
+        _events[eventCode]?.Invoke(player, data);
     }
 
-    public void Subscribe<Event>(ushort eventCode, Action<Event> callback) where Event: IRagonSerializable, new()
+    public void OnEvent<Event>(ushort eventCode, Action<Event> callback) where Event: IRagonSerializable, new()
     {
       if (_events.ContainsKey(eventCode))
       {
@@ -88,23 +91,25 @@ namespace Ragon.Client.Integration
       }
 
       var t = new Event();
-      _events.Add(eventCode, (buffer) =>
+      _events.Add(eventCode, (player, buffer) =>
       {
           t.Deserialize(buffer);
           callback.Invoke(t);
       });
     }
 
-    public void ReplicateEvent<TEvent>(ushort eventCode, TEvent evnt, RagonExecutionMode executionMode = RagonExecutionMode.SERVER_ONLY) where TEvent : IRagonSerializable, new()
+    public void ReplicateEvent<TEvent>(ushort eventCode, TEvent evnt, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY) where TEvent : IRagonSerializable, new()
     {
-      RagonNetwork.Room.SendEntityEvent(eventCode, EntityId, evnt, executionMode);
+      RagonNetwork.Room.ReplicateEntityEvent(eventCode, EntityId, evnt, eventMode);
     }
 
     public void ReplicateState()
     {
-      RagonNetwork.Room.SendEntityState(EntityId, State);
+      RagonNetwork.Room.ReplicateEntityState(EntityId, State);
     }
 
+    #region VIRTUAL
+    
     public virtual void OnCreatedEntity(IRagonPayload payload) 
     {
       
@@ -119,5 +124,7 @@ namespace Ragon.Client.Integration
     {
       
     }
+    
+    #endregion
   }
 }

@@ -1,11 +1,12 @@
 using NetStack.Serialization;
+using Ragon.Common;
 
-namespace Ragon.Client.Integration
+namespace Ragon.Client.Prototyping
 {
   public interface IRagonEntity
   {
-    public void Attach(int entityType, RagonPlayer player, int entityId, BitBuffer payload);
-    public void Detach(BitBuffer payload);
-    public void ChangeOwner(RagonPlayer newOwner);
+    public int GetId();
+    public void ReplicateEvent<TEvent>(ushort eventCode, TEvent evnt, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY)
+      where TEvent : IRagonSerializable, new();
   }
 }

@@ -1,8 +1,5 @@
 using NetStack.Serialization;
-using Ragon.Client.Integration;
-using Ragon.Common;
-
-namespace Example.Game
+namespace Ragon.Client.Prototyping
 {
   public class EmptyPayload: IRagonPayload
   {

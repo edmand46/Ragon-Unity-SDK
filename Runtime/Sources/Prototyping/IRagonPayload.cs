@@ -1,6 +1,6 @@
 using Ragon.Common;
 
-namespace Ragon.Client.Integration
+namespace Ragon.Client.Prototyping
 {
   public interface IRagonPayload: IRagonSerializable
   {
