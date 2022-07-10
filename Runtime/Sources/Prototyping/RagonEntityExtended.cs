@@ -35,7 +35,7 @@ namespace Ragon.Client.Prototyping
     private bool _replication;
     private Dictionary<int, SubscribeDelegate> _events = new();
     
-    public int GetId() => EntityId;
+    public int Id => EntityId;
 
     public void Attach(int entityType, RagonPlayer owner, int entityId, BitBuffer payloadData)
     {
