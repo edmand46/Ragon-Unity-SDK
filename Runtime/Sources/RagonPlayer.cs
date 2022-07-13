@@ -1,5 +1,8 @@
+using System;
+
 namespace Ragon.Client
 {
+  [Serializable]
   public class RagonPlayer
   {
     private RagonRoom _ragonRoom;

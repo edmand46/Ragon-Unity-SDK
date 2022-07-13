@@ -22,6 +22,7 @@ namespace Ragon.Client
     public void LoadScene(string map);
     public void SceneLoaded();
     public void CreateEntity(ushort type, IRagonSerializable spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY, RagonAuthority events = RagonAuthority.OWNER_ONLY);
+    public void CreateStaticEntity(ushort type, ushort staticId, IRagonSerializable spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY, RagonAuthority events = RagonAuthority.OWNER_ONLY);
     public void DestroyEntity(int entityId, IRagonSerializable destroyPayload);
     public void ReplicateEntityEvent(ushort evntCode, int entityId, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY);
     public void ReplicateEntityEvent(ushort evntCode, int entityId, IRagonSerializable payload, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY);
