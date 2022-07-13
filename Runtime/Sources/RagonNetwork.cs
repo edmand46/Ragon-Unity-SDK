@@ -289,8 +289,14 @@ namespace Ragon.Client
           _buffer.Clear();
 
           var entityId = _serializer.ReadInt();
+          var payload = Array.Empty<byte>();
           
-          _entityManager.OnEntityDestroyed(entityId);
+          if (_serializer.Size > 0)
+          {
+            var entityPayload = _serializer.ReadData(_serializer.Size);
+            payload = entityPayload.ToArray();
+          }
+          _entityManager.OnEntityDestroyed(entityId, payload);
           break;
         }
         case RagonOperation.REPLICATE_ENTITY_STATE:

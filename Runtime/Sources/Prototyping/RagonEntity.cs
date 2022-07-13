@@ -31,8 +31,8 @@ namespace Ragon.Client.Prototyping
     protected TState State;
 
     private byte[] _spawnPayload;
-
-    // private byte[] _destroyPayload;
+    private byte[] _destroyPayload;
+    
     private Dictionary<int, OnEventDelegate> _events = new();
 
     public void Attach(int entityType, RagonPlayer owner, int entityId, byte[] payloadData)
@@ -56,8 +56,9 @@ namespace Ragon.Client.Prototyping
       _mine = RagonNetwork.Room.LocalPlayer.Id == newOwner.Id;
     }
 
-    public void Detach()
+    public void Detach(byte[] payload)
     {
+      _destroyPayload = payload;
       OnDestroyedEntity();
     }
 
@@ -109,10 +110,10 @@ namespace Ragon.Client.Prototyping
       return GetPayload<T>(_spawnPayload);
     }
 
-    // public T GetDestroyPayload<T>() where T: IRagonPayload, new()
-    // {
-    //   return GetPayload<T>(_destroyPayload);
-    // }
+    public T GetDestroyPayload<T>() where T: IRagonPayload, new()
+    {
+      return GetPayload<T>(_destroyPayload);
+    }
 
     public void ReplicateEvent<TEvent>(ushort eventCode, TEvent evnt, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY)
       where TEvent : IRagonSerializable, new()

@@ -7,7 +7,7 @@ namespace Ragon.Client.Prototyping
     public bool IsAttached { get; }
     public bool AutoReplication { get; }
     public void Attach(int entityType, RagonPlayer player, int entityId, byte[] payload);
-    public void Detach();
+    public void Detach(byte[] payload);
     public void ProcessEvent(RagonPlayer player, ushort eventCode, BitBuffer buffer);
     public void ProcessState(BitBuffer buffer);
     public void ChangeOwner(RagonPlayer newOwner);

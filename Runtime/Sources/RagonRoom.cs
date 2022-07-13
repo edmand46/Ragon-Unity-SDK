@@ -154,7 +154,7 @@ namespace Ragon.Client
     public void DestroyEntity(int entityId, IRagonSerializable destroyPayload)
     {
       _buffer.Clear();
-      destroyPayload.Serialize(_buffer);
+      destroyPayload?.Serialize(_buffer);
 
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.DESTROY_ENTITY);

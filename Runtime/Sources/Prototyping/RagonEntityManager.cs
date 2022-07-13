@@ -113,7 +113,7 @@ namespace Ragon.Client.Prototyping
         _entitiesOwned.Add(component);
     }
 
-    public void OnEntityDestroyed(int entityId)
+    public void OnEntityDestroyed(int entityId, byte[] payload)
     {
       if (_entitiesDict.Remove(entityId, out var entity))
       {
@@ -122,7 +122,7 @@ namespace Ragon.Client.Prototyping
         if (_entitiesOwned.Contains(entity))
           _entitiesOwned.Remove(entity);
 
-        entity.Detach();
+        entity.Detach(payload);
       }
     }
 
