@@ -228,10 +228,11 @@ namespace Ragon.Client
           
           _buffer.Clear();
           var entities = _serializer.ReadUShort();
+          var emptyPayload = Array.Empty<byte>();
           for (var i = 0; i < entities; i++)
           {
             var entityId = _serializer.ReadInt();
-            _entityManager.OnEntityDestroyed(entityId);
+            _entityManager.OnEntityDestroyed(entityId, emptyPayload);
           }
 
           break;
