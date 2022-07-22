@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace Ragon.Client.Prototyping
 {
+  [DefaultExecutionOrder(-1400)]
   public class RagonEntity<TState> :
     MonoBehaviour,
     IRagonEntity,
@@ -119,6 +120,11 @@ namespace Ragon.Client.Prototyping
       where TEvent : IRagonSerializable, new()
     {
       RagonNetwork.Room.ReplicateEntityEvent(eventCode, _entityId, evnt, eventMode);
+    }
+    
+    public void ReplicateEvent(ushort eventCode, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY)
+    {
+      RagonNetwork.Room.ReplicateEntityEvent(eventCode, _entityId, eventMode);
     }
 
     public void ReplicateState()
