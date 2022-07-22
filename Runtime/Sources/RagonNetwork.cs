@@ -261,8 +261,6 @@ namespace Ragon.Client
           else
             Debug.LogWarning($"Owner {ownerId} not found in players");
           break;
-
-          break;
         }
         case RagonOperation.CREATE_ENTITY:
         {
