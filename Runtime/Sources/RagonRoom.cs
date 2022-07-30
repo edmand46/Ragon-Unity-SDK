@@ -46,6 +46,13 @@ namespace Ragon.Client
     public int MinPlayers { get; private set; }
     public int MaxPlayers { get; private set; }
 
+    public void Cleanup()
+    {
+      _players.Clear();
+      _playersMap.Clear();
+      _connections.Clear();;
+    }
+    
     public void AddPlayer(uint peerId, string playerId, string playerName)
     {
       var isOwner = playerId == _ownerId;
@@ -89,14 +96,11 @@ namespace Ragon.Client
         return;
       }
 
-      var mapRaw = Encoding.UTF8.GetBytes(map).AsSpan();
-      var sendData = new byte[mapRaw.Length + 1];
-      sendData[0] = (byte) RagonOperation.LOAD_SCENE;
-
-      var data = sendData.AsSpan();
-      var mapData = data.Slice(1, data.Length - 1);
-      mapRaw.CopyTo(mapData);
-
+      _serializer.Clear();
+      _serializer.WriteOperation(RagonOperation.LOAD_SCENE);
+      _serializer.WriteString(map);
+      
+      var sendData = _serializer.ToArray();
       _connection.SendData(sendData);
     }
 

@@ -6,6 +6,7 @@ namespace Ragon.Client
   public interface IRagonEntityManager
   {
     void OnJoined();
+    void Cleanup();
     void OnOwnerShipChanged(RagonPlayer player);
     void OnEntityCreated(int entityId, ushort entityType, RagonAuthority state, RagonAuthority evnt, RagonPlayer creator, byte[] payload);
     void OnEntityStaticCreated(int entityId, ushort staticId, ushort entityType, RagonAuthority state, RagonAuthority evnt, RagonPlayer creator, byte[] payload);

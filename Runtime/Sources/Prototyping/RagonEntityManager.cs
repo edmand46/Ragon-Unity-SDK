@@ -24,7 +24,7 @@ namespace Ragon.Client.Prototyping
 
     private Dictionary<int, IRagonEntityInternal> _entitiesDict = new Dictionary<int, IRagonEntityInternal>();
     private Dictionary<int, IRagonEntityInternal> _entitiesStatic = new Dictionary<int, IRagonEntityInternal>();
-
+    
     private List<IRagonEntityInternal> _entitiesList = new List<IRagonEntityInternal>();
     private List<IRagonEntityInternal> _entitiesOwned = new List<IRagonEntityInternal>();
 
@@ -47,7 +47,9 @@ namespace Ragon.Client.Prototyping
       foreach (var go in gameObjects)
       {
         if (go.TryGetComponent<IRagonEntityInternal>(out var ragonEntity))
+        {
           entities.Add(ragonEntity);
+        }
       }
       
       Debug.Log("Found static entities: " + entities.Count);
@@ -61,6 +63,17 @@ namespace Ragon.Client.Prototyping
         if (RagonNetwork.Room.LocalPlayer.IsRoomOwner)
           RagonNetwork.Room.CreateStaticEntity(0, staticId, null);
       }
+    }
+
+    public void Cleanup()
+    {
+      foreach (var entity in _entitiesList)
+        entity.Detach(Array.Empty<byte>());
+
+      _entitiesDict.Clear();
+      _entitiesList.Clear();
+      _entitiesOwned.Clear();
+      _entitiesStatic.Clear();
     }
 
     public void FixedUpdate()

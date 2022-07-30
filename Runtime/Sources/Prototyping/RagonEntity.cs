@@ -60,6 +60,7 @@ namespace Ragon.Client.Prototyping
     {
       _destroyPayload = payload;
       OnDestroyedEntity();
+      Destroy(gameObject);
     }
 
     public void ProcessState(BitBuffer data)

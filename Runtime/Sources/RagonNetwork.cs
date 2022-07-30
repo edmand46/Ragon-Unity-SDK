@@ -27,7 +27,9 @@ namespace Ragon.Client
     private void Awake()
     {
       _instance = this;
-
+      DontDestroyOnLoad(gameObject);
+      
+      
       _connection = new RagonConnection();
       _connection.OnData += OnData;
       _connection.OnConnected += OnConnected;
@@ -140,6 +142,7 @@ namespace Ragon.Client
 
     private void OnData(byte[] bytes)
     {
+      
       if (_listeners.Count == 0 || _entityManager == null)
       {
         Debug.LogWarning("Listeners not defined!");
@@ -152,6 +155,8 @@ namespace Ragon.Client
       _serializer.FromSpan(ref rawData);
 
       var operation = _serializer.ReadOperation();
+      Debug.Log("Op: " + operation);
+      
       switch (operation)
       {
         case RagonOperation.AUTHORIZED_SUCCESS:
@@ -170,7 +175,7 @@ namespace Ragon.Client
           var ownerId = _serializer.ReadString();
           var min = _serializer.ReadUShort();
           var max = _serializer.ReadUShort();
-
+          
           var room = new RagonRoom(_listeners, _entityManager, _connection, roomId, ownerId, localId, min, max);
 
           _room = room;
@@ -186,9 +191,20 @@ namespace Ragon.Client
         case RagonOperation.LEAVE_ROOM:
         {
           foreach (var listener in _listeners)
+          {
+            listener.OnPlayerLeft(_room.LocalPlayer);
+            listener.OnLeaved();
+          }
+          
+          foreach (var listener in _listeners)
             listener.OnPlayerLeft(_room.LocalPlayer);
           
           _roomInternal.RemovePlayer(_room.LocalPlayer.Id);
+      
+          _roomInternal.Cleanup();
+          _entityManager.Cleanup();
+
+          _roomInternal = null;
           _room = null;
           break;
         }
@@ -239,6 +255,9 @@ namespace Ragon.Client
         }
         case RagonOperation.LOAD_SCENE:
         {
+          _entityManager.Cleanup();
+          _roomInternal?.Cleanup();
+
           var sceneName = _serializer.ReadString();
           foreach (var listener in _listeners)
             listener.OnLevel(sceneName);
