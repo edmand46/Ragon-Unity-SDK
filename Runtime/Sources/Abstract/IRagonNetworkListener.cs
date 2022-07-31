@@ -1,4 +1,3 @@
-using NetStack.Serialization;
 using Ragon.Common;
 
 namespace Ragon.Client
@@ -14,7 +13,7 @@ namespace Ragon.Client
     
     void OnPlayerJoined(RagonPlayer player);
     void OnPlayerLeft(RagonPlayer player);
-    void OnEvent(RagonPlayer player, ushort evntCode, BitBuffer payload);
+    void OnEvent(RagonPlayer player, ushort evntCode, RagonSerializer payload);
     void OnOwnerShipChanged(RagonPlayer player);
     void OnLevel(string sceneName);
   }

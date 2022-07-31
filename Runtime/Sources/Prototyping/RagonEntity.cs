@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using NetStack.Serialization;
 using Ragon.Common;
 using UnityEngine;
 
@@ -13,7 +12,7 @@ namespace Ragon.Client.Prototyping
     IRagonEntityInternal
     where TState : IRagonSerializable, new()
   {
-    private delegate void OnEventDelegate(RagonPlayer player, BitBuffer buffer);
+    private delegate void OnEventDelegate(RagonPlayer player, RagonSerializer buffer);
 
     public bool AutoReplication => _replication;
     public bool IsAttached => _attached;
@@ -64,12 +63,12 @@ namespace Ragon.Client.Prototyping
       Destroy(gameObject);
     }
 
-    public void ProcessState(BitBuffer data)
+    public void ProcessState(RagonSerializer data)
     {
       State.Deserialize(data);
     }
 
-    public void ProcessEvent(RagonPlayer player, ushort eventCode, BitBuffer data)
+    public void ProcessEvent(RagonPlayer player, ushort eventCode, RagonSerializer data)
     {
       if (_events.ContainsKey(eventCode))
         _events[eventCode]?.Invoke(player, data);
@@ -96,11 +95,11 @@ namespace Ragon.Client.Prototyping
       if (data == null) return new T();
       if (data.Length == 0) return new T();
       
-      var buffer = new BitBuffer();
-      buffer.FromArray(data, data.Length);
+      var serializer = new RagonSerializer();
+      serializer.FromArray(data);
 
       var payload = new T();
-      payload.Deserialize(buffer);
+      payload.Deserialize(serializer);
 
       return payload;
     }

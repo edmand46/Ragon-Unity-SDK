@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using NetStack.Serialization;
 using Ragon.Common;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -40,7 +39,7 @@ namespace Ragon.Client.Prototyping
       _replicationTimer = 1000.0f / ReplicationRate;
     }
 
-    public void OnJoined()
+    public void CollectSceneData()
     {
       var gameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
       var entities = new List<IRagonEntityInternal>();
@@ -139,7 +138,7 @@ namespace Ragon.Client.Prototyping
       }
     }
 
-    public void OnEntityEvent(RagonPlayer player, int entityId, ushort evntCode, BitBuffer payload)
+    public void OnEntityEvent(RagonPlayer player, int entityId, ushort evntCode, RagonSerializer payload)
     {
       if (_entitiesDict.ContainsKey(entityId))
       {
@@ -147,7 +146,7 @@ namespace Ragon.Client.Prototyping
       }
     }
 
-    public void OnEntityState(int entityId, BitBuffer payload)
+    public void OnEntityState(int entityId, RagonSerializer payload)
     {
       if (_entitiesDict.ContainsKey(entityId))
       {

@@ -1,4 +1,4 @@
-using NetStack.Serialization;
+using Ragon.Common;
 
 namespace Ragon.Client.Prototyping
 {
@@ -8,8 +8,8 @@ namespace Ragon.Client.Prototyping
     public bool AutoReplication { get; }
     public void Attach(int entityType, RagonPlayer player, int entityId, byte[] payload);
     public void Detach(byte[] payload);
-    public void ProcessEvent(RagonPlayer player, ushort eventCode, BitBuffer buffer);
-    public void ProcessState(BitBuffer buffer);
+    public void ProcessEvent(RagonPlayer player, ushort eventCode, RagonSerializer serializer);
+    public void ProcessState(RagonSerializer serializer);
     public void ChangeOwner(RagonPlayer newOwner);
     public void ReplicateState();
   }
