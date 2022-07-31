@@ -19,19 +19,19 @@ namespace Ragon.Client.Prototyping
     public int Id => _entityId;
     public RagonPlayer Owner => _owner;
 
-    [SerializeField] private int _entityType;
-    [SerializeField] private int _entityId;
-    [SerializeField] private bool _mine;
-    [SerializeField] private RagonPlayer _owner;
-    [SerializeField] private bool _attached;
-    [SerializeField] private bool _replication;
+    [SerializeField, ReadOnly] private int _entityType;
+    [SerializeField, ReadOnly] private int _entityId;
+    [SerializeField, ReadOnly] private bool _mine;
+    [SerializeField, ReadOnly] private RagonPlayer _owner;
+    [SerializeField, ReadOnly] private bool _attached;
+    [SerializeField, ReadOnly] private bool _replication;
 
     protected RagonRoom Room;
     protected TState State;
 
     private byte[] _spawnPayload;
     private byte[] _destroyPayload;
-    
+
     private Dictionary<int, OnEventDelegate> _events = new();
 
     public void Attach(int entityType, RagonPlayer owner, int entityId, byte[] payloadData)
@@ -43,7 +43,7 @@ namespace Ragon.Client.Prototyping
       _mine = RagonNetwork.Room.LocalPlayer.Id == owner.Id;
       _spawnPayload = payloadData;
       _replication = true;
-      
+
       State = new TState();
 
       OnCreatedEntity();
@@ -93,7 +93,7 @@ namespace Ragon.Client.Prototyping
     {
       if (data == null) return new T();
       if (data.Length == 0) return new T();
-      
+
       var serializer = new RagonSerializer();
       serializer.FromArray(data);
 
@@ -110,13 +110,13 @@ namespace Ragon.Client.Prototyping
       return GetPayload<T>(_spawnPayload);
     }
 
-    public T GetDestroyPayload<T>() where T: IRagonPayload, new()
+    public T GetDestroyPayload<T>() where T : IRagonPayload, new()
     {
       return GetPayload<T>(_destroyPayload);
     }
 
-    public void ReplicateEvent<TEvent>(ushort eventCode, 
-      TEvent evnt, 
+    public void ReplicateEvent<TEvent>(ushort eventCode,
+      TEvent evnt,
       RagonTarget target = RagonTarget.ALL,
       RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
       where TEvent : IRagonSerializable, new()
@@ -131,7 +131,7 @@ namespace Ragon.Client.Prototyping
     {
       RagonNetwork.Room.ReplicateEntityEvent(eventCode, _entityId, target, replicationMode);
     }
-    
+
     public void ReplicateState()
     {
       RagonNetwork.Room.ReplicateEntityState(_entityId, State);
