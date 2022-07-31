@@ -152,16 +152,16 @@ namespace Ragon.Client
       _connection.SendData(sendData);
     }
 
-    public void ReplicateEntityEvent(ushort evntCode, int entityId, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY)
+    public void ReplicateEntityEvent(ushort evntCode, int entityId, RagonTarget target = RagonTarget.ALL, RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
     {
-      if (eventMode == RagonEventMode.LOCAL_ONLY)
+      if (replicationMode == RagonReplicationMode.LOCAL_ONLY)
       {
         _serializer.Clear();
         _entityManager.OnEntityEvent(LocalPlayer, entityId, evntCode, _serializer);
         return;
       }
 
-      if (eventMode == RagonEventMode.LOCAL_AND_SERVER)
+      if (replicationMode == RagonReplicationMode.LOCAL_AND_SERVER)
       {
         _serializer.Clear();
         _entityManager.OnEntityEvent(LocalPlayer, entityId, evntCode, _serializer);
@@ -170,15 +170,17 @@ namespace Ragon.Client
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
       _serializer.WriteUShort(evntCode);
+      _serializer.WriteByte(((byte) replicationMode));
+      _serializer.WriteByte((byte) target);
       _serializer.WriteInt(entityId);
 
       var sendData = _serializer.ToArray();
       _connection.SendData(sendData);
     }
 
-    public void ReplicateEvent(ushort evntCode, IRagonSerializable payload, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY)
+    public void ReplicateEvent(ushort evntCode, IRagonSerializable payload, RagonTarget target = RagonTarget.ALL, RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
     {
-      if (eventMode == RagonEventMode.LOCAL_ONLY)
+      if (replicationMode == RagonReplicationMode.LOCAL_ONLY)
       {
         _serializer.Clear();
         payload.Serialize(_serializer);
@@ -188,7 +190,7 @@ namespace Ragon.Client
         return;
       }
       
-      if (eventMode == RagonEventMode.LOCAL_AND_SERVER)
+      if (replicationMode == RagonReplicationMode.LOCAL_AND_SERVER)
       {
         _serializer.Clear();
         payload.Serialize(_serializer);
@@ -199,8 +201,8 @@ namespace Ragon.Client
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.REPLICATE_EVENT);
       _serializer.WriteUShort(evntCode);
-      _serializer.WriteByte((byte) eventMode);
-      _serializer.WriteByte((byte) eventMode);
+      _serializer.WriteByte((byte) replicationMode);
+      _serializer.WriteByte((byte) target);
 
       payload.Serialize(_serializer);
 
@@ -208,9 +210,9 @@ namespace Ragon.Client
       _connection.SendData(sendData);
     }
 
-    public void ReplicateEntityEvent(ushort evntCode, int entityId, IRagonSerializable payload, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY)
+    public void ReplicateEntityEvent(ushort evntCode, int entityId, IRagonSerializable payload, RagonTarget target = RagonTarget.ALL, RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
     {
-      if (eventMode == RagonEventMode.LOCAL_ONLY)
+      if (replicationMode == RagonReplicationMode.LOCAL_ONLY)
       {
         _serializer.Clear();
         payload.Serialize(_serializer);
@@ -218,7 +220,7 @@ namespace Ragon.Client
         return;
       }
       
-      if (eventMode == RagonEventMode.LOCAL_AND_SERVER)
+      if (replicationMode == RagonReplicationMode.LOCAL_AND_SERVER)
       {
         _serializer.Clear();
         payload.Serialize(_serializer);
@@ -228,7 +230,8 @@ namespace Ragon.Client
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
       _serializer.WriteUShort(evntCode);
-      _serializer.WriteByte((byte) eventMode);
+      _serializer.WriteByte((byte) replicationMode);
+      _serializer.WriteByte((byte) target);
       _serializer.WriteInt(entityId);
       payload.Serialize(_serializer);
 
@@ -236,9 +239,9 @@ namespace Ragon.Client
       _connection.SendData(sendData);
     }
 
-    public void ReplicateEvent(ushort evntCode, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY)
+    public void ReplicateEvent(ushort evntCode, RagonTarget target = RagonTarget.ALL, RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
     {
-      if (eventMode == RagonEventMode.LOCAL_ONLY)
+      if (replicationMode == RagonReplicationMode.LOCAL_ONLY)
       {
         _serializer.Clear();
         foreach (var listener in _listeners)
@@ -250,9 +253,10 @@ namespace Ragon.Client
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.REPLICATE_EVENT);
       _serializer.WriteUShort(evntCode);
-      _serializer.WriteByte((byte) eventMode);
+      _serializer.WriteByte((byte) replicationMode);
+      _serializer.WriteByte((byte) target);
 
-      if (eventMode == RagonEventMode.LOCAL_AND_SERVER)
+      if (replicationMode == RagonReplicationMode.LOCAL_AND_SERVER)
       {
         _serializer.Clear();
         foreach (var listener in _listeners)

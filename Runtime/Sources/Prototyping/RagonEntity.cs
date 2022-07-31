@@ -116,10 +116,13 @@ namespace Ragon.Client.Prototyping
       return GetPayload<T>(_destroyPayload);
     }
 
-    public void ReplicateEvent<TEvent>(ushort eventCode, TEvent evnt, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY)
+    public void ReplicateEvent<TEvent>(ushort eventCode, 
+      TEvent evnt, 
+      RagonTarget target = RagonTarget.ALL,
+      RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
       where TEvent : IRagonSerializable, new()
     {
-      RagonNetwork.Room.ReplicateEntityEvent(eventCode, _entityId, evnt, eventMode);
+      RagonNetwork.Room.ReplicateEntityEvent(eventCode, _entityId, evnt, target, replicationMode);
     }
     
     public void ReplicateEvent(ushort eventCode, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY)
@@ -127,6 +130,14 @@ namespace Ragon.Client.Prototyping
       RagonNetwork.Room.ReplicateEntityEvent(eventCode, _entityId, eventMode);
     }
 
+    public void ReplicateEvent<TEvent>(ushort eventCode,
+      RagonTarget target = RagonTarget.ALL,
+      RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
+      where TEvent : IRagonSerializable, new()
+    {
+      RagonNetwork.Room.ReplicateEntityEvent(eventCode, _entityId, target, replicationMode);
+    }
+    
     public void ReplicateState()
     {
       RagonNetwork.Room.ReplicateEntityState(_entityId, State);
