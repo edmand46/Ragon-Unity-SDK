@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using Ragon.Client;
 using UnityEditor;
 using UnityEngine;
@@ -19,3 +20,4 @@ namespace Ragon.Editor
     }
   }
 }
+#endif
