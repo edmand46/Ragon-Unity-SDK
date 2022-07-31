@@ -48,6 +48,11 @@ namespace Ragon.Client
     {
       _instance._listeners.Add(listener);
     }
+    
+    public static void RemoveListener(IRagonNetworkListener listener)
+    {
+      _instance._listeners.Remove(listener);
+    }
 
     public static void AuthorizeWithKey(string key, string playerName, byte protocol, byte[] additionalData)
     {
@@ -60,19 +65,20 @@ namespace Ragon.Client
       _instance.JoinOrCreateInternal(parameters);
     }
 
+    public static void CreateOrJoin(RagonRoomParameters parameters)
+    {
+      _instance.JoinOrCreateInternal(parameters);
+    }
+
     public static void Create(string map, int minPlayers, int maxPlayers)
     {
       var parameters = new RagonRoomParameters() { Map = map, Min = minPlayers, Max = maxPlayers};
       _instance.CreateInternal(null, parameters);
     }
     
-    public static void CreateOrJoin(RagonRoomParameters parameters)
+    public static void Create(string roomId, string map, int minPlayers, int maxPlayers)
     {
-      _instance.JoinOrCreateInternal(parameters);
-    }
-
-    public static void Create(string roomId, RagonRoomParameters parameters)
-    {
+      var parameters = new RagonRoomParameters() { Map = map, Min = minPlayers, Max = maxPlayers};
       _instance.CreateInternal(roomId, parameters);
     }
 
@@ -138,7 +144,7 @@ namespace Ragon.Client
     private void CreateInternal(string roomId, RagonRoomParameters parameters)
     {
       _serializer.Clear();
-      _serializer.WriteOperation(RagonOperation.JOIN_OR_CREATE_ROOM);
+      _serializer.WriteOperation(RagonOperation.CREATE_ROOM);
       
       if (roomId != null)
       {
@@ -237,8 +243,9 @@ namespace Ragon.Client
         }
         case RagonOperation.JOIN_FAILED:
         {
+          var message = _serializer.ReadString();
           foreach (var listener in _listeners)
-            listener.OnFailed();
+            listener.OnFailed(message);
           break;
         }
         case RagonOperation.LEAVE_ROOM:

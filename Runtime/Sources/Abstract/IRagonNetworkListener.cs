@@ -7,7 +7,7 @@ namespace Ragon.Client
   {
     void OnAuthorized(string playerId, string playerName);
     void OnJoined();
-    void OnFailed();
+    void OnFailed(string message);
     void OnLeaved();
     void OnConnected();
     void OnDisconnected();
