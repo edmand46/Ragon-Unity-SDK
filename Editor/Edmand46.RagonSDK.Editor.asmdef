@@ -2,7 +2,8 @@
     "name": "Edmand46.RagonSDK.Editor",
     "rootNamespace": "",
     "references": [
-    "GUID:f26b322cfe7c4e1e8d33126797971b81"],
+        "GUID:861b1281dab914af69d87c4345d0b1a2"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
