@@ -363,11 +363,11 @@ namespace Ragon.Client
         case RagonOperation.REPLICATE_EVENT:
         {
           var peerId = _serializer.ReadUShort();
-          var executionMode = (RagonEventMode) _serializer.ReadByte();
+          var executionMode = (RagonReplicationMode) _serializer.ReadByte();
           var eventCode = _serializer.ReadUShort();
   
           if (_room.Connections.TryGetValue(peerId, out var player)
-              && executionMode == RagonEventMode.LOCAL_AND_SERVER
+              && executionMode == RagonReplicationMode.LOCAL_AND_SERVER
               && !player.IsMe)
           {
             foreach (var listener in _listeners)
@@ -380,13 +380,13 @@ namespace Ragon.Client
         {
           var eventCode = _serializer.ReadUShort();
           var peerId = _serializer.ReadUShort();
-          var executionMode = (RagonEventMode) _serializer.ReadByte();
+          var executionMode = (RagonReplicationMode) _serializer.ReadByte();
           var entityId = _serializer.ReadInt();
           
           if (!_room.Connections.TryGetValue(peerId, out var player))
             break;
 
-          if (executionMode == RagonEventMode.LOCAL_AND_SERVER && player.IsMe)
+          if (executionMode == RagonReplicationMode.LOCAL_AND_SERVER && player.IsMe)
             break;
 
           _entityManager.OnEntityEvent(player, entityId, eventCode, _serializer);

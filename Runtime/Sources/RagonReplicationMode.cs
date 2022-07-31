@@ -1,6 +1,6 @@
 namespace Ragon.Client
 {
-  public enum RagonEventMode: byte
+  public enum RagonReplicationMode: byte
   {
     LOCAL_ONLY,
     SERVER_ONLY,
