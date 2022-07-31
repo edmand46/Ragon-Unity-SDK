@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using NetStack.Serialization;
 using Ragon.Common;
 using UnityEngine;
 
@@ -17,7 +16,6 @@ namespace Ragon.Client
     private IRoomInternal _roomInternal;
     private List<IRagonNetworkListener> _listeners = new List<IRagonNetworkListener>();
     private IRagonEntityManager _entityManager;
-    private BitBuffer _buffer = new BitBuffer(8192);
     private RagonSerializer _serializer = new RagonSerializer(8192);
 
     public static IRagonRoom Room => _instance._room;
@@ -48,7 +46,7 @@ namespace Ragon.Client
     {
       _instance._listeners.Add(listener);
     }
-    
+
     public static void RemoveListener(IRagonNetworkListener listener)
     {
       _instance._listeners.Remove(listener);
@@ -61,7 +59,7 @@ namespace Ragon.Client
 
     public static void CreateOrJoin(string map, int minPlayers, int maxPlayers)
     {
-      var parameters = new RagonRoomParameters() { Map = map, Min = minPlayers, Max = maxPlayers};
+      var parameters = new RagonRoomParameters() {Map = map, Min = minPlayers, Max = maxPlayers};
       _instance.JoinOrCreateInternal(parameters);
     }
 
@@ -72,13 +70,13 @@ namespace Ragon.Client
 
     public static void Create(string map, int minPlayers, int maxPlayers)
     {
-      var parameters = new RagonRoomParameters() { Map = map, Min = minPlayers, Max = maxPlayers};
+      var parameters = new RagonRoomParameters() {Map = map, Min = minPlayers, Max = maxPlayers};
       _instance.CreateInternal(null, parameters);
     }
-    
+
     public static void Create(string roomId, string map, int minPlayers, int maxPlayers)
     {
-      var parameters = new RagonRoomParameters() { Map = map, Min = minPlayers, Max = maxPlayers};
+      var parameters = new RagonRoomParameters() {Map = map, Min = minPlayers, Max = maxPlayers};
       _instance.CreateInternal(roomId, parameters);
     }
 
@@ -125,17 +123,8 @@ namespace Ragon.Client
     {
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.JOIN_OR_CREATE_ROOM);
-     
-      {
-        _buffer.Clear();
-        parameters.Serialize(_buffer);
-        
-        Span<byte> data = stackalloc byte[_buffer.Length];
-        ReadOnlySpan<byte> readData = data;
-        
-        _buffer.ToSpan(ref data);
-        _serializer.WriteData(ref readData);
-      }
+
+      parameters.Serialize(_serializer);
 
       var sendData = _serializer.ToArray();
       _connection.SendData(sendData);
@@ -145,7 +134,7 @@ namespace Ragon.Client
     {
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.CREATE_ROOM);
-      
+
       if (roomId != null)
       {
         _serializer.WriteBool(true);
@@ -155,17 +144,8 @@ namespace Ragon.Client
       {
         _serializer.WriteBool(false);
       }
-      
-      {
-        _buffer.Clear();
-        parameters.Serialize(_buffer);
-        
-        Span<byte> data = stackalloc byte[_buffer.Length];
-        ReadOnlySpan<byte> readData = data;
-        
-        _buffer.ToSpan(ref data);
-        _serializer.WriteData(ref readData);
-      }
+
+      parameters.Serialize(_serializer);
 
       var sendData = _serializer.ToArray();
       _connection.SendData(sendData);
@@ -302,7 +282,6 @@ namespace Ragon.Client
           foreach (var listener in _listeners)
             listener.OnPlayerLeft(player);
 
-          _buffer.Clear();
           var entities = _serializer.ReadUShort();
           var emptyPayload = Array.Empty<byte>();
           for (var i = 0; i < entities; i++)
@@ -324,9 +303,7 @@ namespace Ragon.Client
           break;
         }
         case RagonOperation.CREATE_STATIC_ENTITY:
-        {
-          _buffer.Clear();
-
+        { 
           var entityType = _serializer.ReadUShort();
           var staticId = _serializer.ReadUShort();
           var stateAuthority = (RagonAuthority) _serializer.ReadByte();
@@ -345,8 +322,6 @@ namespace Ragon.Client
         }
         case RagonOperation.CREATE_ENTITY:
         {
-          _buffer.Clear();
-
           var entityType = _serializer.ReadUShort();
           var stateAuthority = (RagonAuthority) _serializer.ReadByte();
           var eventAuthority = (RagonAuthority) _serializer.ReadByte();
@@ -367,8 +342,6 @@ namespace Ragon.Client
         }
         case RagonOperation.DESTROY_ENTITY:
         {
-          _buffer.Clear();
-
           var entityId = _serializer.ReadInt();
           var payload = Array.Empty<byte>();
 
@@ -383,58 +356,40 @@ namespace Ragon.Client
         }
         case RagonOperation.REPLICATE_ENTITY_STATE:
         {
-          _buffer.Clear();
           var entityId = _serializer.ReadInt();
-          var entityStateData = _serializer.ReadData(_serializer.Size);
-
-          _buffer.FromSpan(ref entityStateData, entityStateData.Length);
-          _entityManager.OnEntityState(entityId, _buffer);
+          _entityManager.OnEntityState(entityId, _serializer);
           break;
         }
         case RagonOperation.REPLICATE_EVENT:
         {
-          _buffer.Clear();
           var peerId = _serializer.ReadUShort();
           var executionMode = (RagonEventMode) _serializer.ReadByte();
           var eventCode = _serializer.ReadUShort();
-          if (_serializer.Size > 0)
-          {
-            var payloadData = _serializer.ReadData(_serializer.Size);
-            _buffer.FromSpan(ref payloadData, payloadData.Length);
-          }
-
+  
           if (_room.Connections.TryGetValue(peerId, out var player)
               && executionMode == RagonEventMode.LOCAL_AND_SERVER
               && !player.IsMe)
           {
             foreach (var listener in _listeners)
-              listener.OnEvent(player, eventCode, _buffer);
+              listener.OnEvent(player, eventCode, _serializer);
           }
 
           break;
         }
         case RagonOperation.REPLICATE_ENTITY_EVENT:
         {
-          _buffer.Clear();
-
           var eventCode = _serializer.ReadUShort();
           var peerId = _serializer.ReadUShort();
           var executionMode = (RagonEventMode) _serializer.ReadByte();
           var entityId = _serializer.ReadInt();
-
-          if (_serializer.Size > 0)
-          {
-            var eventPayload = _serializer.ReadData(_serializer.Size);
-            _buffer.FromSpan(ref eventPayload, eventPayload.Length);
-          }
-
+          
           if (!_room.Connections.TryGetValue(peerId, out var player))
             break;
 
           if (executionMode == RagonEventMode.LOCAL_AND_SERVER && player.IsMe)
             break;
 
-          _entityManager.OnEntityEvent(player, entityId, eventCode, _buffer);
+          _entityManager.OnEntityEvent(player, entityId, eventCode, _serializer);
           break;
         }
         case RagonOperation.SNAPSHOT:
@@ -461,22 +416,13 @@ namespace Ragon.Client
             var ownerPeerId = (uint) _serializer.ReadUShort();
             var payloadLenght = _serializer.ReadUShort();
             var payloadData = _serializer.ReadData(payloadLenght);
-            var stateLenght = _serializer.ReadUShort();
-            var stateData = _serializer.ReadData(stateLenght);
             var player = _room.Connections[ownerPeerId];
 
             _entityManager.OnEntityCreated(entityId, entityType, stateAuthority, eventAuthority, player, payloadData.ToArray());
-
-            if (stateLenght > 0)
-            {
-              _buffer.Clear();
-              _buffer.FromSpan(ref stateData, stateData.Length);
-
-              _entityManager.OnEntityState(entityId, _buffer);
-            }
+            _entityManager.OnEntityState(entityId, _serializer);
           }
 
-          _entityManager.OnJoined();
+          _entityManager.CollectSceneData();
 
           var staticEntities = _serializer.ReadInt();
           Debug.Log("Static Entities: " + staticEntities);
@@ -490,18 +436,10 @@ namespace Ragon.Client
             var ownerPeerId = (uint) _serializer.ReadUShort();
             var payloadLenght = _serializer.ReadUShort();
             var payloadData = _serializer.ReadData(payloadLenght);
-            var stateLenght = _serializer.ReadUShort();
-            var stateData = _serializer.ReadData(stateLenght);
             var player = _room.Connections[ownerPeerId];
 
             _entityManager.OnEntityStaticCreated(entityId, staticId, entityType, stateAuthority, eventAuthority, player, payloadData.ToArray());
-
-            if (stateLenght > 0)
-            {
-              _buffer.Clear();
-              _buffer.FromSpan(ref stateData, stateData.Length);
-              _entityManager.OnEntityState(entityId, _buffer);
-            }
+            _entityManager.OnEntityState(entityId, _serializer);
           }
 
           foreach (var listener in _listeners)
