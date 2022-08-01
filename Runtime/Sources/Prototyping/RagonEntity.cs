@@ -125,11 +125,6 @@ namespace Ragon.Client.Prototyping
       RagonNetwork.Room.ReplicateEntityEvent(eventCode, _entityId, evnt, target, replicationMode);
     }
     
-    public void ReplicateEvent(ushort eventCode, RagonEventMode eventMode = RagonEventMode.SERVER_ONLY)
-    {
-      RagonNetwork.Room.ReplicateEntityEvent(eventCode, _entityId, eventMode);
-    }
-
     public void ReplicateEvent<TEvent>(ushort eventCode,
       RagonTarget target = RagonTarget.ALL,
       RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
