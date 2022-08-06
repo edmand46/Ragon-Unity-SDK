@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Ragon.Client.Prototyping;
 using Ragon.Common;
 using UnityEngine;
 
@@ -17,9 +18,11 @@ namespace Ragon.Client
     private List<IRagonNetworkListener> _listeners = new List<IRagonNetworkListener>();
     private IRagonEntityManager _entityManager;
     private RagonSerializer _serializer = new RagonSerializer(8192);
-
+    private RagonEventManager _eventManagerRegistry;
+    
     public static IRagonRoom Room => _instance._room;
-    public static IRagonEntityManager Manager => _instance._entityManager;
+    public static IRagonEntityManager EntityManager => _instance._entityManager;
+    public static RagonEventManager EventManager => _instance._eventManagerRegistry;
     public static RagonState State => _instance._state;
 
     private void Awake()
@@ -27,7 +30,8 @@ namespace Ragon.Client
       _instance = this;
       DontDestroyOnLoad(gameObject);
 
-
+      _eventManagerRegistry = new RagonEventManager();
+      
       _connection = new RagonConnection();
       _connection.OnData += OnData;
       _connection.OnConnected += OnConnected;

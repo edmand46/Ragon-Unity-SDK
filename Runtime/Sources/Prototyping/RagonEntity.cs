@@ -10,7 +10,7 @@ namespace Ragon.Client.Prototyping
     MonoBehaviour,
     IRagonEntity,
     IRagonEntityInternal
-    where TState : IRagonSerializable, new()
+    where TState : IRagonState, new()
   {
     private delegate void OnEventDelegate(RagonPlayer player, RagonSerializer buffer);
 
@@ -74,19 +74,20 @@ namespace Ragon.Client.Prototyping
         _events[eventCode]?.Invoke(player, data);
     }
 
-    public void OnEvent<Event>(ushort eventCode, Action<Event> callback) where Event : IRagonSerializable, new()
+    public void OnEvent<TEvent>(Action<RagonPlayer, TEvent> callback) where TEvent : IRagonEvent, new()
     {
+      var eventCode = RagonNetwork.EventManager.GetEventCode<TEvent>(new TEvent());
       if (_events.ContainsKey(eventCode))
       {
         Debug.LogWarning($"Event already {eventCode} subscribed");
         return;
       }
 
-      var t = new Event();
+      var t = new TEvent();
       _events.Add(eventCode, (player, buffer) =>
       {
         t.Deserialize(buffer);
-        callback.Invoke(t);
+        callback.Invoke(player, t);
       });
     }
 
@@ -116,21 +117,13 @@ namespace Ragon.Client.Prototyping
       return GetPayload<T>(_destroyPayload);
     }
 
-    public void ReplicateEvent<TEvent>(ushort eventCode,
+    public void ReplicateEvent<TEvent>(
       TEvent evnt,
       RagonTarget target = RagonTarget.ALL,
       RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
-      where TEvent : IRagonSerializable, new()
+      where TEvent : IRagonEvent, new()
     {
-      RagonNetwork.Room.ReplicateEntityEvent(eventCode, _entityId, evnt, target, replicationMode);
-    }
-    
-    public void ReplicateEvent<TEvent>(ushort eventCode,
-      RagonTarget target = RagonTarget.ALL,
-      RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
-      where TEvent : IRagonSerializable, new()
-    {
-      RagonNetwork.Room.ReplicateEntityEvent(eventCode, _entityId, target, replicationMode);
+      RagonNetwork.Room.ReplicateEntityEvent(evnt, _entityId, target, replicationMode);
     }
 
     public void ReplicateState()
