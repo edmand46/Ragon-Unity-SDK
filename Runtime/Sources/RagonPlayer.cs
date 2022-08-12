@@ -5,7 +5,6 @@ namespace Ragon.Client
   [Serializable]
   public class RagonPlayer
   {
-    private RagonRoom _ragonRoom;
     public string Id { get; private set; }
     public string Name { get; set; }
     public uint PeerId { get; set; }

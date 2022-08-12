@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Ragon.Client.Prototyping;
 using Ragon.Common;
 using UnityEngine;
 
@@ -21,13 +22,13 @@ namespace Ragon.Client
     
     public void LoadScene(string map);
     public void SceneLoaded();
-    public void CreateEntity(ushort type, IRagonSerializable spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY, RagonAuthority events = RagonAuthority.ALL);
-    public void CreateStaticEntity(ushort type, ushort staticId, IRagonSerializable spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY, RagonAuthority events = RagonAuthority.ALL);
-    public void DestroyEntity(int entityId, IRagonSerializable destroyPayload);
-    public void ReplicateEntityEvent(ushort evntCode, int entityId, RagonTarget target = RagonTarget.ALL, RagonReplicationMode mode = RagonReplicationMode.SERVER_ONLY);
-    public void ReplicateEntityEvent(ushort evntCode, int entityId, IRagonSerializable payload, RagonTarget target = RagonTarget.ALL, RagonReplicationMode mode = RagonReplicationMode.SERVER_ONLY);
-    public void ReplicateEvent(ushort evntCode, IRagonSerializable payload, RagonTarget target = RagonTarget.ALL, RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY);
-    public void ReplicateEvent(ushort evntCode, RagonTarget target = RagonTarget.ALL, RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY);
-    public void ReplicateEntityState(int entityId, IRagonSerializable payload);
+    
+    public void CreateEntity(ushort type, IRagonPayload spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY, RagonAuthority events = RagonAuthority.ALL);
+    public void CreateStaticEntity(ushort type, ushort staticId, IRagonPayload spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY, RagonAuthority events = RagonAuthority.ALL);
+    public void DestroyEntity(int entityId, IRagonPayload destroyPayload);
+    
+    public void ReplicateEntityEvent(IRagonEvent evnt, int entityId, RagonTarget target = RagonTarget.ALL, RagonReplicationMode mode = RagonReplicationMode.SERVER_ONLY);
+    public void ReplicateEvent(IRagonEvent evnt, RagonTarget target = RagonTarget.ALL, RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY);
+    public void ReplicateEntityState(int entityId, IRagonState state);
   }
 }
