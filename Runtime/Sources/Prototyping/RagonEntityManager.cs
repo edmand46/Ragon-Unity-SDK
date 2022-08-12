@@ -13,7 +13,7 @@ namespace Ragon.Client.Prototyping
   }
 
   [DefaultExecutionOrder(-10000)]
-  public class RagonEntityManager : MonoBehaviour, IRagonEntityManager
+  public class RagonEntityManager : MonoBehaviour
   {
     [Range(1.0f, 60.0f, order = 0)] public float ReplicationRate = 1.0f;
 
@@ -21,11 +21,11 @@ namespace Ragon.Client.Prototyping
 
     public void PrefabCallback(Func<PrefabRequest, GameObject> action) => _prefabCallback = action;
 
-    private Dictionary<int, IRagonEntityInternal> _entitiesDict = new Dictionary<int, IRagonEntityInternal>();
-    private Dictionary<int, IRagonEntityInternal> _entitiesStatic = new Dictionary<int, IRagonEntityInternal>();
+    private Dictionary<int, RagonObject> _entitiesDict = new Dictionary<int, RagonObject>();
+    private Dictionary<int, RagonObject> _entitiesStatic = new Dictionary<int, RagonObject>();
     
-    private List<IRagonEntityInternal> _entitiesList = new List<IRagonEntityInternal>();
-    private List<IRagonEntityInternal> _entitiesOwned = new List<IRagonEntityInternal>();
+    private List<RagonObject> _entitiesList = new List<RagonObject>();
+    private List<RagonObject> _entitiesOwned = new List<RagonObject>();
 
     private Func<PrefabRequest, GameObject> _prefabCallback;
 
@@ -42,10 +42,10 @@ namespace Ragon.Client.Prototyping
     public void CollectSceneData()
     {
       var gameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
-      var entities = new List<IRagonEntityInternal>();
+      var entities = new List<RagonObject>();
       foreach (var go in gameObjects)
       {
-        if (go.TryGetComponent<IRagonEntityInternal>(out var ragonEntity))
+        if (go.TryGetComponent<RagonObject>(out var ragonEntity))
         {
           entities.Add(ragonEntity);
         }
@@ -82,8 +82,8 @@ namespace Ragon.Client.Prototyping
       {
         foreach (var entityInternal in _entitiesOwned)
         {
-          if (entityInternal.AutoReplication)
-            entityInternal.ReplicateState();
+          // if (entityInternal.AutoReplication)
+            // entityInternal.ReplicateState();
         }
 
         _replicationTimer = 0.0f;
@@ -115,7 +115,7 @@ namespace Ragon.Client.Prototyping
       var prefab = _prefabCallback?.Invoke(prefabRequest);
       var go = Instantiate(prefab);
 
-      var component = go.GetComponent<IRagonEntityInternal>();
+      var component = go.GetComponent<RagonObject>();
       component.Attach(entityType, creator, entityId, payload);
 
       _entitiesDict.Add(entityId, component);

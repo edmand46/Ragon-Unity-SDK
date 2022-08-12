@@ -11,6 +11,12 @@ namespace Ragon.Client
     Unreliable,
   } 
   
+  public enum RagonConnectionState
+  {
+    DISCONNECTED,
+    CONNECTED,
+  }
+  
   public class RagonConnection
   {
     private Host _host;

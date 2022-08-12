@@ -1,74 +1,69 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Ragon.Common;
 using UnityEngine;
 
 namespace Ragon.Client.Prototyping
 {
-  [DefaultExecutionOrder(-1400)]
-  public class RagonEntity<TState> :
-    MonoBehaviour,
-    IRagonEntity,
-    IRagonEntityInternal
-    where TState : IRagonState, new()
+  [RequireComponent(typeof(RagonObject))]
+  public class RagonEntity : MonoBehaviour
   {
     private delegate void OnEventDelegate(RagonPlayer player, RagonSerializer buffer);
 
-    public bool AutoReplication => _replication;
-    public bool IsAttached => _attached;
-    public bool IsMine => _mine;
-    public int Id => _entityId;
-    public RagonPlayer Owner => _owner;
+    public bool AutoReplication => _object.AutoReplication;
+    public bool IsAttached => _object.IsAttached;
+    public bool IsMine => _object.IsMine;
+    public RagonPlayer Owner => _object.Owner;
+    public RagonObject Object => _object;
+    public int Id => _id;
 
-    [SerializeField, ReadOnly] private int _entityType;
-    [SerializeField, ReadOnly] private int _entityId;
-    [SerializeField, ReadOnly] private bool _mine;
-    [SerializeField, ReadOnly] private RagonPlayer _owner;
-    [SerializeField, ReadOnly] private bool _attached;
-    [SerializeField, ReadOnly] private bool _replication;
-
-    protected RagonRoom Room;
-    protected TState State;
-
-    private byte[] _spawnPayload;
-    private byte[] _destroyPayload;
-
+    private int _id;
+    private RagonObject _object;
+    private List<RagonFloat> _state = new();
     private Dictionary<int, OnEventDelegate> _events = new();
 
-    public void Attach(int entityType, RagonPlayer owner, int entityId, byte[] payloadData)
+    internal RagonPropertyInfo[] Prepare()
     {
-      _entityType = entityType;
-      _entityId = entityId;
-      _owner = owner;
-      _attached = true;
-      _mine = RagonNetwork.Room.LocalPlayer.Id == owner.Id;
-      _spawnPayload = payloadData;
-      _replication = true;
+      var fieldFlags = (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+      var fieldInfos = GetType().GetFields(fieldFlags);
+      var baseProperty = typeof(RagonFloat);
+      var infos = new List<RagonPropertyInfo>();
+      
+      foreach (var field in fieldInfos)
+      {
+        if (baseProperty.IsAssignableFrom(field.FieldType))
+        {
+          var property = (RagonFloat) field.GetValue(this);
+          _state.Add(property);
+          infos.Add(new RagonPropertyInfo()
+          {
+            Size = 4,
+          });
+        }
+      }
 
-      State = new TState();
+      return infos.ToArray();
+    }
+
+    internal void Attach(RagonObject ragonObject)
+    {
+      _object = ragonObject;
 
       OnCreatedEntity();
     }
 
-    public void ChangeOwner(RagonPlayer newOwner)
+    internal void Detach()
     {
-      _owner = newOwner;
-      _mine = RagonNetwork.Room.LocalPlayer.Id == newOwner.Id;
-    }
-
-    public void Detach(byte[] payload)
-    {
-      _destroyPayload = payload;
       OnDestroyedEntity();
-      Destroy(gameObject);
     }
 
-    public void ProcessState(RagonSerializer data)
+    internal void ProcessState(RagonSerializer data)
     {
-      State.Deserialize(data);
+      // State.Deserialize(data);
     }
 
-    public void ProcessEvent(RagonPlayer player, ushort eventCode, RagonSerializer data)
+    internal void ProcessEvent(RagonPlayer player, ushort eventCode, RagonSerializer data)
     {
       if (_events.ContainsKey(eventCode))
         _events[eventCode]?.Invoke(player, data);
@@ -91,47 +86,39 @@ namespace Ragon.Client.Prototyping
       });
     }
 
-    internal T GetPayload<T>(byte[] data) where T : IRagonPayload, new()
-    {
-      if (data == null) return new T();
-      if (data.Length == 0) return new T();
-
-      var serializer = new RagonSerializer();
-      serializer.FromArray(data);
-
-      var payload = new T();
-      payload.Deserialize(serializer);
-
-      return payload;
-    }
-
-    public int Type { get; private set; }
-
-    public T GetSpawnPayload<T>() where T : IRagonPayload, new()
-    {
-      return GetPayload<T>(_spawnPayload);
-    }
-
-    public T GetDestroyPayload<T>() where T : IRagonPayload, new()
-    {
-      return GetPayload<T>(_destroyPayload);
-    }
-
     public void ReplicateEvent<TEvent>(
       TEvent evnt,
       RagonTarget target = RagonTarget.ALL,
       RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
       where TEvent : IRagonEvent, new()
     {
-      RagonNetwork.Room.ReplicateEntityEvent(evnt, _entityId, target, replicationMode);
+      // RagonNetwork.Room.ReplicateEntityEvent(, evnt, target, replicationMode);
     }
 
     public void ReplicateState()
     {
-      RagonNetwork.Room.ReplicateEntityState(_entityId, State);
-    }
+      long bitset = 0;
+      var properties = _state.Count;
 
-    #region VIRTUAL
+      var serializer = new RagonSerializer();
+      serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_STATE);
+      serializer.WriteLong(bitset);
+
+      for (int i = 0; i < properties; i++)
+      {
+        var ragonProperty = _state[i];
+        if (ragonProperty.IsDirty)
+        {
+          bitset <<= i;
+          ragonProperty.Serialize(serializer);
+        }
+      }
+
+      serializer.WriteLong(bitset, 2);
+      var sendData = serializer.ToArray();
+
+      RagonNetwork.Connection.SendData(sendData);
+    }
 
     public virtual void OnCreatedEntity()
     {
@@ -140,7 +127,5 @@ namespace Ragon.Client.Prototyping
     public virtual void OnDestroyedEntity()
     {
     }
-
-    #endregion
   }
 }
