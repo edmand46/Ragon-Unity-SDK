@@ -1,17 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Runtime.CompilerServices;
 using Ragon.Client.Prototyping;
 using Ragon.Common;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Ragon.Client
 {
-  public class RagonRoom : IRagonRoom, IRoomInternal
+  public class RagonRoom : IRoomInternal
   {
     private RagonConnection _connection;
     private List<IRagonNetworkListener> _listeners;
-    private IRagonEntityManager _entityManager;
+    private RagonObjectManager _objectManager;
     private RagonSerializer _serializer = new();
     private List<RagonPlayer> _players = new();
     private Dictionary<string, RagonPlayer> _playersMap = new();
@@ -19,11 +21,13 @@ namespace Ragon.Client
     private string _ownerId;
     private string _localId;
 
-    public RagonRoom(List<IRagonNetworkListener> listeners, IRagonEntityManager manager, RagonConnection connection, string id, string ownerId,
+    private Dictionary<int, GameObject> _unattached = new Dictionary<int, GameObject>();
+
+    public RagonRoom(List<IRagonNetworkListener> listeners, RagonObjectManager manager, RagonConnection connection, string id, string ownerId,
       string localPlayerId,
       int min, int max)
     {
-      _entityManager = manager;
+      _objectManager = manager;
       _listeners = listeners;
       _connection = connection;
       _ownerId = ownerId;
@@ -109,75 +113,71 @@ namespace Ragon.Client
       _connection.SendData(sendData);
     }
 
-    public void CreateStaticEntity(ushort entityType, ushort staticId, IRagonPayload spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY,
+    public void CreateStaticEntity(GameObject prefab, ushort staticId, IRagonPayload spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY,
       RagonAuthority events = RagonAuthority.OWNER_ONLY)
     {
+      var ragonObject = prefab.GetComponent<RagonObject>();
+      if (!ragonObject)
+      {
+        Debug.LogWarning("Ragon Object not found on GO");
+        return;
+      }
+      
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.CREATE_STATIC_ENTITY);
-      _serializer.WriteUShort(entityType);
+      _serializer.WriteUShort((ushort) ragonObject.Type);
       _serializer.WriteUShort(staticId);
-      _serializer.WriteByte((byte) state);
-      _serializer.WriteByte((byte) events);
 
+      ragonObject.RetrieveProperties();
+      ragonObject.WriteStateInfo(_serializer);
+      
       spawnPayload?.Serialize(_serializer);
 
       var sendData = _serializer.ToArray();
       _connection.SendData(sendData);
     }
 
-    public void CreateEntity(ushort entityType, IRagonPayload spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY,
-      RagonAuthority events = RagonAuthority.OWNER_ONLY)
+    public void CreateEntity(GameObject prefab, IRagonPayload spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY, RagonAuthority events = RagonAuthority.OWNER_ONLY)
     {
+      var ragonObject = prefab.GetComponent<RagonObject>();
+      if (!ragonObject)
+      {
+        Debug.LogWarning("Ragon Object not found on GO");
+        return;
+      }
+      
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.CREATE_ENTITY);
-      _serializer.WriteUShort(entityType);
-      _serializer.WriteByte((byte) state);
-      _serializer.WriteByte((byte) events);
-
+      _serializer.WriteUShort((ushort) ragonObject.Type);
+      
+      ragonObject.RetrieveProperties();
+      ragonObject.WriteStateInfo(_serializer);
+      
       spawnPayload?.Serialize(_serializer);
-
+      
       var sendData = _serializer.ToArray();
       _connection.SendData(sendData);
     }
 
-    public void DestroyEntity(int entityId, IRagonPayload destroyPayload)
+    public void DestroyEntity(GameObject gameObject, IRagonPayload destroyPayload)
     {
+      var hasObject = gameObject.TryGetComponent<RagonObject>(out var ragonObject);
+      if (!hasObject)
+      {
+        Debug.LogError($"{gameObject.name} has not Ragon Object component");
+        return;
+      } 
+      
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.DESTROY_ENTITY);
-      _serializer.WriteInt(entityId);
-      
+      _serializer.WriteInt(ragonObject.Id);
+
       destroyPayload?.Serialize(_serializer);
 
       var sendData = _serializer.ToArray();
       _connection.SendData(sendData);
     }
 
-    public void ReplicateEntityEvent(IRagonEvent evnt, int entityId, RagonTarget target = RagonTarget.ALL, RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
-    {
-      var evntCode = RagonNetwork.EventManager.GetEventCode(evnt);
-      if (replicationMode == RagonReplicationMode.LOCAL_ONLY)
-      {
-        _serializer.Clear();
-        _entityManager.OnEntityEvent(LocalPlayer, entityId, evntCode, _serializer);
-        return;
-      }
-
-      if (replicationMode == RagonReplicationMode.LOCAL_AND_SERVER)
-      {
-        _serializer.Clear();
-        _entityManager.OnEntityEvent(LocalPlayer, entityId, evntCode, _serializer);
-      }
-
-      _serializer.Clear();
-      _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
-      _serializer.WriteUShort(evntCode);
-      _serializer.WriteByte(((byte) replicationMode));
-      _serializer.WriteByte((byte) target);
-      _serializer.WriteInt(entityId);
-
-      var sendData = _serializer.ToArray();
-      _connection.SendData(sendData);
-    }
     public void ReplicateEvent(IRagonEvent evnt, RagonTarget target = RagonTarget.ALL, RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
     {
       var evntCode = RagonNetwork.EventManager.GetEventCode(evnt);
@@ -203,17 +203,6 @@ namespace Ragon.Client
           listener.OnEvent(RagonNetwork.Room.LocalPlayer, evntCode, _serializer);
       }
 
-      var sendData = _serializer.ToArray();
-      _connection.SendData(sendData);
-    }
-    public void ReplicateEntityState(int entityId, IRagonState state)
-    {
-      _serializer.Clear();
-      _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_STATE);
-      _serializer.WriteInt(entityId);
-      
-      state.Serialize(_serializer);
-      
       var sendData = _serializer.ToArray();
       _connection.SendData(sendData);
     }
