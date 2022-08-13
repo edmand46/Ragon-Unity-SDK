@@ -20,32 +20,8 @@ namespace Ragon.Client.Prototyping
 
     private int _id;
     private RagonObject _object;
-    private List<RagonFloat> _state = new();
     private Dictionary<int, OnEventDelegate> _events = new();
-
-    internal RagonPropertyInfo[] Prepare()
-    {
-      var fieldFlags = (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-      var fieldInfos = GetType().GetFields(fieldFlags);
-      var baseProperty = typeof(RagonFloat);
-      var infos = new List<RagonPropertyInfo>();
-      
-      foreach (var field in fieldInfos)
-      {
-        if (baseProperty.IsAssignableFrom(field.FieldType))
-        {
-          var property = (RagonFloat) field.GetValue(this);
-          _state.Add(property);
-          infos.Add(new RagonPropertyInfo()
-          {
-            Size = 4,
-          });
-        }
-      }
-
-      return infos.ToArray();
-    }
-
+    
     internal void Attach(RagonObject ragonObject)
     {
       _object = ragonObject;
@@ -56,11 +32,6 @@ namespace Ragon.Client.Prototyping
     internal void Detach()
     {
       OnDestroyedEntity();
-    }
-
-    internal void ProcessState(RagonSerializer data)
-    {
-      // State.Deserialize(data);
     }
 
     internal void ProcessEvent(RagonPlayer player, ushort eventCode, RagonSerializer data)
@@ -92,32 +63,7 @@ namespace Ragon.Client.Prototyping
       RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
       where TEvent : IRagonEvent, new()
     {
-      // RagonNetwork.Room.ReplicateEntityEvent(, evnt, target, replicationMode);
-    }
-
-    public void ReplicateState()
-    {
-      long bitset = 0;
-      var properties = _state.Count;
-
-      var serializer = new RagonSerializer();
-      serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_STATE);
-      serializer.WriteLong(bitset);
-
-      for (int i = 0; i < properties; i++)
-      {
-        var ragonProperty = _state[i];
-        if (ragonProperty.IsDirty)
-        {
-          bitset <<= i;
-          ragonProperty.Serialize(serializer);
-        }
-      }
-
-      serializer.WriteLong(bitset, 2);
-      var sendData = serializer.ToArray();
-
-      RagonNetwork.Connection.SendData(sendData);
+      
     }
 
     public virtual void OnCreatedEntity()

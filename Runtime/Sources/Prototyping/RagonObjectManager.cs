@@ -13,11 +13,11 @@ namespace Ragon.Client.Prototyping
   }
 
   [DefaultExecutionOrder(-10000)]
-  public class RagonEntityManager : MonoBehaviour
+  public class RagonObjectManager : MonoBehaviour
   {
     [Range(1.0f, 60.0f, order = 0)] public float ReplicationRate = 1.0f;
 
-    public static RagonEntityManager Instance { get; private set; }
+    public static RagonObjectManager Instance { get; private set; }
 
     public void PrefabCallback(Func<PrefabRequest, GameObject> action) => _prefabCallback = action;
 
@@ -29,6 +29,7 @@ namespace Ragon.Client.Prototyping
 
     private Func<PrefabRequest, GameObject> _prefabCallback;
 
+    private RagonSerializer _serializer = new RagonSerializer();
     private float _replicationTimer = 0.0f;
     private float _replicationRate = 0.0f;
 
@@ -82,11 +83,11 @@ namespace Ragon.Client.Prototyping
       {
         foreach (var entityInternal in _entitiesOwned)
         {
-          // if (entityInternal.AutoReplication)
-            // entityInternal.ReplicateState();
+          if (entityInternal.AutoReplication)
+            entityInternal.ProcessReplication(_serializer);
         }
 
-        _replicationTimer = 0.0f;
+        _replicationTimer = 0.0f; 
       }
     }
 
@@ -116,6 +117,7 @@ namespace Ragon.Client.Prototyping
       var go = Instantiate(prefab);
 
       var component = go.GetComponent<RagonObject>();
+      component.RetrieveProperties();
       component.Attach(entityType, creator, entityId, payload);
 
       _entitiesDict.Add(entityId, component);

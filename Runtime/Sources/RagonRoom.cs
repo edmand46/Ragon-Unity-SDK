@@ -13,7 +13,7 @@ namespace Ragon.Client
   {
     private RagonConnection _connection;
     private List<IRagonNetworkListener> _listeners;
-    private RagonEntityManager _entityManager;
+    private RagonObjectManager _objectManager;
     private RagonSerializer _serializer = new();
     private List<RagonPlayer> _players = new();
     private Dictionary<string, RagonPlayer> _playersMap = new();
@@ -23,11 +23,11 @@ namespace Ragon.Client
 
     private Dictionary<int, GameObject> _unattached = new Dictionary<int, GameObject>();
 
-    public RagonRoom(List<IRagonNetworkListener> listeners, RagonEntityManager manager, RagonConnection connection, string id, string ownerId,
+    public RagonRoom(List<IRagonNetworkListener> listeners, RagonObjectManager manager, RagonConnection connection, string id, string ownerId,
       string localPlayerId,
       int min, int max)
     {
-      _entityManager = manager;
+      _objectManager = manager;
       _listeners = listeners;
       _connection = connection;
       _ownerId = ownerId;
@@ -131,22 +131,19 @@ namespace Ragon.Client
 
     public void CreateEntity(GameObject prefab, IRagonPayload spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY, RagonAuthority events = RagonAuthority.OWNER_ONLY)
     {
-      var ragonGroup = prefab.GetComponent<RagonObject>();
-      if (!ragonGroup)
+      var ragonObject = prefab.GetComponent<RagonObject>();
+      if (!ragonObject)
       {
         Debug.LogWarning("Ragon Object not found on GO");
         return;
       }
-
-      var infos = ragonGroup.Prepare();
-      var count = (ushort)infos.Count;
       
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.CREATE_ENTITY);
-      _serializer.WriteUShort(25);
-      _serializer.WriteUShort(count);
-      foreach (var info in infos)
-        _serializer.WriteUShort((ushort) info.Size);
+      _serializer.WriteUShort((ushort) ragonObject.Type);
+      
+      ragonObject.RetrieveProperties();
+      ragonObject.WriteStateInfo(_serializer);
       
       var sendData = _serializer.ToArray();
       _connection.SendData(sendData);
@@ -154,10 +151,16 @@ namespace Ragon.Client
 
     public void DestroyEntity(GameObject gameObject, IRagonPayload destroyPayload)
     {
+      var hasObject = gameObject.TryGetComponent<RagonObject>(out var ragonObject);
+      if (!hasObject)
+      {
+        Debug.LogError($"{gameObject.name} has not Ragon Object component");
+        return;
+      } 
       
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.DESTROY_ENTITY);
-      // _serializer.WriteInt(entityId);
+      _serializer.WriteInt(ragonObject.Id);
 
       destroyPayload?.Serialize(_serializer);
 

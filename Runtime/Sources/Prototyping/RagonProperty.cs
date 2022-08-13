@@ -3,42 +3,45 @@ using Ragon.Common;
 
 namespace Ragon.Client.Prototyping
 {
-  public class RagonFloat
+  public class RagonProperty
   {
     public Action OnChanged;
-    public bool IsDirty => _dirty;
-    
-    public float Value
-    {
-      get => _value; 
-      set
-      {
-        _value = value;
-        _dirty = true;
-      }
-    }
+    public bool IsAttached => _attached;
+    public int Id => _id;
+    public int Size => _size;
 
-    private float _value;
-    private bool _dirty;
+    private RagonObject _entity;
+    private bool _attached;
+    private int _id;
+    private int _size;
 
-    public RagonFloat(float initialValue)
+    public RagonProperty(int size)
     {
-      _value = initialValue;
-      _dirty = true;
+      _size = size;
     }
     
-    public void Serialize(RagonSerializer serializer)
+    public void Changed()
     {
-      serializer.WriteFloat(_value);
-      _dirty = false;
+      if (!_attached) return;
+      _entity.TrackChangedProperty(this);
     }
 
-    public void Deserialize(RagonSerializer serializer)
+    public void Attach(RagonObject entity, int propertyId)
     {
-      _value = serializer.ReadFloat();
-      _dirty = false;
+      _attached = true;
+      _entity = entity;
+      _id = propertyId;
+      Changed();
+    }
+
+    public virtual void Serialize(RagonSerializer serializer)
+    {
       
-      OnChanged?.Invoke();
+    }
+    
+    public virtual void Deserialize(RagonSerializer serializer)
+    {
+      
     }
   }
 }
