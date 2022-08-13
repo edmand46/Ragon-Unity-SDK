@@ -61,7 +61,7 @@ namespace Ragon.Client.Prototyping
         _entitiesStatic.Add(staticId, entityInternal);
         
         if (RagonNetwork.Room.LocalPlayer.IsRoomOwner)
-          RagonNetwork.Room.CreateStaticEntity(0, staticId, null);
+          RagonNetwork.Room.CreateStaticEntity(entityInternal.gameObject, staticId, null);
       }
     }
 

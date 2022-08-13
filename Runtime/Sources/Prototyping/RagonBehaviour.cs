@@ -12,20 +12,21 @@ namespace Ragon.Client.Prototyping
     private delegate void OnEventDelegate(RagonPlayer player, RagonSerializer buffer);
 
     public bool AutoReplication => _object.AutoReplication;
-    public bool IsAttached => _object.IsAttached;
+    public bool IsAttached => _attached;
     public bool IsMine => _object.IsMine;
     public RagonPlayer Owner => _object.Owner;
     public RagonObject Object => _object;
     public int Id => _id;
 
     private int _id;
+    private bool _attached;
     private RagonObject _object;
     private Dictionary<int, OnEventDelegate> _events = new();
     
     internal void Attach(RagonObject ragonObject)
     {
       _object = ragonObject;
-
+      _attached = true;
       OnCreatedEntity();
     }
 

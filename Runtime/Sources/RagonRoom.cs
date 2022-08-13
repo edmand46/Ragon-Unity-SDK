@@ -113,16 +113,24 @@ namespace Ragon.Client
       _connection.SendData(sendData);
     }
 
-    public void CreateStaticEntity(ushort entityType, ushort staticId, IRagonPayload spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY,
+    public void CreateStaticEntity(GameObject prefab, ushort staticId, IRagonPayload spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY,
       RagonAuthority events = RagonAuthority.OWNER_ONLY)
     {
+      var ragonObject = prefab.GetComponent<RagonObject>();
+      if (!ragonObject)
+      {
+        Debug.LogWarning("Ragon Object not found on GO");
+        return;
+      }
+      
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.CREATE_STATIC_ENTITY);
-      _serializer.WriteUShort(entityType);
+      _serializer.WriteUShort((ushort) ragonObject.Type);
       _serializer.WriteUShort(staticId);
-      _serializer.WriteByte((byte) state);
-      _serializer.WriteByte((byte) events);
 
+      ragonObject.RetrieveProperties();
+      ragonObject.WriteStateInfo(_serializer);
+      
       spawnPayload?.Serialize(_serializer);
 
       var sendData = _serializer.ToArray();
@@ -144,6 +152,8 @@ namespace Ragon.Client
       
       ragonObject.RetrieveProperties();
       ragonObject.WriteStateInfo(_serializer);
+      
+      spawnPayload?.Serialize(_serializer);
       
       var sendData = _serializer.ToArray();
       _connection.SendData(sendData);
