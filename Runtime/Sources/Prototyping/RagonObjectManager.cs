@@ -54,7 +54,7 @@ namespace Ragon.Client.Prototyping
       
       Debug.Log("Found static entities: " + objs.Count);
       
-      ushort staticId = 0;
+      ushort staticId = 1;
       foreach (var staticObj in objs)
       {
         staticId += 1;
@@ -95,6 +95,7 @@ namespace Ragon.Client.Prototyping
     {
       if (_objectsStatic.Remove(staticId, out var ragonObject))
       {
+        ragonObject.RetrieveProperties();
         ragonObject.Attach(entityType, creator, objectId, payload);
 
         _objectsDict.Add(objectId, ragonObject);

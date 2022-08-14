@@ -367,11 +367,11 @@ namespace Ragon.Client
         }
         case RagonOperation.REPLICATE_EVENT:
         {
-          var peerId = _serializer.ReadUShort();
+          var executorPeerId = _serializer.ReadUShort();
           var executionMode = (RagonReplicationMode) _serializer.ReadByte();
           var eventCode = _serializer.ReadUShort();
   
-          if (_room.Connections.TryGetValue(peerId, out var player)
+          if (_room.Connections.TryGetValue(executorPeerId, out var player)
               && executionMode == RagonReplicationMode.LOCAL_AND_SERVER
               && !player.IsMe)
           {
@@ -436,7 +436,7 @@ namespace Ragon.Client
             var entityType = _serializer.ReadUShort();
             var entityId = _serializer.ReadUShort();
             var staticId = _serializer.ReadUShort();
-            var ownerPeerId = (uint) _serializer.ReadUShort();
+            var ownerPeerId = _serializer.ReadUShort();
             var payloadLenght = _serializer.ReadUShort();
             var payloadData = _serializer.ReadData(payloadLenght);
             var stateAuthority = RagonAuthority.OWNER_ONLY;

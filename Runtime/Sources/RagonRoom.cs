@@ -72,6 +72,8 @@ namespace Ragon.Client
       _players.Add(player);
       _playersMap.Add(player.Id, player);
       _connections.Add(player.PeerId, player);
+      
+      Debug.Log($"Added player {playerName} Id: {peerId}");
     }
 
     public void RemovePlayer(string playerId)
