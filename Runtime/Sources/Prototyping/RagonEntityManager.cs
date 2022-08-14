@@ -16,11 +16,10 @@ namespace Ragon.Client.Prototyping
   public class RagonEntityManager : MonoBehaviour
   {
     [Range(1.0f, 60.0f, order = 0)] public float ReplicationRate = 1.0f;
-
+    [SerializeField] private RagonPrefabRegistry _prefabRegistry;
+    
     public static RagonEntityManager Instance { get; private set; }
-
-    public void PrefabCallback(Func<PrefabRequest, GameObject> action) => _prefabCallback = action;
-
+    
     private Dictionary<int, RagonEntity> _entitiesDict = new Dictionary<int, RagonEntity>();
     private Dictionary<int, RagonEntity> _entitiesStatic = new Dictionary<int, RagonEntity>();
     
@@ -113,14 +112,8 @@ namespace Ragon.Client.Prototyping
 
     public void OnEntityCreated(int entityId, ushort entityType, RagonAuthority state, RagonAuthority evnt, RagonPlayer creator, byte[] payload)
     {
-      var prefabRequest = new PrefabRequest()
-      {
-        Type = entityType,
-        IsOwned = creator.IsMe,
-      };
-
-      var prefab = _prefabCallback?.Invoke(prefabRequest);
-      var go = Instantiate(prefab);
+      var prefab = _prefabRegistry.Prefabs[entityType];
+      var go = Instantiate(prefab); 
 
       var component = go.GetComponent<RagonEntity>();
       component.RetrieveProperties();

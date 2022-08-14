@@ -19,7 +19,7 @@ namespace Ragon.Client.Prototyping
     public int Type => _entityType;
     public RagonPlayer Owner => _owner;
 
-    [SerializeField] private int _entityType;
+    [SerializeField, ReadOnly] private int _entityType;
     [SerializeField, ReadOnly] private int _entityId;
     [SerializeField, ReadOnly] private bool _mine;
     [SerializeField, ReadOnly] private RagonPlayer _owner;
@@ -68,6 +68,8 @@ namespace Ragon.Client.Prototyping
       foreach (var property in _propertiesList)
         serializer.WriteUShort((ushort) property.Size);
     }
+
+    internal void SetType(ushort t) => _entityType = t;
 
     internal void TrackChangedProperty(RagonProperty property)
     {
