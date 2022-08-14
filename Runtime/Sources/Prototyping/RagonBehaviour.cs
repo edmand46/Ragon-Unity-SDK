@@ -65,7 +65,7 @@ namespace Ragon.Client.Prototyping
       RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
       where TEvent : IRagonEvent, new()
     {
-      
+      _object.ReplicateEvent(evnt, target, replicationMode);
     }
 
     public virtual void OnCreatedEntity()

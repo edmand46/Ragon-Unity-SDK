@@ -386,7 +386,7 @@ namespace Ragon.Client
           var eventCode = _serializer.ReadUShort();
           var peerId = _serializer.ReadUShort();
           var executionMode = (RagonReplicationMode) _serializer.ReadByte();
-          var entityId = _serializer.ReadInt();
+          var entityId = _serializer.ReadUShort();
           
           if (!_room.Connections.TryGetValue(peerId, out var player))
             break;

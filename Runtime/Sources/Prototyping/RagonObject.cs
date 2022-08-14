@@ -29,8 +29,8 @@ namespace Ragon.Client.Prototyping
     [SerializeField, ReadOnly] private bool _replication;
 
     protected RagonRoom Room;
-
-    private RagonEntity[] _entities;
+    private RagonSerializer _serializer;
+    private RagonEntity[] _behaviours;
     private List<RagonProperty> _properties;
     private bool _propertiesChanged;
     private byte[] _spawnPayload;
@@ -41,9 +41,10 @@ namespace Ragon.Client.Prototyping
     internal void RetrieveProperties()
     {
       _properties = new List<RagonProperty>();
-      _entities = GetComponents<RagonEntity>();
-
-      foreach (var state in _entities)
+      _behaviours = GetComponents<RagonEntity>();
+      _serializer = new RagonSerializer();
+      
+      foreach (var state in _behaviours)
       {
         var fieldFlags = (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
         var fieldInfos = state.GetType().GetFields(fieldFlags);
@@ -55,7 +56,6 @@ namespace Ragon.Client.Prototyping
           {
             var property = (RagonProperty) field.GetValue(state);
             _properties.Add(property);
-            // Debug.Log($"Entity: {state.name} - Field: {field.Name} - ID: {_properties.Count}");
           }
         }
       }
@@ -83,10 +83,8 @@ namespace Ragon.Client.Prototyping
       _spawnPayload = payloadData;
       _replication = true;
 
-      foreach (var state in _entities)
-      {
+      foreach (var state in _behaviours)
         state.Attach(this);
-      }
 
       var propertyIdGenerator = 0;
       foreach (var property in _properties)
@@ -106,27 +104,13 @@ namespace Ragon.Client.Prototyping
     {
       _destroyPayload = payload;
 
-      foreach (var state in _entities)
-      {
+      foreach (var state in _behaviours)
         state.Detach();
-      }
 
       Destroy(gameObject);
     }
 
-    internal void ProcessState(RagonSerializer data)
-    {
-      var maskChanges = data.ReadLong();
-      for (int i = 0; i < _properties.Count; i++)
-      {
-        if (((maskChanges >> i) & 1) == 1)
-        {
-          _properties[i].Deserialize(data);
-        }
-      }
-    }
-
-    internal void ProcessReplication(RagonSerializer serializer)
+    internal void ReplicateState(RagonSerializer serializer)
     {
       if (!_propertiesChanged) return;
 
@@ -156,10 +140,16 @@ namespace Ragon.Client.Prototyping
       RagonNetwork.Connection.SendData(sendData);
     }
 
-    internal void ProcessEvent(RagonPlayer player, ushort eventCode, RagonSerializer data)
+    internal void ProcessState(RagonSerializer data)
     {
-      if (_events.ContainsKey(eventCode))
-        _events[eventCode]?.Invoke(player, data);
+      var maskChanges = data.ReadLong();
+      for (int i = 0; i < _properties.Count; i++)
+      {
+        if (((maskChanges >> i) & 1) == 1)
+        {
+          _properties[i].Deserialize(data);
+        }
+      }
     }
 
     internal T GetPayload<T>(byte[] data) where T : IRagonPayload, new()
@@ -184,6 +174,28 @@ namespace Ragon.Client.Prototyping
     public T GetDestroyPayload<T>() where T : IRagonPayload, new()
     {
       return GetPayload<T>(_destroyPayload);
+    }
+
+    public void ReplicateEvent<TEvent>(TEvent evnt, RagonTarget target, RagonReplicationMode replicationMode) where TEvent : IRagonEvent, new()
+    {
+      var evntId = RagonNetwork.EventManager.GetEventCode(evnt);
+      _serializer.Clear();
+      _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
+      _serializer.WriteUShort(evntId);
+      _serializer.WriteByte((byte) replicationMode);
+      _serializer.WriteByte((byte) target);
+      _serializer.WriteUShort((ushort) Id);
+      
+      evnt.Serialize(_serializer);
+
+      var sendData = _serializer.ToArray();
+      RagonNetwork.Connection.SendData(sendData);
+    }
+    
+    internal void ProcessEvent(RagonPlayer player, ushort eventCode, RagonSerializer data)
+    {
+      foreach (var behaviour in _behaviours)
+        behaviour.ProcessEvent(player, eventCode, data);
     }
   }
 }

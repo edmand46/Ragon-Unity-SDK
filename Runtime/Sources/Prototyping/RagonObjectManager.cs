@@ -84,7 +84,7 @@ namespace Ragon.Client.Prototyping
         foreach (var ownedObject in _objectsOwned)
         {
           if (ownedObject.AutoReplication)
-            ownedObject.ProcessReplication(_serializer);
+            ownedObject.ReplicateState(_serializer);
         }
 
         _replicationTimer = 0.0f; 
