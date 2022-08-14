@@ -10,7 +10,7 @@ namespace Ragon.Client.Prototyping
     public int Id => _id;
     public int Size => _size;
 
-    private RagonObject _entity;
+    private RagonEntity _entity;
     private bool _dirty;
     private int _id;
     private int _size;
@@ -33,7 +33,7 @@ namespace Ragon.Client.Prototyping
       _dirty = false;
     }
 
-    public void Attach(RagonObject obj, int propertyId)
+    public void Attach(RagonEntity obj, int propertyId)
     {
       _entity = obj;
       _id = propertyId;

@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Runtime.CompilerServices;
 using Ragon.Client.Prototyping;
 using Ragon.Common;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace Ragon.Client
 {
@@ -13,7 +11,7 @@ namespace Ragon.Client
   {
     private RagonConnection _connection;
     private List<IRagonNetworkListener> _listeners;
-    private RagonObjectManager _objectManager;
+    private RagonEntityManager _entityManager;
     private RagonSerializer _serializer = new();
     private List<RagonPlayer> _players = new();
     private Dictionary<string, RagonPlayer> _playersMap = new();
@@ -23,11 +21,11 @@ namespace Ragon.Client
 
     private Dictionary<int, GameObject> _unattached = new Dictionary<int, GameObject>();
 
-    public RagonRoom(List<IRagonNetworkListener> listeners, RagonObjectManager manager, RagonConnection connection, string id, string ownerId,
+    public RagonRoom(List<IRagonNetworkListener> listeners, RagonEntityManager manager, RagonConnection connection, string id, string ownerId,
       string localPlayerId,
       int min, int max)
     {
-      _objectManager = manager;
+      _entityManager = manager;
       _listeners = listeners;
       _connection = connection;
       _ownerId = ownerId;
@@ -72,8 +70,6 @@ namespace Ragon.Client
       _players.Add(player);
       _playersMap.Add(player.Id, player);
       _connections.Add(player.PeerId, player);
-      
-      Debug.Log($"Added player {playerName} Id: {peerId}");
     }
 
     public void RemovePlayer(string playerId)
@@ -118,7 +114,7 @@ namespace Ragon.Client
     public void CreateStaticEntity(GameObject prefab, ushort staticId, IRagonPayload spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY,
       RagonAuthority events = RagonAuthority.OWNER_ONLY)
     {
-      var ragonObject = prefab.GetComponent<RagonObject>();
+      var ragonObject = prefab.GetComponent<RagonEntity>();
       if (!ragonObject)
       {
         Debug.LogWarning("Ragon Object not found on GO");
@@ -141,8 +137,8 @@ namespace Ragon.Client
 
     public void CreateEntity(GameObject prefab, IRagonPayload spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY, RagonAuthority events = RagonAuthority.OWNER_ONLY)
     {
-      var ragonObject = prefab.GetComponent<RagonObject>();
-      if (!ragonObject)
+      var ragonEntity = prefab.GetComponent<RagonEntity>();
+      if (!ragonEntity)
       {
         Debug.LogWarning("Ragon Object not found on GO");
         return;
@@ -150,10 +146,10 @@ namespace Ragon.Client
       
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.CREATE_ENTITY);
-      _serializer.WriteUShort((ushort) ragonObject.Type);
+      _serializer.WriteUShort((ushort) ragonEntity.Type);
       
-      ragonObject.RetrieveProperties();
-      ragonObject.WriteStateInfo(_serializer);
+      ragonEntity.RetrieveProperties();
+      ragonEntity.WriteStateInfo(_serializer);
       
       spawnPayload?.Serialize(_serializer);
       
@@ -163,10 +159,10 @@ namespace Ragon.Client
 
     public void DestroyEntity(GameObject gameObject, IRagonPayload destroyPayload)
     {
-      var hasObject = gameObject.TryGetComponent<RagonObject>(out var ragonObject);
-      if (!hasObject)
+      var hasEntity = gameObject.TryGetComponent<RagonEntity>(out var ragonObject);
+      if (!hasEntity)
       {
-        Debug.LogError($"{gameObject.name} has not Ragon Object component");
+        Debug.LogError($"{gameObject.name} has not Ragon Entity component");
         return;
       } 
       

@@ -6,28 +6,22 @@ using UnityEngine;
 
 namespace Ragon.Client.Prototyping
 {
-  [RequireComponent(typeof(RagonObject))]
-  public class RagonEntity : MonoBehaviour
+  [RequireComponent(typeof(RagonEntity))]
+  public class RagonBehaviour : MonoBehaviour
   {
     private delegate void OnEventDelegate(RagonPlayer player, RagonSerializer buffer);
-
-    public bool AutoReplication => _object.AutoReplication;
-    public bool IsAttached => _attached;
-    public bool IsMine => _object.IsMine;
-    public RagonPlayer Owner => _object.Owner;
-    public RagonObject Object => _object;
-    public int Id => _id;
+    
+    public RagonPlayer Owner => _entity.Owner;
+    public RagonEntity Entity => _entity;
 
     private int _id;
-    private bool _attached;
-    private RagonObject _object;
+    private RagonEntity _entity;
     private Dictionary<int, OnEventDelegate> _events = new();
     
-    internal void Attach(RagonObject ragonObject)
+    internal void Attach(RagonEntity ragonEntity)
     {
-      _object = ragonObject;
-      _attached = true;
-      _id = ragonObject.Id;
+      _entity = ragonEntity;
+      
       OnCreatedEntity();
     }
 
@@ -65,7 +59,7 @@ namespace Ragon.Client.Prototyping
       RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
       where TEvent : IRagonEvent, new()
     {
-      _object.ReplicateEvent(evnt, target, replicationMode);
+      _entity.ReplicateEvent(evnt, target, replicationMode);
     }
 
     public virtual void OnCreatedEntity()

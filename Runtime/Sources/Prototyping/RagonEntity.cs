@@ -7,13 +7,11 @@ using UnityEngine;
 
 namespace Ragon.Client.Prototyping
 {
-  [ExecuteInEditMode]
-  public class RagonObject : MonoBehaviour
+  [DefaultExecutionOrder(-9000)]
+  public class RagonEntity : MonoBehaviour
   {
     private delegate void OnEventDelegate(RagonPlayer player, RagonSerializer buffer);
-
-    public static string GenerateIdentifier() => Guid.NewGuid().ToString().Replace("-", "");
-
+    
     public bool AutoReplication => _replication;
     public bool IsAttached => _attached;
     public bool IsMine => _mine;
@@ -27,11 +25,12 @@ namespace Ragon.Client.Prototyping
     [SerializeField, ReadOnly] private RagonPlayer _owner;
     [SerializeField, ReadOnly] private bool _attached;
     [SerializeField, ReadOnly] private bool _replication;
+    [SerializeField, ReadOnly] private int _properties; 
 
     protected RagonRoom Room;
     private RagonSerializer _serializer;
-    private RagonEntity[] _behaviours;
-    private List<RagonProperty> _properties;
+    private RagonBehaviour[] _behaviours;
+    private List<RagonProperty> _propertiesList;
     private bool _propertiesChanged;
     private byte[] _spawnPayload;
     private byte[] _destroyPayload;
@@ -40,8 +39,8 @@ namespace Ragon.Client.Prototyping
 
     internal void RetrieveProperties()
     {
-      _properties = new List<RagonProperty>();
-      _behaviours = GetComponents<RagonEntity>();
+      _propertiesList = new List<RagonProperty>();
+      _behaviours = GetComponents<RagonBehaviour>();
       _serializer = new RagonSerializer();
       
       foreach (var state in _behaviours)
@@ -52,19 +51,21 @@ namespace Ragon.Client.Prototyping
 
         foreach (var field in fieldInfos)
         {
-          if (baseProperty.IsAssignableFrom(field.FieldType))
+          if (baseProperty.IsAssignableFrom(field.FieldType) && _propertiesList.Count < 64)
           {
             var property = (RagonProperty) field.GetValue(state);
-            _properties.Add(property);
+            _propertiesList.Add(property);
           }
         }
       }
+
+      _properties = _propertiesList.Count;
     }
 
     internal void WriteStateInfo(RagonSerializer serializer)
     {
-      serializer.WriteUShort((ushort) _properties.Count);
-      foreach (var property in _properties)
+      serializer.WriteUShort((ushort) _propertiesList.Count);
+      foreach (var property in _propertiesList)
         serializer.WriteUShort((ushort) property.Size);
     }
 
@@ -83,11 +84,11 @@ namespace Ragon.Client.Prototyping
       _spawnPayload = payloadData;
       _replication = true;
 
-      foreach (var state in _behaviours)
-        state.Attach(this);
+      foreach (var behaviour in _behaviours)
+        behaviour.Attach(this);
 
       var propertyIdGenerator = 0;
-      foreach (var property in _properties)
+      foreach (var property in _propertiesList)
       {
         property.Attach(this, propertyIdGenerator);
         propertyIdGenerator++;
@@ -122,7 +123,7 @@ namespace Ragon.Client.Prototyping
       var offset = serializer.Lenght;
       serializer.WriteLong(maskChanges);
 
-      foreach (var prop in _properties)
+      foreach (var prop in _propertiesList)
       {
         if (prop.IsDirty)
         {
@@ -143,11 +144,11 @@ namespace Ragon.Client.Prototyping
     internal void ProcessState(RagonSerializer data)
     {
       var maskChanges = data.ReadLong();
-      for (int i = 0; i < _properties.Count; i++)
+      for (int i = 0; i < _propertiesList.Count; i++)
       {
         if (((maskChanges >> i) & 1) == 1)
         {
-          _properties[i].Deserialize(data);
+          _propertiesList[i].Deserialize(data);
         }
       }
     }
