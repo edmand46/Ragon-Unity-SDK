@@ -35,7 +35,8 @@ namespace Ragon.Client.Prototyping
     private void Awake()
     {
       Instance = this;
-
+      
+      _prefabRegistry.Cache();
       _replicationTimer = 1000.0f / ReplicationRate;
     }
 

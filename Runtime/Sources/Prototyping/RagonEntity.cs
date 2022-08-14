@@ -18,7 +18,7 @@ namespace Ragon.Client.Prototyping
     public int Id => _entityId;
     public int Type => _entityType;
     public RagonPlayer Owner => _owner;
-
+    
     [SerializeField, ReadOnly] private int _entityType;
     [SerializeField, ReadOnly] private int _entityId;
     [SerializeField, ReadOnly] private bool _mine;
@@ -34,8 +34,6 @@ namespace Ragon.Client.Prototyping
     private bool _propertiesChanged;
     private byte[] _spawnPayload;
     private byte[] _destroyPayload;
-
-    private Dictionary<int, OnEventDelegate> _events = new();
 
     internal void RetrieveProperties()
     {

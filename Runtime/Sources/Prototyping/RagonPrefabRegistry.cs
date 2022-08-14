@@ -8,7 +8,7 @@ namespace Ragon.Client.Prototyping
   [Serializable]
   public struct EntityPrefab
   {
-    public int EntityType;
+    public ushort EntityType;
     public GameObject Prefab;
   }
 
@@ -21,13 +21,21 @@ namespace Ragon.Client.Prototyping
 
     public IReadOnlyDictionary<ushort, GameObject> Prefabs => _prefabsMap;
     private Dictionary<ushort, GameObject> _prefabsMap = new Dictionary<ushort, GameObject>();
+
+    public void Cache()
+    {
+      foreach (var entityPrefab in _prefabs)
+      {
+        _prefabsMap.Add(entityPrefab.EntityType, entityPrefab.Prefab);
+      }
+    }
     
+#if UNITY_EDITOR
     private void OnValidate()
     {
       _prefabs.Clear();
-
       var guids = AssetDatabase.FindAssets("t:Prefab");
-      var sequencer = 0;
+      ushort sequencer = 0;
 
       foreach (var guid in guids)
       {
@@ -46,10 +54,11 @@ namespace Ragon.Client.Prototyping
           {
             sequencer++;
             _prefabs.Add(new EntityPrefab() {Prefab = go, EntityType = sequencer});
-            comp.SetType((ushort) sequencer);
+            comp.SetType(sequencer);
           }
         }
       }
     }
+#endif
   }
 }

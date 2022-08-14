@@ -13,14 +13,16 @@ namespace Ragon.Client.Prototyping
     
     public RagonPlayer Owner => _entity.Owner;
     public RagonEntity Entity => _entity;
+    public bool IsMine => _mine;
 
-    private int _id;
+    private bool _mine;
     private RagonEntity _entity;
     private Dictionary<int, OnEventDelegate> _events = new();
     
     internal void Attach(RagonEntity ragonEntity)
     {
       _entity = ragonEntity;
+      _mine = ragonEntity.IsMine;
       
       OnCreatedEntity();
     }
