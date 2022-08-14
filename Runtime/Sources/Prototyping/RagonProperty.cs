@@ -6,12 +6,12 @@ namespace Ragon.Client.Prototyping
   public class RagonProperty
   {
     public Action OnChanged;
-    public bool IsAttached => _attached;
+    public bool IsDirty => _dirty;
     public int Id => _id;
     public int Size => _size;
 
     private RagonObject _entity;
-    private bool _attached;
+    private bool _dirty;
     private int _id;
     private int _size;
 
@@ -19,29 +19,34 @@ namespace Ragon.Client.Prototyping
     {
       _size = size;
     }
-    
-    public void Changed()
+
+    public void MarkAsChanged()
     {
-      if (!_attached) return;
-      _entity.TrackChangedProperty(this);
+      _dirty = true;
+      
+      if (_entity)
+        _entity.TrackChangedProperty(this);
     }
 
-    public void Attach(RagonObject entity, int propertyId)
+    public void Clear()
     {
-      _attached = true;
-      _entity = entity;
+      _dirty = false;
+    }
+
+    public void Attach(RagonObject obj, int propertyId)
+    {
+      _entity = obj;
       _id = propertyId;
-      Changed();
+      
+      MarkAsChanged();
     }
 
     public virtual void Serialize(RagonSerializer serializer)
     {
-      
     }
-    
+
     public virtual void Deserialize(RagonSerializer serializer)
     {
-      
     }
   }
 }

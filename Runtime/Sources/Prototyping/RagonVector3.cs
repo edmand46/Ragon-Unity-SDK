@@ -15,7 +15,7 @@ namespace Ragon.Client.Prototyping
       set
       {
         _value = value;
-        Changed();
+        MarkAsChanged();
       }
     }
     
@@ -33,8 +33,6 @@ namespace Ragon.Client.Prototyping
 
     public override void Deserialize(RagonSerializer serializer)
     {
-      if (!IsAttached) return;
-      
       _value.x = serializer.ReadFloat();
       _value.y = serializer.ReadFloat();
       _value.z = serializer.ReadFloat();

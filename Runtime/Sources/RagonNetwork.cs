@@ -329,11 +329,11 @@ namespace Ragon.Client
           var eventAuthority = RagonAuthority.OWNER_ONLY;
           var payload = Array.Empty<byte>();
           
-          // if (_serializer.Size > 0)
-          // {
-          //   var entityPayload = _serializer.ReadData(_serializer.Size);
-          //   payload = entityPayload.ToArray();
-          // }
+          if (_serializer.Size > 0)
+          {
+            var entityPayload = _serializer.ReadData(_serializer.Size);
+            payload = entityPayload.ToArray();
+          }
 
           if (_room.Connections.TryGetValue(ownerId, out var owner))
             _objectManager.OnEntityCreated(entityId, entityType, stateAuthority, eventAuthority, owner, payload);

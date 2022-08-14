@@ -27,6 +27,7 @@ namespace Ragon.Client.Prototyping
     {
       _object = ragonObject;
       _attached = true;
+      _id = ragonObject.Id;
       OnCreatedEntity();
     }
 

@@ -13,11 +13,12 @@ namespace Ragon.Client.Prototyping
       set
       {
         _value = value;
-        Changed();
+        MarkAsChanged();
       }
     }
     
     [SerializeField] private float _value;
+    
     public RagonFloat(float initialValue) : base(4)
     {
       _value = initialValue;
@@ -30,8 +31,6 @@ namespace Ragon.Client.Prototyping
 
     public override void Deserialize(RagonSerializer serializer)
     {
-      if (!IsAttached) return;
-      
       _value = serializer.ReadFloat();
       OnChanged?.Invoke();
     }

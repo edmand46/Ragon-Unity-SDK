@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Ragon.Common;
 using UnityEngine;
@@ -31,8 +32,7 @@ namespace Ragon.Client.Prototyping
 
     private RagonEntity[] _entities;
     private List<RagonProperty> _properties;
-    private HashSet<RagonProperty> _propertiesSet;
-    private List<RagonProperty> _changedProperties;
+    private bool _propertiesChanged;
     private byte[] _spawnPayload;
     private byte[] _destroyPayload;
 
@@ -41,8 +41,6 @@ namespace Ragon.Client.Prototyping
     internal void RetrieveProperties()
     {
       _properties = new List<RagonProperty>();
-      _propertiesSet = new HashSet<RagonProperty>();
-      _changedProperties = new List<RagonProperty>();
       _entities = GetComponents<RagonEntity>();
 
       foreach (var state in _entities)
@@ -57,7 +55,6 @@ namespace Ragon.Client.Prototyping
           {
             var property = (RagonProperty) field.GetValue(state);
             _properties.Add(property);
-            _changedProperties.Add(property);
             // Debug.Log($"Entity: {state.name} - Field: {field.Name} - ID: {_properties.Count}");
           }
         }
@@ -73,8 +70,7 @@ namespace Ragon.Client.Prototyping
 
     internal void TrackChangedProperty(RagonProperty property)
     {
-      if (_propertiesSet.Add(property))
-        _changedProperties.Add(property);
+      _propertiesChanged = true;
     }
 
     public void Attach(int entityType, RagonPlayer owner, int entityId, byte[] payloadData)
@@ -125,7 +121,6 @@ namespace Ragon.Client.Prototyping
       {
         if (((maskChanges >> i) & 1) == 1)
         {
-          Debug.Log("Property updated: " + i);
           _properties[i].Deserialize(data);
         }
       }
@@ -133,27 +128,30 @@ namespace Ragon.Client.Prototyping
 
     internal void ProcessReplication(RagonSerializer serializer)
     {
-      if (_changedProperties.Count == 0) return;
+      if (!_propertiesChanged) return;
 
       var maskChanges = 0L;
-
+      
       serializer.Clear();
       serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_STATE);
       serializer.WriteUShort((ushort) _entityId);
       var offset = serializer.Lenght;
       serializer.WriteLong(maskChanges);
 
-      foreach (var prop in _changedProperties)
+      foreach (var prop in _properties)
       {
-        maskChanges |= (uint) (1 << prop.Id);
-        prop.Serialize(serializer);
+        if (prop.IsDirty)
+        {
+          maskChanges |= (uint) (1 << prop.Id);
+          prop.Serialize(serializer);
+          prop.Clear();
+        }
       }
-
-      _changedProperties.Clear();
-      _propertiesSet.Clear();
       
       serializer.WriteLong(maskChanges, offset);
-
+      
+      _propertiesChanged = false;
+      
       var sendData = serializer.ToArray();
       RagonNetwork.Connection.SendData(sendData);
     }
