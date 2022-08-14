@@ -27,6 +27,10 @@ namespace Ragon.Client.Prototyping
     
     public T Create<T>() where T: IRagonEvent, new()
     {
+      var type = typeof(T);
+      if (!_eventsRegistryByType.ContainsKey(type))
+        Register<T>();
+      
       return new T();
     }
   }
