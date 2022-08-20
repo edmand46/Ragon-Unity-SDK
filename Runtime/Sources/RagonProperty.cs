@@ -20,14 +20,12 @@ namespace Ragon.Client
 
     public RagonProperty()
     {
-      Debug.Log("RagonProperty()");
       _size = 0;
       _fixed = false;
     }
 
     public void SetFixedSize(int size)
     {
-      Debug.Log($"SetFixedSize({size})");
       _size = size;
       _fixed = true;
     }

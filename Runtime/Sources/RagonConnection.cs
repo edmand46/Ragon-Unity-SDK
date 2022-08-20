@@ -47,7 +47,6 @@ namespace Ragon.Client
     
     public void Send(byte[] data, DeliveryType deliveryType = DeliveryType.Unreliable)
     {
-      Debug.Log("Packet size: " + data.Length);
       var packet = new Packet();
       if (deliveryType == DeliveryType.Reliable)
       {
