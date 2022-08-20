@@ -1,5 +1,5 @@
 using System;
-using Ragon.Client.Prototyping;
+using Ragon.Client;
 using Ragon.Common;
 using UnityEngine;
 

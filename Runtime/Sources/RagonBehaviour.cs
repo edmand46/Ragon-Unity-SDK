@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using Ragon.Common;
 using UnityEngine;
 
-namespace Ragon.Client.Prototyping
+namespace Ragon.Client
 {
   [RequireComponent(typeof(RagonEntity))]
   public class RagonBehaviour : MonoBehaviour

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace Ragon.Client.Prototyping
+namespace Ragon.Client
 {
   [Serializable]
   public struct EntityPrefab

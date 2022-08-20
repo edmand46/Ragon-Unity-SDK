@@ -1,5 +1,4 @@
 using System;
-using Ragon.Client;
 using Ragon.Common;
 
 namespace Ragon.Client

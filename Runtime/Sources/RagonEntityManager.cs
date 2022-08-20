@@ -4,7 +4,7 @@ using Ragon.Common;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Ragon.Client.Prototyping
+namespace Ragon.Client
 {
   public struct PrefabRequest
   {

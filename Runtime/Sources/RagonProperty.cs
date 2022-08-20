@@ -2,7 +2,7 @@ using System;
 using Ragon.Common;
 using UnityEngine;
 
-namespace Ragon.Client.Prototyping
+namespace Ragon.Client
 {
   public class RagonProperty
   {

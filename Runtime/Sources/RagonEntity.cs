@@ -1,11 +1,9 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Ragon.Common;
 using UnityEngine;
 
-namespace Ragon.Client.Prototyping
+namespace Ragon.Client
 {
   [DefaultExecutionOrder(-9000)]
   public class RagonEntity : MonoBehaviour

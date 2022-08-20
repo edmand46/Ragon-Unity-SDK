@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Ragon.Client.Prototyping;
+using Ragon.Client;
 using Ragon.Common;
 using UnityEngine;
 
-namespace Ragon.Client.Prototyping
+namespace Ragon.Client
 {
   public class RagonEventRegistry
   {

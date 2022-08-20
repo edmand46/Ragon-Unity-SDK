@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using Ragon.Client.Prototyping;
 using Ragon.Common;
 using UnityEngine;
 

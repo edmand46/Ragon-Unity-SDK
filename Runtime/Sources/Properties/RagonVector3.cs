@@ -1,9 +1,8 @@
 using System;
-using Ragon.Client.Prototyping.Components;
 using Ragon.Common;
 using UnityEngine;
 
-namespace Ragon.Client.Prototyping
+namespace Ragon.Client
 {
   [Serializable]
   public enum RagonAxis
@@ -18,11 +17,10 @@ namespace Ragon.Client.Prototyping
   }
   
   [Serializable]
-  public class RagonVector3: RagonProperty
+  public class RagonVector3: RagonProperty 
   {
+    [SerializeField] private RagonAxis _axis;
     [SerializeField] private Vector3 _value;
-    
-    private RagonAxis _axis;
     
     public Vector3 Value
     {
@@ -35,10 +33,10 @@ namespace Ragon.Client.Prototyping
       }
     }
     
-    public RagonVector3(Vector3 initialValue, RagonAxis axis)
+    public RagonVector3(Vector3 initialValue, RagonAxis axis = RagonAxis.XYZ)
     {
-      _axis = axis;
       _value = initialValue;
+      _axis = axis;
       
       switch (_axis)
       {
