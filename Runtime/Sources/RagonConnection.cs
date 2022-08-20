@@ -1,5 +1,8 @@
 using System;
+using System.Diagnostics;
+using Ragon.Common;
 using ENet;
+using Debug = UnityEngine.Debug;
 using Event = ENet.Event;
 using EventType = ENet.EventType;
 
@@ -9,28 +12,43 @@ namespace Ragon.Client
   {
     Reliable,
     Unreliable,
-  } 
-  
-  public enum RagonConnectionState
-  {
-    DISCONNECTED,
-    CONNECTED,
   }
-  
-  public class RagonConnection
+
+  public class RagonConnection: IRagonConnection
   {
     private Host _host;
     private Peer _peer;
     private Event _netEvent;
-
+    
     public Action<byte[]> OnData;
     public Action OnConnected;
     public Action OnDisconnected;
+    public RagonConnectionState ConnectionState;
+    public uint Ping => _peer.RoundTripTime;
+    public double UpstreamBandwidth => _upstreamBandwidth;
+    public double DownstreamBandwidth => _downstreamBandwidth;
+    
+    private double _upstreamBandwidth = 0d;
+    private double _downstreamBandwidth = 0d;
+    private ulong _upstreamData = 0;
+    private ulong _downstreamData = 0;
+    private double _time = 0d;
+    private double _deltaTime = 0d;
+    private double _elapsedTime = 0d;
+    private double _lastTime = 0d;
+    private const double interval = 1.0d;
+    private Stopwatch _timer;
 
-    public void SendData(byte[] data, DeliveryType deliveryType = DeliveryType.Unreliable)
+    public void Send(RagonSerializer serializer, DeliveryType deliveryType = DeliveryType.Unreliable)
     {
+      var data = serializer.ToArray();
+      Send(data, deliveryType);
+    }
+    
+    public void Send(byte[] data, DeliveryType deliveryType = DeliveryType.Unreliable)
+    {
+      Debug.Log("Packet size: " + data.Length);
       var packet = new Packet();
-      
       if (deliveryType == DeliveryType.Reliable)
       {
         packet.Create(data, PacketFlags.Reliable);
@@ -38,28 +56,28 @@ namespace Ragon.Client
       }
       else
       {
-        packet.Create(data, PacketFlags.None);
+        packet.Create(data, PacketFlags.UnreliableFragmented);
         _peer.Send(1, ref packet);
       }
     }
-
+    
     public void Prepare()
     {
       Library.Initialize();
     }
 
-    public void Connect(string server, ushort port)
+    public void Connect(string server, ushort port, uint protocol)
     {
       _host = new Host();
       _host.Create();
-
+      _timer = Stopwatch.StartNew();
+      
       Address address = new Address();
       address.SetHost(server);
       address.Port = port;
-
-      _peer = _host.Connect(address, 2, 0);
+      
+      _peer = _host.Connect(address, 2, protocol);
     }
-
     public void Update()
     {
       if (_host == null) return;
@@ -96,10 +114,45 @@ namespace Ragon.Client
             break;
         }
       }
+      ComputeBandwidth();
     }
 
+    private void ComputeBandwidth()
+    {
+      _time += _deltaTime;
+
+      if (_time >= interval)
+      {
+        var bytesSent = _peer.IsSet ? _peer.BytesSent : 0;
+        var bytesReceived = _peer.IsSet ? _peer.BytesReceived : 0;
+        
+        if (_upstreamData > 0)
+        {
+          _upstreamData = bytesSent - _upstreamData;
+          _upstreamBandwidth = (_upstreamData / _time) * 8 / (1000 * 1000);
+        }
+
+        if (_downstreamData > 0)
+        {
+          _downstreamData = bytesReceived - _downstreamData;
+          _downstreamBandwidth = (_downstreamData / _time) * 8 / (1000 * 1000);
+        }
+
+        _upstreamData = bytesSent;
+        _downstreamData = bytesReceived;
+
+        _time -= interval;
+      }
+      
+      _elapsedTime = _timer.ElapsedMilliseconds;
+      _deltaTime = (_elapsedTime - _lastTime) / 1000d;
+      _lastTime = _elapsedTime;
+    }
+    
     public void Dispose()
     {
+      OnDisconnected?.Invoke();
+      
       if (_peer.IsSet)
       {
         _peer.DisconnectNow(0);

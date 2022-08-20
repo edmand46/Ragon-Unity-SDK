@@ -13,15 +13,17 @@ namespace Ragon.Client.Prototyping
       set
       {
         _value = value;
+        OnChanged?.Invoke();
         MarkAsChanged();
       }
     }
     
     [SerializeField] private int _value;
     
-    public RagonInt(int initialValue) : base(4)
+    public RagonInt(int initialValue)
     {
       _value = initialValue;
+      SetFixedSize(4);
     }
     
     public override void Serialize(RagonSerializer serializer)

@@ -1,37 +1,87 @@
-using System;
 using System.Collections.Generic;
-using Ragon.Client.Prototyping;
 using Ragon.Common;
-using UnityEngine;
 
-namespace Ragon.Client.Prototyping
+namespace Ragon.Client
 {
   public class RagonEventManager
   {
-    private Dictionary<Type, ushort> _eventsRegistryByType = new();
-    private ushort _eventIdGenerator = 0;
-    
-    public ushort GetEventCode<TEvent>(TEvent _) where TEvent: IRagonEvent {
-      var type = typeof(TEvent);
-      var evntCode = _eventsRegistryByType[type];
-      return evntCode;
-    }
-    
-    public void Register<T>() where T: IRagonEvent, new()
+    public int Count => _listeners.Count;
+    private List<IRagonListener> _listeners = new();
+
+    public void Add(IRagonListener listener)
     {
-      var type = typeof(T);
-      Debug.Log($"[Ragon] Registered Event: {type.Name} - {_eventIdGenerator}");
-      _eventsRegistryByType.Add(type, _eventIdGenerator);
-      _eventIdGenerator++;
+      _listeners.Add(listener);
     }
-    
-    public T Create<T>() where T: IRagonEvent, new()
+
+    public void Remove(IRagonListener listener)
     {
-      var type = typeof(T);
-      if (!_eventsRegistryByType.ContainsKey(type))
-        Register<T>();
-      
-      return new T();
+      _listeners.Remove(listener);
+    }
+
+    public void OnEvent(RagonPlayer roomLocalPlayer, ushort evntCode, RagonSerializer serializer)
+    {
+      foreach (var listener in _listeners)
+        listener.OnEvent(roomLocalPlayer, evntCode, serializer);
+    }
+
+    public void OnAuthorized(string playerId, string playerName)
+    {
+      foreach (var listener in _listeners)
+        listener.OnAuthorized(playerId, playerName);
+    }
+
+    public void OnLeaved()
+    {
+      foreach (var listener in _listeners)
+        listener.OnLeaved();
+    }
+
+    public void OnFailed(string message)
+    {
+      foreach (var listener in _listeners)
+        listener.OnFailed(message);
+    }
+
+    public void OnOwnerShipChanged(RagonPlayer player)
+    {
+      foreach (var listener in _listeners)
+        listener.OnOwnerShipChanged(player);
+    }
+
+    public void OnPlayerLeft(RagonPlayer player)
+    {
+      foreach (var listener in _listeners)
+        listener.OnPlayerLeft(player);
+    }
+
+    public void OnPlayerJoined(RagonPlayer player)
+    {
+      foreach (var listener in _listeners)
+        listener.OnPlayerJoined(player);
+    }
+
+    public void OnLevel(string sceneName)
+    {
+      foreach (var listener in _listeners)
+        listener.OnLevel(sceneName);
+    }
+
+    public void OnJoined()
+    {
+      foreach (var listener in _listeners)
+        listener.OnJoined();
+    }
+
+    public void OnConnected()
+    {
+      foreach (var listener in _listeners)
+        listener.OnConnected();
+    }
+
+    public void OnDisconnected()
+    {
+      foreach (var listener in _listeners)
+        listener.OnDisconnected();
     }
   }
 }

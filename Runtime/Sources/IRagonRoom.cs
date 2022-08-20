@@ -1,0 +1,38 @@
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using Ragon.Client.Prototyping;
+using Ragon.Common;
+using UnityEngine;
+
+namespace Ragon.Client
+{
+  public interface IRagonRoom
+  {
+    public string Id { get; }
+    public RagonPlayer Owner { get; }
+    public RagonPlayer LocalPlayer { get; }
+    public int MinPlayers { get; }
+    public int MaxPlayers { get; }
+
+    public ReadOnlyCollection<RagonPlayer> Players { get; }
+    public IReadOnlyDictionary<string, RagonPlayer> PlayersById { get; }
+    public IReadOnlyDictionary<uint, RagonPlayer> ConnectionsById { get; }
+
+    public void LoadScene(string map);
+    public void SceneLoaded();
+
+    public void CreateSceneEntity(GameObject prefab, ushort staticId, IRagonPayload spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY,
+      RagonAuthority events = RagonAuthority.OWNER_ONLY);
+
+    public void CreateEntity(GameObject prefab, IRagonPayload spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY,
+      RagonAuthority events = RagonAuthority.OWNER_ONLY);
+
+    public void CreateEntity(GameObject prefab, RagonAuthority state = RagonAuthority.OWNER_ONLY,
+      RagonAuthority events = RagonAuthority.OWNER_ONLY);
+
+    public void DestroyEntity(GameObject gameObject);
+    public void DestroyEntity(GameObject gameObject, IRagonPayload destroyPayload);
+    
+    public void ReplicateEvent(IRagonEvent evnt, RagonTarget target = RagonTarget.ALL, RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY);
+  }
+}

@@ -40,7 +40,7 @@ namespace Ragon.Client.Prototyping
 
     public void OnEvent<TEvent>(Action<RagonPlayer, TEvent> callback) where TEvent : IRagonEvent, new()
     {
-      var eventCode = RagonNetwork.EventManager.GetEventCode<TEvent>(new TEvent());
+      var eventCode = RagonNetwork.Event.GetEventCode<TEvent>(new TEvent());
       if (_events.ContainsKey(eventCode))
       {
         Debug.LogWarning($"Event already {eventCode} subscribed");
@@ -70,6 +70,16 @@ namespace Ragon.Client.Prototyping
 
     public virtual void OnDestroyedEntity()
     {
+    }
+
+    public virtual void OnEntityTick()
+    {
+      
+    }
+
+    public virtual void OnProxyTick()
+    {
+      
     }
   }
 }

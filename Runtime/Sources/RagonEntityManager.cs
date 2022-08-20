@@ -15,29 +15,31 @@ namespace Ragon.Client.Prototyping
   [DefaultExecutionOrder(-10000)]
   public class RagonEntityManager : MonoBehaviour
   {
-    [Range(1.0f, 60.0f, order = 0)] public float ReplicationRate = 1.0f;
-    [SerializeField] private RagonPrefabRegistry _prefabRegistry;
-    
+    [Range(1.0f, 60.0f, order = 0)] public float replicationRate = 1.0f;
+
     public static RagonEntityManager Instance { get; private set; }
-    
+
     private Dictionary<int, RagonEntity> _entitiesDict = new Dictionary<int, RagonEntity>();
     private Dictionary<int, RagonEntity> _entitiesStatic = new Dictionary<int, RagonEntity>();
-    
+
     private List<RagonEntity> _entitiesList = new List<RagonEntity>();
     private List<RagonEntity> _entitiesOwned = new List<RagonEntity>();
 
     private Func<PrefabRequest, GameObject> _prefabCallback;
 
     private RagonSerializer _serializer = new RagonSerializer();
+    private RagonRoom _room;
     private float _replicationTimer = 0.0f;
     private float _replicationRate = 0.0f;
-
+    private RagonPrefabRegistry _registry;
     private void Awake()
     {
       Instance = this;
       
-      _prefabRegistry.Cache();
-      _replicationTimer = 1000.0f / ReplicationRate;
+      _registry = Resources.Load<RagonPrefabRegistry>("RagonPrefabRegistry");
+      _registry.Cache();
+      
+      _replicationRate = 1000.0f / replicationRate;
     }
 
     public void CollectSceneData()
@@ -51,18 +53,28 @@ namespace Ragon.Client.Prototyping
           objs.Add(ragonObject);
         }
       }
-      
-      Debug.Log("Found static entities: " + objs.Count);
-      
+
+      Debug.Log("Found scene entities: " + objs.Count);
+
       ushort staticId = 1;
       foreach (var entity in objs)
       {
         staticId += 1;
         _entitiesStatic.Add(staticId, entity);
-        
+
         if (RagonNetwork.Room.LocalPlayer.IsRoomOwner)
-          RagonNetwork.Room.CreateStaticEntity(entity.gameObject, staticId, null);
+          RagonNetwork.Room.CreateSceneEntity(entity.gameObject, staticId, null);
       }
+    }
+
+    public void OnRoomCreated(RagonRoom room)
+    {
+      _room = room;
+    }
+
+    public void OnRoomDestroyed()
+    {
+      _room = null;
     }
 
     public void Cleanup()
@@ -76,32 +88,44 @@ namespace Ragon.Client.Prototyping
       _entitiesStatic.Clear();
     }
 
-    public void Update()
-    {
-      
-    }
-
     public void FixedUpdate()
     {
+      if (_room == null) return;
+      
       _replicationTimer += Time.fixedTime;
       if (_replicationTimer > _replicationRate)
       {
+        var changedEntities = 0;
+
+        _serializer.Clear();
+        _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_STATE);
+        
+        var offset = _serializer.Lenght;
+        _serializer.AddOffset(2);
+
         foreach (var ent in _entitiesOwned)
         {
-          if (ent.AutoReplication)
+          if (ent.AutoReplication && ent.PropertiesChanged)
+          {
             ent.ReplicateState(_serializer);
+            changedEntities++;
+          }
         }
-
-        _replicationTimer = 0.0f; 
+        
+        _serializer.WriteUShort((ushort) changedEntities, offset);
+        _room.Connection.Send(_serializer);
+        
+        _replicationTimer = 0.0f;
       }
     }
 
-    public void OnEntityStaticCreated(int entityId, ushort staticId, ushort entityType, RagonAuthority state, RagonAuthority evnt, RagonPlayer creator, byte[] payload)
+    public void OnEntityStaticCreated(int entityId, ushort staticId, ushort entityType, RagonAuthority state, RagonAuthority evnt, RagonPlayer creator,
+      byte[] payload)
     {
       if (_entitiesStatic.Remove(staticId, out var ragonEntity))
       {
         ragonEntity.RetrieveProperties();
-        ragonEntity.Attach(entityType, creator, entityId, payload);
+        ragonEntity.Attach(_room, entityType, creator, entityId, payload);
 
         _entitiesDict.Add(entityId, ragonEntity);
         _entitiesList.Add(ragonEntity);
@@ -113,12 +137,12 @@ namespace Ragon.Client.Prototyping
 
     public void OnEntityCreated(int entityId, ushort entityType, RagonAuthority state, RagonAuthority evnt, RagonPlayer creator, byte[] payload)
     {
-      var prefab = _prefabRegistry.Prefabs[entityType];
-      var go = Instantiate(prefab); 
+      var prefab = _registry.Prefabs[entityType];
+      var go = Instantiate(prefab);
 
       var component = go.GetComponent<RagonEntity>();
       component.RetrieveProperties();
-      component.Attach(entityType, creator, entityId, payload);
+      component.Attach(_room, entityType, creator, entityId, payload);
 
       _entitiesDict.Add(entityId, component);
       _entitiesList.Add(component);

@@ -2,7 +2,7 @@ using Ragon.Common;
 
 namespace Ragon.Client
 {
-  public interface IRagonNetworkListener
+  public interface IRagonListener
   {
     void OnAuthorized(string playerId, string playerName);
     void OnJoined();
@@ -13,8 +13,9 @@ namespace Ragon.Client
     
     void OnPlayerJoined(RagonPlayer player);
     void OnPlayerLeft(RagonPlayer player);
-    void OnEvent(RagonPlayer player, ushort evntCode, RagonSerializer payload);
     void OnOwnerShipChanged(RagonPlayer player);
+    
     void OnLevel(string sceneName);
+    void OnEvent(RagonPlayer player, ushort evntCode, RagonSerializer payload);
   }
 }

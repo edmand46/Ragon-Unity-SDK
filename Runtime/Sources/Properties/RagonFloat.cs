@@ -5,33 +5,36 @@ using UnityEngine;
 namespace Ragon.Client.Prototyping
 {
   [Serializable]
-  public class RagonBool: RagonProperty
+  public class RagonFloat: RagonProperty
   {
-    public bool Value
+    public float Value
     {
       get => _value; 
       set
       {
         _value = value;
+        
         MarkAsChanged();
+        OnChanged?.Invoke();
       }
     }
     
-    [SerializeField] private bool _value;
+    [SerializeField] private float _value;
     
-    public RagonBool(bool initialValue) : base(1)
+    public RagonFloat(float initialValue)
     {
       _value = initialValue;
+      SetFixedSize(4);
     }
     
     public override void Serialize(RagonSerializer serializer)
     {
-      serializer.WriteBool(_value);
+      serializer.WriteFloat(_value);
     }
 
     public override void Deserialize(RagonSerializer serializer)
     {
-      _value = serializer.ReadBool();
+      _value = serializer.ReadFloat();
       OnChanged?.Invoke();
     }
   }

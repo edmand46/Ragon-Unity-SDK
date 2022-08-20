@@ -10,26 +10,25 @@ namespace Ragon.Client.Prototyping
   [DefaultExecutionOrder(-9000)]
   public class RagonEntity : MonoBehaviour
   {
-    private delegate void OnEventDelegate(RagonPlayer player, RagonSerializer buffer);
-    
     public bool AutoReplication => _replication;
+    public bool PropertiesChanged => _propertiesChanged;
     public bool IsAttached => _attached;
     public bool IsMine => _mine;
     public int Id => _entityId;
     public int Type => _entityType;
     public RagonPlayer Owner => _owner;
-    
+
     [SerializeField, ReadOnly] private int _entityType;
     [SerializeField, ReadOnly] private int _entityId;
     [SerializeField, ReadOnly] private bool _mine;
     [SerializeField, ReadOnly] private RagonPlayer _owner;
     [SerializeField, ReadOnly] private bool _attached;
     [SerializeField, ReadOnly] private bool _replication;
-    [SerializeField, ReadOnly] private int _properties; 
+    [SerializeField, ReadOnly] private int _properties;
+    [SerializeField, ReadOnly] private RagonBehaviour[] _behaviours;
 
-    protected RagonRoom Room;
+    private RagonRoom _room;
     private RagonSerializer _serializer;
-    private RagonBehaviour[] _behaviours;
     private List<RagonProperty> _propertiesList;
     private bool _propertiesChanged;
     private byte[] _spawnPayload;
@@ -40,7 +39,7 @@ namespace Ragon.Client.Prototyping
       _propertiesList = new List<RagonProperty>();
       _behaviours = GetComponents<RagonBehaviour>();
       _serializer = new RagonSerializer();
-      
+
       foreach (var state in _behaviours)
       {
         var fieldFlags = (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
@@ -49,10 +48,11 @@ namespace Ragon.Client.Prototyping
 
         foreach (var field in fieldInfos)
         {
-          if (baseProperty.IsAssignableFrom(field.FieldType) && _propertiesList.Count < 64)
+          if (baseProperty.IsAssignableFrom(field.FieldType))
           {
             var property = (RagonProperty) field.GetValue(state);
             _propertiesList.Add(property);
+            Debug.Log($"RetrieveProperties: {gameObject.name} Prop: {property.Id} Size: {property.Size}");
           }
         }
       }
@@ -64,7 +64,11 @@ namespace Ragon.Client.Prototyping
     {
       serializer.WriteUShort((ushort) _propertiesList.Count);
       foreach (var property in _propertiesList)
+      {
+        serializer.WriteBool(property.IsFixed);
         serializer.WriteUShort((ushort) property.Size);
+        Debug.Log($"WriteStateInfo: {gameObject.name} Prop: {property.Id} Size: {property.Size}");
+      }
     }
 
     internal void SetType(ushort t) => _entityType = t;
@@ -74,15 +78,16 @@ namespace Ragon.Client.Prototyping
       _propertiesChanged = true;
     }
 
-    public void Attach(int entityType, RagonPlayer owner, int entityId, byte[] payloadData)
+    public void Attach(RagonRoom room, int entityType, RagonPlayer owner, int entityId, byte[] payloadData)
     {
       _entityType = entityType;
       _entityId = entityId;
       _owner = owner;
       _attached = true;
-      _mine = RagonNetwork.Room.LocalPlayer.Id == owner.Id;
       _spawnPayload = payloadData;
       _replication = true;
+      _room = room;
+      _mine = _room.LocalPlayer.Id == owner.Id;
 
       foreach (var behaviour in _behaviours)
         behaviour.Attach(this);
@@ -98,7 +103,7 @@ namespace Ragon.Client.Prototyping
     public void ChangeOwner(RagonPlayer newOwner)
     {
       _owner = newOwner;
-      _mine = RagonNetwork.Room.LocalPlayer.Id == newOwner.Id;
+      _mine = _room.LocalPlayer.Id == newOwner.Id;
     }
 
     public void Detach(byte[] payload)
@@ -113,43 +118,31 @@ namespace Ragon.Client.Prototyping
 
     internal void ReplicateState(RagonSerializer serializer)
     {
-      if (!_propertiesChanged) return;
-
-      var maskChanges = 0L;
-      
-      serializer.Clear();
-      serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_STATE);
       serializer.WriteUShort((ushort) _entityId);
-      var offset = serializer.Lenght;
-      serializer.WriteLong(maskChanges);
-
+      
       foreach (var prop in _propertiesList)
       {
         if (prop.IsDirty)
         {
-          maskChanges |= (uint) (1 << prop.Id);
-          prop.Serialize(serializer);
+          serializer.WriteBool(true);
+          prop.Pack(serializer);
           prop.Clear();
+        }
+        else
+        {
+          serializer.WriteBool(false);
         }
       }
       
-      serializer.WriteLong(maskChanges, offset);
-      
       _propertiesChanged = false;
-      
-      var sendData = serializer.ToArray();
-      RagonNetwork.Connection.SendData(sendData);
     }
 
     internal void ProcessState(RagonSerializer data)
     {
-      var maskChanges = data.ReadLong();
       for (int i = 0; i < _propertiesList.Count; i++)
       {
-        if (((maskChanges >> i) & 1) == 1)
-        {
+        if (data.ReadBool())
           _propertiesList[i].Deserialize(data);
-        }
       }
     }
 
@@ -179,24 +172,40 @@ namespace Ragon.Client.Prototyping
 
     public void ReplicateEvent<TEvent>(TEvent evnt, RagonTarget target, RagonReplicationMode replicationMode) where TEvent : IRagonEvent, new()
     {
-      var evntId = RagonNetwork.EventManager.GetEventCode(evnt);
+      var evntId = RagonNetwork.Event.GetEventCode(evnt);
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
       _serializer.WriteUShort(evntId);
       _serializer.WriteByte((byte) replicationMode);
       _serializer.WriteByte((byte) target);
       _serializer.WriteUShort((ushort) Id);
-      
+
       evnt.Serialize(_serializer);
 
       var sendData = _serializer.ToArray();
-      RagonNetwork.Connection.SendData(sendData);
+      _room.Connection.Send(sendData);
     }
-    
+
     internal void ProcessEvent(RagonPlayer player, ushort eventCode, RagonSerializer data)
     {
       foreach (var behaviour in _behaviours)
         behaviour.ProcessEvent(player, eventCode, data);
+    }
+
+    private void Update()
+    {
+      if (!_attached) return;
+
+      if (_mine)
+      {
+        foreach (var behaviour in _behaviours)
+          behaviour.OnEntityTick();
+      }
+      else
+      {
+        foreach (var behaviour in _behaviours)
+          behaviour.OnProxyTick();
+      }
     }
   }
 }
