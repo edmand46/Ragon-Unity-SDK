@@ -24,11 +24,11 @@ namespace Ragon.Client
     private RagonSerializer _serializer = new(8192);
 
     public static RagonSession Session => _instance._session;
-    public static IRagonRoom Room => _instance._room;
-    public static IRagonConnection Connection => _instance._connection;
     public static RagonEventRegistry Event => _instance._eventRegistry;
     public static RagonConnectionState State => _instance._connection.ConnectionState;
-
+    public static IRagonRoom Room => _instance._room;
+    public static IRagonConnection Connection => _instance._connection;
+    
     private void Awake()
     {
       _instance = this;

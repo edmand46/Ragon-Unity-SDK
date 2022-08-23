@@ -32,13 +32,14 @@ namespace Ragon.Client
     private float _replicationTimer = 0.0f;
     private float _replicationRate = 0.0f;
     private RagonPrefabRegistry _registry;
+    
     private void Awake()
     {
       Instance = this;
-      
+
       _registry = Resources.Load<RagonPrefabRegistry>("RagonPrefabRegistry");
       _registry.Cache();
-      
+
       _replicationRate = 1000.0f / replicationRate;
     }
 
@@ -48,10 +49,8 @@ namespace Ragon.Client
       var objs = new List<RagonEntity>();
       foreach (var go in gameObjects)
       {
-        if (go.TryGetComponent<RagonEntity>(out var ragonObject))
-        {
-          objs.Add(ragonObject);
-        }
+        var entities = go.GetComponentsInChildren<RagonEntity>();
+        objs.AddRange(entities);
       }
 
       Debug.Log("Found scene entities: " + objs.Count);
@@ -91,7 +90,7 @@ namespace Ragon.Client
     public void FixedUpdate()
     {
       if (_room == null) return;
-      
+
       _replicationTimer += Time.fixedTime;
       if (_replicationTimer > _replicationRate)
       {
@@ -99,7 +98,7 @@ namespace Ragon.Client
 
         _serializer.Clear();
         _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_STATE);
-        
+
         var offset = _serializer.Lenght;
         _serializer.AddOffset(2);
 
@@ -111,10 +110,10 @@ namespace Ragon.Client
             changedEntities++;
           }
         }
-        
+
         _serializer.WriteUShort((ushort) changedEntities, offset);
         _room.Connection.Send(_serializer);
-        
+
         _replicationTimer = 0.0f;
       }
     }

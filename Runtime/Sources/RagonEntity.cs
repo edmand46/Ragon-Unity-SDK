@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Ragon.Client
 {
   [DefaultExecutionOrder(-9000)]
-  public class RagonEntity : MonoBehaviour
+  public sealed class RagonEntity : MonoBehaviour
   {
     public bool AutoReplication => _replication;
     public bool PropertiesChanged => _propertiesChanged;
@@ -50,7 +50,6 @@ namespace Ragon.Client
           {
             var property = (RagonProperty) field.GetValue(state);
             _propertiesList.Add(property);
-            // Debug.Log($"RetrieveProperties: {gameObject.name} Prop: {property.Id} Size: {property.Size}");
           }
         }
       }
@@ -65,7 +64,6 @@ namespace Ragon.Client
       {
         serializer.WriteBool(property.IsFixed);
         serializer.WriteUShort((ushort) property.Size);
-        // Debug.Log($"WriteStateInfo: {gameObject.name} Prop: {property.Id} Size: {property.Size}");
       }
     }
 

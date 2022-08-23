@@ -24,6 +24,7 @@ namespace Ragon.Client
 
     public void Cache()
     {
+      _prefabsMap.Clear();
       foreach (var entityPrefab in _prefabs)
       {
         _prefabsMap.Add(entityPrefab.EntityType, entityPrefab.Prefab);
