@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Ragon.Common;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -32,7 +33,7 @@ namespace Ragon.Client
     private float _replicationTimer = 0.0f;
     private float _replicationRate = 0.0f;
     private RagonPrefabRegistry _registry;
-    
+
     private void Awake()
     {
       Instance = this;
@@ -118,11 +119,18 @@ namespace Ragon.Client
       }
     }
 
-    public void OnEntityStaticCreated(int entityId, ushort staticId, ushort entityType, RagonAuthority state, RagonAuthority evnt, RagonPlayer creator,
-      byte[] payload)
+    public void OnEntityStaticCreated(int entityId, ushort staticId, ushort entityType, RagonPlayer creator, RagonSerializer serializer)
     {
       if (_entitiesStatic.Remove(staticId, out var ragonEntity))
-      {
+      { 
+        var payload = Array.Empty<byte>();
+        if (serializer.Size > 0)
+        {
+          var size = serializer.ReadUShort();
+          var entityPayload = serializer.ReadData(size);
+          payload = entityPayload.ToArray();
+        }
+        
         ragonEntity.RetrieveProperties();
         ragonEntity.Attach(_room, entityType, creator, entityId, payload);
 
@@ -134,11 +142,19 @@ namespace Ragon.Client
       }
     }
 
-    public void OnEntityCreated(int entityId, ushort entityType, RagonAuthority state, RagonAuthority evnt, RagonPlayer creator, byte[] payload)
+    public void OnEntityCreated(int entityId, ushort entityType, RagonPlayer creator, RagonSerializer serializer)
     {
+      var payload = Array.Empty<byte>();
+      if (serializer.Size > 0)
+      {
+        var size = serializer.ReadUShort();
+        var entityPayload = serializer.ReadData(size);
+        payload = entityPayload.ToArray();
+      }
+
       var prefab = _registry.Prefabs[entityType];
       var go = Instantiate(prefab);
-
+      
       var component = go.GetComponent<RagonEntity>();
       component.RetrieveProperties();
       component.Attach(_room, entityType, creator, entityId, payload);
@@ -150,10 +166,18 @@ namespace Ragon.Client
         _entitiesOwned.Add(component);
     }
 
-    public void OnEntityDestroyed(int entityId, byte[] payload)
+    public void OnEntityDestroyed(int entityId, RagonSerializer serializer)
     {
       if (_entitiesDict.Remove(entityId, out var ragonEntity))
       {
+        var payload = Array.Empty<byte>();
+        if (serializer.Size > 0)
+        {
+          var size = serializer.ReadUShort();
+          var entityPayload = serializer.ReadData(size);
+          payload = entityPayload.ToArray();
+        }
+        
         _entitiesList.Remove(ragonEntity);
 
         if (_entitiesOwned.Contains(ragonEntity))

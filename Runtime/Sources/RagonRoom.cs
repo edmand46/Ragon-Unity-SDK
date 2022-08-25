@@ -107,8 +107,7 @@ namespace Ragon.Client
       _connection.Send(sendData, DeliveryType.Reliable);
     }
 
-    public void CreateSceneEntity(GameObject prefab, ushort staticId, IRagonPayload spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY,
-      RagonAuthority events = RagonAuthority.OWNER_ONLY)
+    public void CreateSceneEntity(GameObject prefab, ushort staticId, IRagonPayload spawnPayload)
     {
       var ragonObject = prefab.GetComponent<RagonEntity>();
       if (!ragonObject)
@@ -137,14 +136,12 @@ namespace Ragon.Client
       _connection.Send(sendData, DeliveryType.Reliable);
     }
 
-    public void CreateEntity(GameObject prefab, RagonAuthority state = RagonAuthority.OWNER_ONLY,
-      RagonAuthority events = RagonAuthority.OWNER_ONLY)
+    public void CreateEntity(GameObject prefab)
     {
-      CreateEntity(prefab, null, state, events);
+      CreateEntity(prefab, null);
     }
     
-    public void CreateEntity(GameObject prefab, IRagonPayload spawnPayload, RagonAuthority state = RagonAuthority.OWNER_ONLY,
-      RagonAuthority events = RagonAuthority.OWNER_ONLY)
+    public void CreateEntity(GameObject prefab, IRagonPayload spawnPayload)
     {
       var ragonEntity = prefab.GetComponent<RagonEntity>();
       if (!ragonEntity)

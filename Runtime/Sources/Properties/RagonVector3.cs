@@ -19,7 +19,6 @@ namespace Ragon.Client
   [Serializable]
   public class RagonVector3: RagonProperty 
   {
-    [SerializeField] private RagonAxis _axis;
     [SerializeField] private Vector3 _value;
     
     public Vector3 Value
@@ -32,6 +31,8 @@ namespace Ragon.Client
         MarkAsChanged();
       }
     }
+    
+    private RagonAxis _axis;
     
     public RagonVector3(Vector3 initialValue, RagonAxis axis = RagonAxis.XYZ)
     {
