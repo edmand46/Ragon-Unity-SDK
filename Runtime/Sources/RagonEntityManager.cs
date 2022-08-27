@@ -7,12 +7,6 @@ using UnityEngine.SceneManagement;
 
 namespace Ragon.Client
 {
-  public struct PrefabRequest
-  {
-    public ushort Type;
-    public bool IsOwned;
-  }
-
   [DefaultExecutionOrder(-10000)]
   public class RagonEntityManager : MonoBehaviour
   {
@@ -26,14 +20,13 @@ namespace Ragon.Client
     private List<RagonEntity> _entitiesList = new List<RagonEntity>();
     private List<RagonEntity> _entitiesOwned = new List<RagonEntity>();
 
-    private Func<PrefabRequest, GameObject> _prefabCallback;
-
+    private RagonPrefabRegistry _registry;
     private RagonSerializer _serializer = new RagonSerializer();
     private RagonRoom _room;
+
     private float _replicationTimer = 0.0f;
     private float _replicationRate = 0.0f;
-    private RagonPrefabRegistry _registry;
-
+    
     private void Awake()
     {
       Instance = this;
@@ -48,6 +41,7 @@ namespace Ragon.Client
     {
       var gameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
       var objs = new List<RagonEntity>();
+      
       foreach (var go in gameObjects)
       {
         var entities = go.GetComponentsInChildren<RagonEntity>();
