@@ -12,12 +12,14 @@ namespace Ragon.Client
     public bool PropertiesChanged => _propertiesChanged;
     public bool IsAttached => _attached;
     public bool IsMine => _mine;
-    public int Id => _entityId;
-    public int Type => _entityType;
+    public ushort Id => _entityId;
+    public ushort Type => _entityType;
+    public ushort SceneId => _sceneId;
     public RagonPlayer Owner => _owner;
 
-    [SerializeField, ReadOnly] private int _entityType;
-    [SerializeField, ReadOnly] private int _entityId;
+    [SerializeField, ReadOnly] private ushort _entityType;
+    [SerializeField, ReadOnly] private ushort _entityId;
+    [SerializeField, ReadOnly] private ushort _sceneId;
     [SerializeField, ReadOnly] private bool _mine;
     [SerializeField, ReadOnly] private RagonPlayer _owner;
     [SerializeField, ReadOnly] private bool _attached;
@@ -68,13 +70,14 @@ namespace Ragon.Client
     }
 
     internal void SetType(ushort t) => _entityType = t;
+    public void SetSceneId(ushort id) => _sceneId = id;
 
     internal void TrackChangedProperty(RagonProperty property)
     {
       _propertiesChanged = true;
     }
 
-    public void Attach(RagonRoom room, int entityType, RagonPlayer owner, int entityId, byte[] payloadData)
+    public void Attach(RagonRoom room, ushort entityType, RagonPlayer owner, ushort entityId, byte[] payloadData)
     {
       _entityType = entityType;
       _entityId = entityId;

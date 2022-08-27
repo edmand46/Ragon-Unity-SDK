@@ -55,15 +55,12 @@ namespace Ragon.Client
       }
 
       Debug.Log("Found scene entities: " + objs.Count);
-
-      ushort staticId = 1;
       foreach (var entity in objs)
       {
-        staticId += 1;
-        _entitiesStatic.Add(staticId, entity);
-
+        var sceneId = entity.SceneId;
+        _entitiesStatic.Add(sceneId, entity);
         if (RagonNetwork.Room.LocalPlayer.IsRoomOwner)
-          RagonNetwork.Room.CreateSceneEntity(entity.gameObject, staticId, null);
+          RagonNetwork.Room.CreateSceneEntity(entity.gameObject, sceneId, null);
       }
     }
 
@@ -119,7 +116,7 @@ namespace Ragon.Client
       }
     }
 
-    public void OnEntityStaticCreated(int entityId, ushort staticId, ushort entityType, RagonPlayer creator, RagonSerializer serializer)
+    public void OnEntityStaticCreated(ushort entityId, ushort staticId, ushort entityType, RagonPlayer creator, RagonSerializer serializer)
     {
       if (_entitiesStatic.Remove(staticId, out var ragonEntity))
       { 
@@ -142,7 +139,7 @@ namespace Ragon.Client
       }
     }
 
-    public void OnEntityCreated(int entityId, ushort entityType, RagonPlayer creator, RagonSerializer serializer)
+    public void OnEntityCreated(ushort entityId, ushort entityType, RagonPlayer creator, RagonSerializer serializer)
     {
       var payload = Array.Empty<byte>();
       if (serializer.Size > 0)
