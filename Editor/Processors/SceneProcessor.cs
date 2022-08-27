@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Ragon.Client;
+using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -47,6 +48,7 @@ namespace Ragon.Editor
       {
         staticId += 1;
         entity.SetSceneId(staticId);
+        EditorUtility.SetDirty(entity);
       }
     }
   }
