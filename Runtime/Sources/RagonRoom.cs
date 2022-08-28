@@ -15,7 +15,7 @@ namespace Ragon.Client
     private Dictionary<uint, RagonPlayer> _connections = new();
     private string _ownerId;
     private string _localId;
-    
+
     private Dictionary<int, GameObject> _unattached = new Dictionary<int, GameObject>();
 
     public RagonRoom(
@@ -58,6 +58,10 @@ namespace Ragon.Client
 
     public void AddPlayer(uint peerId, string playerId, string playerName)
     {
+      // TODO: Remove this shit
+      if (_playersMap.ContainsKey(playerId)) 
+        return;
+      
       var isOwner = playerId == _ownerId;
       var isLocal = playerId == _localId;
 
