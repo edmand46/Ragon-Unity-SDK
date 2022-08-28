@@ -26,7 +26,7 @@ namespace Ragon.Client
 
     private float _replicationTimer = 0.0f;
     private float _replicationRate = 0.0f;
-    
+
     private void Awake()
     {
       Instance = this;
@@ -41,7 +41,7 @@ namespace Ragon.Client
     {
       var gameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
       var objs = new List<RagonEntity>();
-      
+
       foreach (var go in gameObjects)
       {
         var entities = go.GetComponentsInChildren<RagonEntity>();
@@ -113,7 +113,7 @@ namespace Ragon.Client
     public void OnEntityStaticCreated(ushort entityId, ushort staticId, ushort entityType, RagonPlayer creator, RagonSerializer serializer)
     {
       if (_entitiesStatic.Remove(staticId, out var ragonEntity))
-      { 
+      {
         var payload = Array.Empty<byte>();
         if (serializer.Size > 0)
         {
@@ -121,7 +121,7 @@ namespace Ragon.Client
           var entityPayload = serializer.ReadData(size);
           payload = entityPayload.ToArray();
         }
-        
+
         ragonEntity.RetrieveProperties();
         ragonEntity.Attach(_room, entityType, creator, entityId, payload);
 
@@ -145,7 +145,7 @@ namespace Ragon.Client
 
       var prefab = _registry.Prefabs[entityType];
       var go = Instantiate(prefab);
-      
+
       var component = go.GetComponent<RagonEntity>();
       component.RetrieveProperties();
       component.Attach(_room, entityType, creator, entityId, payload);
@@ -168,7 +168,7 @@ namespace Ragon.Client
           var entityPayload = serializer.ReadData(size);
           payload = entityPayload.ToArray();
         }
-        
+
         _entitiesList.Remove(ragonEntity);
 
         if (_entitiesOwned.Contains(ragonEntity))

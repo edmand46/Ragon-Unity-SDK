@@ -8,8 +8,8 @@ namespace Ragon.Client
   [RequireComponent(typeof(RagonEntity))]
   public class RagonBehaviour : MonoBehaviour
   {
-    private delegate void OnEventDelegate(RagonPlayer player, RagonSerializer buffer);
-    
+    private delegate void OnEventDelegate(RagonPlayer player, RagonSerializer serializer);
+
     public RagonPlayer Owner => _entity.Owner;
     public RagonEntity Entity => _entity;
     public bool IsMine => _mine;
@@ -17,6 +17,7 @@ namespace Ragon.Client
     private bool _mine;
     private RagonEntity _entity;
     private Dictionary<int, OnEventDelegate> _events = new();
+    private Dictionary<int, Action<IRagonEvent>> _localEvents = new();
     
     internal void Attach(RagonEntity ragonEntity)
     {
@@ -39,17 +40,23 @@ namespace Ragon.Client
 
     public void OnEvent<TEvent>(Action<RagonPlayer, TEvent> callback) where TEvent : IRagonEvent, new()
     {
-      var eventCode = RagonNetwork.Event.GetEventCode<TEvent>(new TEvent());
+      var t = new TEvent();
+      var eventCode = RagonNetwork.Event.GetEventCode(t);
+      
       if (_events.ContainsKey(eventCode))
       {
         Debug.LogWarning($"Event already {eventCode} subscribed");
         return;
       }
-
-      var t = new TEvent();
-      _events.Add(eventCode, (player, buffer) =>
+      
+      _localEvents.Add(eventCode, (evnt) =>
       {
-        t.Deserialize(buffer);
+        callback.Invoke(RagonNetwork.Room.LocalPlayer, (TEvent) evnt);
+      });
+      
+      _events.Add(eventCode, (player, serializer) =>
+      {
+        t.Deserialize(serializer);
         callback.Invoke(player, t);
       });
     }
@@ -60,6 +67,19 @@ namespace Ragon.Client
       RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
       where TEvent : IRagonEvent, new()
     {
+      if (replicationMode == RagonReplicationMode.LOCAL_ONLY)
+      {
+        var eventCode = RagonNetwork.Event.GetEventCode(evnt);
+        _localEvents[eventCode].Invoke(evnt);
+        return;
+      }
+
+      if (replicationMode == RagonReplicationMode.LOCAL_AND_SERVER)
+      {
+        var eventCode = RagonNetwork.Event.GetEventCode(evnt);
+        _localEvents[eventCode].Invoke(evnt);
+      }
+      
       _entity.ReplicateEvent(evnt, target, replicationMode);
     }
 
