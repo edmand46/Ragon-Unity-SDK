@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Ragon.Common;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 
 namespace Ragon.Client
@@ -32,6 +32,8 @@ namespace Ragon.Client
       Instance = this;
 
       _registry = Resources.Load<RagonPrefabRegistry>("RagonPrefabRegistry");
+      Assert.IsNotNull(_registry,"Can't load prefab registry, please create RagonPrefabRegistry in Resources folder");
+      
       _registry.Cache();
 
       _replicationRate = 1000.0f / replicationRate;

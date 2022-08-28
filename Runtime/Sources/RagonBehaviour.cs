@@ -49,7 +49,7 @@ namespace Ragon.Client
         return;
       }
 
-      _localEvents.Add(eventCode, (RagonPlayer player, evnt) => { callback.Invoke(player, (TEvent) evnt); });
+      _localEvents.Add(eventCode, (player, eventData) => { callback.Invoke(player, (TEvent) eventData); });
 
       _events.Add(eventCode, (player, serializer) =>
       {
@@ -64,17 +64,20 @@ namespace Ragon.Client
       RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
       where TEvent : IRagonEvent, new()
     {
-      if (replicationMode == RagonReplicationMode.LOCAL_ONLY)
+      if (target != RagonTarget.EXCEPT_OWNER)
       {
-        var eventCode = RagonNetwork.Event.GetEventCode(evnt);
-        _localEvents[eventCode].Invoke(RagonNetwork.Room.LocalPlayer, evnt);
-        return;
-      }
+        if (replicationMode == RagonReplicationMode.LOCAL_ONLY)
+        {
+          var eventCode = RagonNetwork.Event.GetEventCode(evnt);
+          _localEvents[eventCode].Invoke(RagonNetwork.Room.LocalPlayer, evnt);
+          return;
+        }
 
-      if (replicationMode == RagonReplicationMode.LOCAL_AND_SERVER)
-      {
-        var eventCode = RagonNetwork.Event.GetEventCode(evnt);
-        _localEvents[eventCode].Invoke(RagonNetwork.Room.LocalPlayer, evnt);
+        if (replicationMode == RagonReplicationMode.LOCAL_AND_SERVER)
+        {
+          var eventCode = RagonNetwork.Event.GetEventCode(evnt);
+          _localEvents[eventCode].Invoke(RagonNetwork.Room.LocalPlayer, evnt);
+        }
       }
 
       _entity.ReplicateEvent(evnt, target, replicationMode);
