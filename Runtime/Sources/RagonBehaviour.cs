@@ -17,13 +17,13 @@ namespace Ragon.Client
     private bool _mine;
     private RagonEntity _entity;
     private Dictionary<int, OnEventDelegate> _events = new();
-    private Dictionary<int, Action<IRagonEvent>> _localEvents = new();
-    
+    private Dictionary<int, Action<RagonPlayer, IRagonEvent>> _localEvents = new();
+
     internal void Attach(RagonEntity ragonEntity)
     {
       _entity = ragonEntity;
       _mine = ragonEntity.IsMine;
-      
+
       OnCreatedEntity();
     }
 
@@ -42,18 +42,15 @@ namespace Ragon.Client
     {
       var t = new TEvent();
       var eventCode = RagonNetwork.Event.GetEventCode(t);
-      
+
       if (_events.ContainsKey(eventCode))
       {
         Debug.LogWarning($"Event already {eventCode} subscribed");
         return;
       }
-      
-      _localEvents.Add(eventCode, (evnt) =>
-      {
-        callback.Invoke(RagonNetwork.Room.LocalPlayer, (TEvent) evnt);
-      });
-      
+
+      _localEvents.Add(eventCode, (RagonPlayer player, evnt) => { callback.Invoke(player, (TEvent) evnt); });
+
       _events.Add(eventCode, (player, serializer) =>
       {
         t.Deserialize(serializer);
@@ -70,16 +67,16 @@ namespace Ragon.Client
       if (replicationMode == RagonReplicationMode.LOCAL_ONLY)
       {
         var eventCode = RagonNetwork.Event.GetEventCode(evnt);
-        _localEvents[eventCode].Invoke(evnt);
+        _localEvents[eventCode].Invoke(RagonNetwork.Room.LocalPlayer, evnt);
         return;
       }
 
       if (replicationMode == RagonReplicationMode.LOCAL_AND_SERVER)
       {
         var eventCode = RagonNetwork.Event.GetEventCode(evnt);
-        _localEvents[eventCode].Invoke(evnt);
+        _localEvents[eventCode].Invoke(RagonNetwork.Room.LocalPlayer, evnt);
       }
-      
+
       _entity.ReplicateEvent(evnt, target, replicationMode);
     }
 
@@ -93,12 +90,10 @@ namespace Ragon.Client
 
     public virtual void OnEntityTick()
     {
-      
     }
 
     public virtual void OnProxyTick()
     {
-      
     }
   }
 }
