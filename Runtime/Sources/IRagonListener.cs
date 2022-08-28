@@ -16,6 +16,5 @@ namespace Ragon.Client
     void OnOwnerShipChanged(RagonPlayer player);
     
     void OnLevel(string sceneName);
-    void OnEvent(RagonPlayer player, ushort evntCode, RagonSerializer payload);
   }
 }

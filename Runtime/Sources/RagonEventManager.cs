@@ -20,8 +20,8 @@ namespace Ragon.Client
 
     public void OnEvent(RagonPlayer roomLocalPlayer, ushort evntCode, RagonSerializer serializer)
     {
-      foreach (var listener in _listeners)
-        listener.OnEvent(roomLocalPlayer, evntCode, serializer);
+      // foreach (var listener in _listeners)
+      //   listener.OnEvent(roomLocalPlayer, evntCode, serializer);
     }
 
     public void OnAuthorized(string playerId, string playerName)

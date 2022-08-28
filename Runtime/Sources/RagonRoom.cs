@@ -187,30 +187,30 @@ namespace Ragon.Client
       _connection.Send(sendData, DeliveryType.Reliable);
     }
 
-    public void ReplicateEvent(IRagonEvent evnt, RagonTarget target = RagonTarget.ALL, RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
-    {
-      var evntCode = RagonNetwork.Event.GetEventCode(evnt);
-      if (replicationMode == RagonReplicationMode.LOCAL_ONLY)
-      {
-        _serializer.Clear();
-        _eventManager.OnEvent(RagonNetwork.Room.LocalPlayer, evntCode, _serializer);
-        return;
-      }
-
-      _serializer.Clear();
-      _serializer.WriteOperation(RagonOperation.REPLICATE_EVENT);
-      _serializer.WriteUShort(evntCode);
-      _serializer.WriteByte((byte) replicationMode);
-      _serializer.WriteByte((byte) target);
-
-      if (replicationMode == RagonReplicationMode.LOCAL_AND_SERVER)
-      {
-        _serializer.Clear();
-        _eventManager.OnEvent(RagonNetwork.Room.LocalPlayer, evntCode, _serializer);
-      }
-
-      var sendData = _serializer.ToArray();
-      _connection.Send(sendData);
-    }
+    // public void ReplicateEvent(IRagonEvent evnt, RagonTarget target = RagonTarget.ALL, RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
+    // {
+    //   var evntCode = RagonNetwork.Event.GetEventCode(evnt);
+    //   if (replicationMode == RagonReplicationMode.LOCAL_ONLY)
+    //   {
+    //     _serializer.Clear();
+    //     _eventManager.OnEvent(RagonNetwork.Room.LocalPlayer, evntCode, _serializer);
+    //     return;
+    //   }
+    //
+    //   _serializer.Clear();
+    //   _serializer.WriteOperation(RagonOperation.REPLICATE_EVENT);
+    //   _serializer.WriteUShort(evntCode);
+    //   _serializer.WriteByte((byte) replicationMode);
+    //   _serializer.WriteByte((byte) target);
+    //
+    //   if (replicationMode == RagonReplicationMode.LOCAL_AND_SERVER)
+    //   {
+    //     _serializer.Clear();
+    //     _eventManager.OnEvent(RagonNetwork.Room.LocalPlayer, evntCode, _serializer);
+    //   }
+    //
+    //   var sendData = _serializer.ToArray();
+    //   _connection.Send(sendData);
+    // }
   }
 }

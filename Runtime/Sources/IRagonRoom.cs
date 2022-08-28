@@ -27,6 +27,6 @@ namespace Ragon.Client
     public void DestroyEntity(GameObject gameObject);
     public void DestroyEntity(GameObject gameObject, IRagonPayload destroyPayload);
     
-    public void ReplicateEvent(IRagonEvent evnt, RagonTarget target = RagonTarget.ALL, RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY);
+    // public void ReplicateEvent(IRagonEvent evnt, RagonTarget target = RagonTarget.ALL, RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY);
   }
 }
