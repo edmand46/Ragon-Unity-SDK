@@ -19,14 +19,11 @@ namespace Ragon.Client
 
     public void LoadScene(string map);
     public void SceneLoaded();
-
-    public void CreateSceneEntity(GameObject prefab, ushort staticId, IRagonPayload spawnPayload);
+    
     public void CreateEntity(GameObject prefab, IRagonPayload spawnPayload);
     public void CreateEntity(GameObject prefab);
 
     public void DestroyEntity(GameObject gameObject);
     public void DestroyEntity(GameObject gameObject, IRagonPayload destroyPayload);
-    
-    // public void ReplicateEvent(IRagonEvent evnt, RagonTarget target = RagonTarget.ALL, RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY);
   }
 }

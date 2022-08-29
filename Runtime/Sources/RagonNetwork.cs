@@ -143,12 +143,12 @@ namespace Ragon.Client
         case RagonOperation.JOIN_SUCCESS:
         {
           var roomId = _serializer.ReadString();
-          var localId = _serializer.ReadString();
+          var playerId = _serializer.ReadString();
           var ownerId = _serializer.ReadString();
           var min = _serializer.ReadUShort();
           var max = _serializer.ReadUShort();
-
-          var room = new RagonRoom(_eventManager, _connection, roomId, ownerId, localId, min, max);
+          
+          var room = new RagonRoom(_connection, roomId, ownerId, playerId, min, max);
           _entityManager.OnRoomCreated(room);
           _room = room;
           break;
@@ -301,11 +301,10 @@ namespace Ragon.Client
             var playerId = _serializer.ReadString();
             var playerPeerId = (uint) _serializer.ReadUShort();
             var playerName = _serializer.ReadString();
-
             _room.AddPlayer(playerPeerId, playerId, playerName);
           }
           
-          _entityManager.CollectSceneData();
+          _entityManager.CreateSceneEntities();
           
           var dynamicEntities = _serializer.ReadUShort();
           Debug.Log("Dynamic Entities: " + dynamicEntities);
@@ -335,7 +334,13 @@ namespace Ragon.Client
 
           _eventManager.OnJoined();
 
-          Debug.Log("Snapshot received");
+          _serializer.Clear();
+          _serializer.WriteOperation(RagonOperation.SCENE_IS_PROCESSED);
+          
+          var sendData = _serializer.ToArray();
+          _connection.Send(sendData, DeliveryType.Reliable);
+          
+          Debug.Log("Snapshot processed");
           break;
         }
       }

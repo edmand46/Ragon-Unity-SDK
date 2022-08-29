@@ -39,7 +39,7 @@ namespace Ragon.Client
       _replicationRate = 1000.0f / replicationRate;
     }
 
-    public void CollectSceneData()
+    public void CreateSceneEntities()
     {
       var gameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
       var objs = new List<RagonEntity>();
@@ -55,9 +55,36 @@ namespace Ragon.Client
       {
         var sceneId = entity.SceneId;
         _entitiesStatic.Add(sceneId, entity);
+        
         if (RagonNetwork.Room.LocalPlayer.IsRoomOwner)
-          RagonNetwork.Room.CreateSceneEntity(entity.gameObject, sceneId, null);
+          CreateSceneEntity(entity.gameObject, sceneId, null);
       }
+    }
+
+    public void CreateSceneEntity(GameObject prefab, ushort sceneId, IRagonPayload spawnPayload)
+    {
+      var ragonObject = prefab.GetComponent<RagonEntity>();
+      if (!ragonObject)
+      {
+        Debug.LogWarning("Ragon Entity not found on GO");
+        return;
+      }
+
+      _serializer.Clear();
+      _serializer.WriteOperation(RagonOperation.CREATE_SCENE_ENTITY);
+      _serializer.WriteUShort(ragonObject.Type);
+      _serializer.WriteUShort(sceneId);
+
+      ragonObject.RetrieveProperties();
+      ragonObject.WriteStateInfo(_serializer);
+
+      spawnPayload?.Serialize(_serializer);
+
+      
+      Debug.Log($"Create scene entity: {ragonObject.Type} {sceneId}");
+      
+      var sendData = _serializer.ToArray();
+      _room.Connection.Send(sendData, DeliveryType.Reliable);
     }
 
     public void OnRoomCreated(RagonRoom room)
@@ -114,6 +141,7 @@ namespace Ragon.Client
 
     public void OnEntityStaticCreated(ushort entityId, ushort staticId, ushort entityType, RagonPlayer creator, RagonSerializer serializer)
     {
+      Debug.Log($"OnCreate scene entity: {entityId} {staticId} {entityType}");
       if (_entitiesStatic.Remove(staticId, out var ragonEntity))
       {
         var payload = Array.Empty<byte>();

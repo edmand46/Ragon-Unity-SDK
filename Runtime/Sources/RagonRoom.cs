@@ -8,7 +8,6 @@ namespace Ragon.Client
   public class RagonRoom: IRagonRoom
   {
     private RagonConnection _connection;
-    private RagonEventManager _eventManager;
     private RagonSerializer _serializer = new();
     private List<RagonPlayer> _players = new();
     private Dictionary<string, RagonPlayer> _playersMap = new();
@@ -19,7 +18,6 @@ namespace Ragon.Client
     private Dictionary<int, GameObject> _unattached = new Dictionary<int, GameObject>();
 
     public RagonRoom(
-      RagonEventManager eventManager,
       RagonConnection connection,
       string id,
       string ownerId,
@@ -27,7 +25,6 @@ namespace Ragon.Client
       int min,
       int max)
     {
-      _eventManager = eventManager;
       _connection = connection;
       _ownerId = ownerId;
       _localId = localPlayerId;
@@ -58,8 +55,7 @@ namespace Ragon.Client
 
     public void AddPlayer(uint peerId, string playerId, string playerName)
     {
-      // TODO: Remove this shit
-      if (_playersMap.ContainsKey(playerId)) 
+      if (_playersMap.ContainsKey(playerId))
         return;
       
       var isOwner = playerId == _ownerId;
@@ -110,30 +106,7 @@ namespace Ragon.Client
       var sendData = _serializer.ToArray();
       _connection.Send(sendData, DeliveryType.Reliable);
     }
-
-    public void CreateSceneEntity(GameObject prefab, ushort staticId, IRagonPayload spawnPayload)
-    {
-      var ragonObject = prefab.GetComponent<RagonEntity>();
-      if (!ragonObject)
-      {
-        Debug.LogWarning("Ragon Object not found on GO");
-        return;
-      }
-
-      _serializer.Clear();
-      _serializer.WriteOperation(RagonOperation.CREATE_SCENE_ENTITY);
-      _serializer.WriteUShort((ushort) ragonObject.Type);
-      _serializer.WriteUShort(staticId);
-
-      ragonObject.RetrieveProperties();
-      ragonObject.WriteStateInfo(_serializer);
-
-      spawnPayload?.Serialize(_serializer);
-
-      var sendData = _serializer.ToArray();
-      _connection.Send(sendData, DeliveryType.Reliable);
-    }
-
+    
     public void SceneLoaded()
     {
       var sendData = new byte[] {(byte) RagonOperation.SCENE_IS_LOADED};
@@ -190,31 +163,5 @@ namespace Ragon.Client
       var sendData = _serializer.ToArray();
       _connection.Send(sendData, DeliveryType.Reliable);
     }
-
-    // public void ReplicateEvent(IRagonEvent evnt, RagonTarget target = RagonTarget.ALL, RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
-    // {
-    //   var evntCode = RagonNetwork.Event.GetEventCode(evnt);
-    //   if (replicationMode == RagonReplicationMode.LOCAL_ONLY)
-    //   {
-    //     _serializer.Clear();
-    //     _eventManager.OnEvent(RagonNetwork.Room.LocalPlayer, evntCode, _serializer);
-    //     return;
-    //   }
-    //
-    //   _serializer.Clear();
-    //   _serializer.WriteOperation(RagonOperation.REPLICATE_EVENT);
-    //   _serializer.WriteUShort(evntCode);
-    //   _serializer.WriteByte((byte) replicationMode);
-    //   _serializer.WriteByte((byte) target);
-    //
-    //   if (replicationMode == RagonReplicationMode.LOCAL_AND_SERVER)
-    //   {
-    //     _serializer.Clear();
-    //     _eventManager.OnEvent(RagonNetwork.Room.LocalPlayer, evntCode, _serializer);
-    //   }
-    //
-    //   var sendData = _serializer.ToArray();
-    //   _connection.Send(sendData);
-    // }
   }
 }
