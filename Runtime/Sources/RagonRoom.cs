@@ -5,9 +5,10 @@ using UnityEngine;
 
 namespace Ragon.Client
 {
-  public class RagonRoom: IRagonRoom
+  public class RagonRoom : IRagonRoom
   {
     private RagonConnection _connection;
+    private RagonEntityManager _entityManager;
     private RagonSerializer _serializer = new();
     private List<RagonPlayer> _players = new();
     private Dictionary<string, RagonPlayer> _playersMap = new();
@@ -15,37 +16,33 @@ namespace Ragon.Client
     private string _ownerId;
     private string _localId;
 
-    private Dictionary<int, GameObject> _unattached = new Dictionary<int, GameObject>();
+    public string Id { get; private set; }
+    public int MinPlayers { get; private set; }
+    public int MaxPlayers { get; private set; }
+
+    public RagonPlayer Owner { get; private set; }
+    public RagonPlayer LocalPlayer { get; private set; }
+    public RagonConnection Connection => _connection;
+
+    public ReadOnlyCollection<RagonPlayer> Players => _players.AsReadOnly();
+    public IReadOnlyDictionary<uint, RagonPlayer> ConnectionsById => _connections;
+    public IReadOnlyDictionary<string, RagonPlayer> PlayersById => _playersMap;
 
     public RagonRoom(
       RagonConnection connection,
+      RagonEntityManager manager,
       string id,
-      string ownerId,
-      string localPlayerId,
       int min,
       int max)
     {
       _connection = connection;
-      _ownerId = ownerId;
-      _localId = localPlayerId;
+      _entityManager = manager;
 
       Id = id;
       MinPlayers = min;
       MaxPlayers = max;
     }
-    
-    public string Id { get; private set; }
-    public int MinPlayers { get; private set; }
-    public int MaxPlayers { get; private set; }
-    
-    public RagonPlayer Owner { get; private set; }
-    public RagonPlayer LocalPlayer { get; private set; }
-    public RagonConnection Connection => _connection;
-    
-    public ReadOnlyCollection<RagonPlayer> Players => _players.AsReadOnly();
-    public IReadOnlyDictionary<uint, RagonPlayer> ConnectionsById => _connections;
-    public IReadOnlyDictionary<string, RagonPlayer> PlayersById => _playersMap;
-    
+
     public void Cleanup()
     {
       _players.Clear();
@@ -53,13 +50,22 @@ namespace Ragon.Client
       _connections.Clear();
     }
 
+    public void SetOwnerAndLocal(string ownerId, string localId)
+    {
+      Debug.Log($"{ownerId} - {localId}");
+      _ownerId = ownerId;
+      _localId = localId;
+    }
+
     public void AddPlayer(uint peerId, string playerId, string playerName)
     {
       if (_playersMap.ContainsKey(playerId))
         return;
-      
+
       var isOwner = playerId == _ownerId;
       var isLocal = playerId == _localId;
+
+      Debug.Log($"Added player {playerId}|{playerName} IsOwner: {isOwner} isLocal: {isLocal}");
 
       var player = new RagonPlayer(peerId, playerId, playerName, isOwner, isLocal);
 
@@ -106,30 +112,39 @@ namespace Ragon.Client
       var sendData = _serializer.ToArray();
       _connection.Send(sendData, DeliveryType.Reliable);
     }
-    
+
     public void SceneLoaded()
     {
-      var sendData = new byte[] {(byte) RagonOperation.SCENE_IS_LOADED};
+      _entityManager.CollectSceneEntities();
+
+      _serializer.Clear();
+      _serializer.WriteOperation(RagonOperation.SCENE_LOADED);
+
+      if (_ownerId == _localId)
+        _entityManager.WriteSceneEntities(_serializer);
+
+      var sendData = _serializer.ToArray();
       _connection.Send(sendData, DeliveryType.Reliable);
     }
 
-    public void CreateEntity(GameObject prefab)
+    public void CreateEntity(GameObject prefab, RagonAuthority evnt)
     {
-      CreateEntity(prefab, null);
+      CreateEntity(prefab, null, evnt);
     }
-    
-    public void CreateEntity(GameObject prefab, IRagonPayload spawnPayload)
+
+    public void CreateEntity(GameObject prefab, IRagonPayload spawnPayload, RagonAuthority authority)
     {
       var ragonEntity = prefab.GetComponent<RagonEntity>();
       if (!ragonEntity)
       {
-        Debug.LogWarning("Ragon Object not found on GO");
+        Debug.LogError($"{prefab.name} has not Ragon Entity component");
         return;
       }
 
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.CREATE_ENTITY);
-      _serializer.WriteUShort((ushort) ragonEntity.Type);
+      _serializer.WriteUShort(ragonEntity.Type);
+      _serializer.WriteByte((byte) authority);
 
       ragonEntity.RetrieveProperties();
       ragonEntity.WriteStateInfo(_serializer);
@@ -144,7 +159,7 @@ namespace Ragon.Client
     {
       DestroyEntity(gameObject, null);
     }
-    
+
     public void DestroyEntity(GameObject gameObject, IRagonPayload destroyPayload)
     {
       var hasEntity = gameObject.TryGetComponent<RagonEntity>(out var ragonObject);

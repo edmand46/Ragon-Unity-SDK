@@ -61,12 +61,12 @@ namespace Ragon.Client
     public void ReplicateEvent<TEvent>(
       TEvent evnt,
       RagonTarget target = RagonTarget.ALL,
-      RagonReplicationMode replicationMode = RagonReplicationMode.SERVER_ONLY)
+      RagonReplicationMode replicationMode = RagonReplicationMode.SERVER)
       where TEvent : IRagonEvent, new()
     {
       if (target != RagonTarget.EXCEPT_OWNER)
       {
-        if (replicationMode == RagonReplicationMode.LOCAL_ONLY)
+        if (replicationMode == RagonReplicationMode.LOCAL)
         {
           var eventCode = RagonNetwork.Event.GetEventCode(evnt);
           _localEvents[eventCode].Invoke(RagonNetwork.Room.LocalPlayer, evnt);

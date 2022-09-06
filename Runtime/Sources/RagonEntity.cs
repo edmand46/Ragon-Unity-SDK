@@ -15,8 +15,10 @@ namespace Ragon.Client
     public ushort Id => _entityId;
     public ushort Type => _entityType;
     public ushort SceneId => _sceneId;
+    public RagonAuthority Authority => _authority;
     public RagonPlayer Owner => _owner;
-
+    
+    [SerializeField] private RagonAuthority _authority;
     [SerializeField, ReadOnly] private ushort _entityType;
     [SerializeField, ReadOnly] private ushort _entityId;
     [SerializeField, ReadOnly] private ushort _sceneId;
@@ -117,7 +119,7 @@ namespace Ragon.Client
 
     internal void ReplicateState(RagonSerializer serializer)
     {
-      serializer.WriteUShort((ushort) _entityId);
+      serializer.WriteUShort(_entityId);
       
       foreach (var prop in _propertiesList)
       {

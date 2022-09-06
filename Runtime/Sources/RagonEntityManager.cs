@@ -39,8 +39,10 @@ namespace Ragon.Client
       _replicationRate = 1000.0f / replicationRate;
     }
 
-    public void CreateSceneEntities()
+    public void CollectSceneEntities()
     {
+      _entitiesStatic.Clear();
+      
       var gameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
       var objs = new List<RagonEntity>();
 
@@ -55,36 +57,23 @@ namespace Ragon.Client
       {
         var sceneId = entity.SceneId;
         _entitiesStatic.Add(sceneId, entity);
-        
-        if (RagonNetwork.Room.LocalPlayer.IsRoomOwner)
-          CreateSceneEntity(entity.gameObject, sceneId, null);
       }
     }
 
-    public void CreateSceneEntity(GameObject prefab, ushort sceneId, IRagonPayload spawnPayload)
+    public void WriteSceneEntities(RagonSerializer serializer)
     {
-      var ragonObject = prefab.GetComponent<RagonEntity>();
-      if (!ragonObject)
+      serializer.WriteUShort((ushort) _entitiesStatic.Count);
+      foreach (var (sceneId, ragonObject) in _entitiesStatic)
       {
-        Debug.LogWarning("Ragon Entity not found on GO");
-        return;
+        serializer.WriteUShort(ragonObject.Type);
+        serializer.WriteByte((byte) ragonObject.Authority);
+        serializer.WriteUShort((ushort) sceneId);
+        
+        ragonObject.RetrieveProperties();
+        ragonObject.WriteStateInfo(serializer);
+        
+        Debug.Log($"[Scene Entity] Name; {ragonObject.name} Authority: {ragonObject.Authority} SceneId: {sceneId}");
       }
-
-      _serializer.Clear();
-      _serializer.WriteOperation(RagonOperation.CREATE_SCENE_ENTITY);
-      _serializer.WriteUShort(ragonObject.Type);
-      _serializer.WriteUShort(sceneId);
-
-      ragonObject.RetrieveProperties();
-      ragonObject.WriteStateInfo(_serializer);
-
-      spawnPayload?.Serialize(_serializer);
-
-      
-      Debug.Log($"Create scene entity: {ragonObject.Type} {sceneId}");
-      
-      var sendData = _serializer.ToArray();
-      _room.Connection.Send(sendData, DeliveryType.Reliable);
     }
 
     public void OnRoomCreated(RagonRoom room)
@@ -153,8 +142,9 @@ namespace Ragon.Client
         }
 
         ragonEntity.RetrieveProperties();
+        ragonEntity.ProcessState(serializer);
         ragonEntity.Attach(_room, entityType, creator, entityId, payload);
-
+        
         _entitiesDict.Add(entityId, ragonEntity);
         _entitiesList.Add(ragonEntity);
 
@@ -178,8 +168,9 @@ namespace Ragon.Client
 
       var component = go.GetComponent<RagonEntity>();
       component.RetrieveProperties();
+      component.ProcessState(serializer);
       component.Attach(_room, entityType, creator, entityId, payload);
-
+      
       _entitiesDict.Add(entityId, component);
       _entitiesList.Add(component);
 
@@ -212,12 +203,16 @@ namespace Ragon.Client
     {
       if (_entitiesDict.TryGetValue(entityId, out var ent))
         ent.ProcessEvent(player, evntCode, payload);
+      else
+        Debug.LogWarning("[Event] Entity not found");
     }
 
     public void OnEntityState(int entityId, RagonSerializer payload)
     {
       if (_entitiesDict.TryGetValue(entityId, out var ent))
         ent.ProcessState(payload);
+      else
+        Debug.LogWarning("[State] Entity not found");
     }
 
     public void OnOwnerShipChanged(RagonPlayer player)
