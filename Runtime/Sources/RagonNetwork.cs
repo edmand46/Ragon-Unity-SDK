@@ -266,7 +266,7 @@ namespace Ragon.Client
           var eventCode = _serializer.ReadUShort();
 
           if (_room.ConnectionsById.TryGetValue(executorPeerId, out var player)
-              && executionMode == RagonReplicationMode.LOCAL_AND_SERVER
+              && executionMode == RagonReplicationMode.LocalAndServer
               && !player.IsMe)
           {
             _eventManager.OnEvent(player, eventCode, _serializer);
@@ -284,7 +284,7 @@ namespace Ragon.Client
           if (!_room.ConnectionsById.TryGetValue(peerId, out var player))
             break;
 
-          if (executionMode == RagonReplicationMode.LOCAL_AND_SERVER && player.IsMe)
+          if (executionMode == RagonReplicationMode.LocalAndServer && player.IsMe)
             break;
 
           _entityManager.OnEntityEvent(player, entityId, eventCode, _serializer);

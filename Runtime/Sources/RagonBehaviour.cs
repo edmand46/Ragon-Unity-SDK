@@ -5,7 +5,6 @@ using UnityEngine;
 
 namespace Ragon.Client
 {
-  [RequireComponent(typeof(RagonEntity))]
   public class RagonBehaviour : MonoBehaviour
   {
     private delegate void OnEventDelegate(RagonPlayer player, RagonSerializer serializer);
@@ -60,20 +59,20 @@ namespace Ragon.Client
 
     public void ReplicateEvent<TEvent>(
       TEvent evnt,
-      RagonTarget target = RagonTarget.ALL,
-      RagonReplicationMode replicationMode = RagonReplicationMode.SERVER)
+      RagonTarget target = RagonTarget.All,
+      RagonReplicationMode replicationMode = RagonReplicationMode.Server)
       where TEvent : IRagonEvent, new()
     {
-      if (target != RagonTarget.EXCEPT_OWNER)
+      if (target != RagonTarget.ExceptOwner)
       {
-        if (replicationMode == RagonReplicationMode.LOCAL)
+        if (replicationMode == RagonReplicationMode.Local)
         {
           var eventCode = RagonNetwork.Event.GetEventCode(evnt);
           _localEvents[eventCode].Invoke(RagonNetwork.Room.LocalPlayer, evnt);
           return;
         }
 
-        if (replicationMode == RagonReplicationMode.LOCAL_AND_SERVER)
+        if (replicationMode == RagonReplicationMode.LocalAndServer)
         {
           var eventCode = RagonNetwork.Event.GetEventCode(evnt);
           _localEvents[eventCode].Invoke(RagonNetwork.Room.LocalPlayer, evnt);

@@ -19,6 +19,8 @@ namespace Ragon.Client
     public RagonPlayer Owner => _owner;
     
     [SerializeField] private RagonAuthority _authority;
+    [SerializeField] private RagonDiscovery _discovery;
+    
     [SerializeField, ReadOnly] private ushort _entityType;
     [SerializeField, ReadOnly] private ushort _entityId;
     [SerializeField, ReadOnly] private ushort _sceneId;
@@ -39,7 +41,16 @@ namespace Ragon.Client
     internal void RetrieveProperties()
     {
       _propertiesList = new List<RagonProperty>();
-      _behaviours = GetComponents<RagonBehaviour>();
+      switch (_discovery)
+      {
+        case RagonDiscovery.RootObject:
+          _behaviours = GetComponents<RagonBehaviour>();
+          break;
+        case RagonDiscovery.RootObjectWithNested:
+          _behaviours = GetComponentsInChildren<RagonBehaviour>();
+          break;
+      }
+      
       _serializer = new RagonSerializer();
 
       foreach (var state in _behaviours)
