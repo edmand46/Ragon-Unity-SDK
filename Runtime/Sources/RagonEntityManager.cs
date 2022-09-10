@@ -142,8 +142,8 @@ namespace Ragon.Client
         }
 
         ragonEntity.RetrieveProperties();
-        ragonEntity.ProcessState(serializer);
         ragonEntity.Attach(_room, entityType, creator, entityId, payload);
+        ragonEntity.ProcessState(serializer);
         
         _entitiesDict.Add(entityId, ragonEntity);
         _entitiesList.Add(ragonEntity);
@@ -168,8 +168,8 @@ namespace Ragon.Client
 
       var component = go.GetComponent<RagonEntity>();
       component.RetrieveProperties();
-      component.ProcessState(serializer);
       component.Attach(_room, entityType, creator, entityId, payload);
+      component.ProcessState(serializer);
       
       _entitiesDict.Add(entityId, component);
       _entitiesList.Add(component);
