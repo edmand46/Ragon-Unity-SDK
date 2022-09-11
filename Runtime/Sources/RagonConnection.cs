@@ -98,12 +98,15 @@ namespace Ragon.Client
             break;
           case EventType.Connect:
             OnConnected?.Invoke();
+            ConnectionState = RagonConnectionState.CONNECTED;
             break;
           case EventType.Disconnect:
             OnDisconnected?.Invoke();
+            ConnectionState = RagonConnectionState.DISCONNECTED;
             break;
           case EventType.Timeout:
             OnDisconnected?.Invoke();
+            ConnectionState = RagonConnectionState.DISCONNECTED;
             break;
           case EventType.Receive:
             var data = new byte[_netEvent.Packet.Length];
