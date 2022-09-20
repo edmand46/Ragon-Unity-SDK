@@ -100,16 +100,16 @@ namespace Ragon.Client
       _replication = true;
       _room = room;
       _mine = _room.LocalPlayer.Id == owner.Id;
-
-      foreach (var behaviour in _behaviours)
-        behaviour.Attach(this);
-
+      
       var propertyIdGenerator = 0;
       foreach (var property in _propertiesList)
       {
         property.Attach(this, propertyIdGenerator);
         propertyIdGenerator++;
       }
+      
+      foreach (var behaviour in _behaviours)
+        behaviour.Attach(this);
     }
 
     public void ChangeOwner(RagonPlayer newOwner)
