@@ -21,7 +21,7 @@ namespace Ragon.Client
     public void SceneLoaded();
     
     public void CreateEntity(GameObject prefab, IRagonPayload spawnPayload, RagonAuthority evnt = RagonAuthority.OwnerOnly);
-    public void CreateEntity(GameObject prefab, RagonAuthority evnt);
+    public void CreateEntity(GameObject prefab, RagonAuthority evnt = RagonAuthority.OwnerOnly);
 
     public void DestroyEntity(GameObject gameObject);
     public void DestroyEntity(GameObject gameObject, IRagonPayload destroyPayload);

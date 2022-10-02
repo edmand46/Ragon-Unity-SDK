@@ -173,11 +173,17 @@ namespace Ragon.Client
         case RagonOperation.OWNERSHIP_CHANGED:
         {
           var newOwnerId = _serializer.ReadString();
-          _room.OnOwnershipChanged(newOwnerId);
           var player = _room.PlayersById[newOwnerId];
-
+          
+          _room.OnOwnershipChanged(newOwnerId);
           _eventManager.OnOwnerShipChanged(player);
-          _entityManager.OnOwnerShipChanged(player);
+          
+          var entities = _serializer.ReadUShort();
+          for (var i = 0; i < entities; i++)
+          {
+            var entityId = _serializer.ReadUShort();
+            _entityManager.OnOwnerShipChanged(player, entityId);
+          }
           break;
         }
         case RagonOperation.PLAYER_JOINED:

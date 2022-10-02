@@ -116,6 +116,9 @@ namespace Ragon.Client
     {
       _owner = newOwner;
       _mine = _room.LocalPlayer.Id == newOwner.Id;
+
+      foreach (var behaviour in _behaviours)
+        behaviour.OnOwnerShipChanged(newOwner);
     }
 
     public void Detach(byte[] payload)

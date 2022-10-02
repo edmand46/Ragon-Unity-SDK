@@ -97,5 +97,10 @@ namespace Ragon.Client
     public virtual void OnProxyTick()
     {
     }
+
+    public virtual void OnOwnerShipChanged(RagonPlayer player)
+    {
+      
+    }
   }
 }

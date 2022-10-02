@@ -32,8 +32,8 @@ namespace Ragon.Client
       Instance = this;
 
       _registry = Resources.Load<RagonPrefabRegistry>("RagonPrefabRegistry");
-      Assert.IsNotNull(_registry,"Can't load prefab registry, please create RagonPrefabRegistry in Resources folder");
-      
+      Assert.IsNotNull(_registry, "Can't load prefab registry, please create RagonPrefabRegistry in Resources folder");
+
       _registry.Cache();
 
       _replicationRate = 1000.0f / replicationRate;
@@ -42,7 +42,7 @@ namespace Ragon.Client
     public void CollectSceneEntities()
     {
       _entitiesStatic.Clear();
-      
+
       var gameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
       var objs = new List<RagonEntity>();
 
@@ -68,10 +68,10 @@ namespace Ragon.Client
         serializer.WriteUShort(ragonObject.Type);
         serializer.WriteByte((byte) ragonObject.Authority);
         serializer.WriteUShort((ushort) sceneId);
-        
+
         ragonObject.RetrieveProperties();
         ragonObject.WriteStateInfo(serializer);
-        
+
         Debug.Log($"[Scene Entity] Name; {ragonObject.name} Authority: {ragonObject.Authority} SceneId: {sceneId}");
       }
     }
@@ -144,7 +144,7 @@ namespace Ragon.Client
         ragonEntity.RetrieveProperties();
         ragonEntity.Attach(_room, entityType, creator, entityId, payload);
         ragonEntity.ProcessState(serializer);
-        
+
         _entitiesDict.Add(entityId, ragonEntity);
         _entitiesList.Add(ragonEntity);
 
@@ -170,7 +170,7 @@ namespace Ragon.Client
       component.RetrieveProperties();
       component.Attach(_room, entityType, creator, entityId, payload);
       component.ProcessState(serializer);
-      
+
       _entitiesDict.Add(entityId, component);
       _entitiesList.Add(component);
 
@@ -215,10 +215,12 @@ namespace Ragon.Client
         Debug.LogWarning("[State] Entity not found");
     }
 
-    public void OnOwnerShipChanged(RagonPlayer player)
+    public void OnOwnerShipChanged(RagonPlayer player, int entityId)
     {
-      foreach (var ent in _entitiesList)
-        ent.ChangeOwner(player);
+      if (_entitiesDict.TryGetValue(entityId, out var entity))
+        entity.ChangeOwner(player);
+      else
+        Debug.LogWarning("[OwnerShip] Entity not found");
     }
   }
 }
