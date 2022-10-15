@@ -17,10 +17,11 @@ namespace Ragon.Client
     public ushort SceneId => _sceneId;
     public RagonAuthority Authority => _authority;
     public RagonPlayer Owner => _owner;
-    
+
     [SerializeField] private RagonAuthority _authority;
     [SerializeField] private RagonDiscovery _discovery;
-    
+    [SerializeField] private bool _autoDestroy;
+
     [SerializeField, ReadOnly] private ushort _entityType;
     [SerializeField, ReadOnly] private ushort _entityId;
     [SerializeField, ReadOnly] private ushort _sceneId;
@@ -50,7 +51,7 @@ namespace Ragon.Client
           _behaviours = GetComponentsInChildren<RagonBehaviour>();
           break;
       }
-      
+
       _serializer = new RagonSerializer();
 
       foreach (var state in _behaviours)
@@ -100,14 +101,14 @@ namespace Ragon.Client
       _replication = true;
       _room = room;
       _mine = _room.LocalPlayer.Id == owner.Id;
-      
+
       var propertyIdGenerator = 0;
       foreach (var property in _propertiesList)
       {
         property.Attach(this, propertyIdGenerator);
         propertyIdGenerator++;
       }
-      
+
       foreach (var behaviour in _behaviours)
         behaviour.Attach(this);
     }
@@ -128,13 +129,14 @@ namespace Ragon.Client
       foreach (var state in _behaviours)
         state.Detach();
 
-      Destroy(gameObject);
+      if (_autoDestroy)
+        Destroy(gameObject);
     }
 
     internal void ReplicateState(RagonSerializer serializer)
     {
       serializer.WriteUShort(_entityId);
-      
+
       foreach (var prop in _propertiesList)
       {
         if (prop.IsDirty)
@@ -148,7 +150,7 @@ namespace Ragon.Client
           serializer.WriteBool(false);
         }
       }
-      
+
       _propertiesChanged = false;
     }
 

@@ -127,12 +127,12 @@ namespace Ragon.Client
       _connection.Send(sendData, DeliveryType.Reliable);
     }
 
-    public void CreateEntity(GameObject prefab, RagonAuthority evnt)
+    public void CreateEntity(GameObject prefab)
     {
-      CreateEntity(prefab, null, evnt);
+      CreateEntity(prefab, null);
     }
 
-    public void CreateEntity(GameObject prefab, IRagonPayload spawnPayload, RagonAuthority authority)
+    public void CreateEntity(GameObject prefab, IRagonPayload spawnPayload)
     {
       var ragonEntity = prefab.GetComponent<RagonEntity>();
       if (!ragonEntity)
@@ -144,7 +144,7 @@ namespace Ragon.Client
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.CREATE_ENTITY);
       _serializer.WriteUShort(ragonEntity.Type);
-      _serializer.WriteByte((byte) authority);
+      _serializer.WriteByte((byte) ragonEntity.Authority);
 
       ragonEntity.RetrieveProperties();
       ragonEntity.WriteStateInfo(_serializer);
