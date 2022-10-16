@@ -147,12 +147,14 @@ namespace Ragon.Client
           var ownerId = _serializer.ReadString();
           var min = _serializer.ReadUShort();
           var max = _serializer.ReadUShort();
+          var map = _serializer.ReadString();
 
           var room = new RagonRoom(_connection, _entityManager, roomId, min, max);
           room.SetOwnerAndLocal(ownerId, playerId);
-
+          
           _entityManager.OnRoomCreated(room);
           _room = room;
+          _eventManager.OnLevel(map);
           break;
         }
         case RagonOperation.JOIN_FAILED:
