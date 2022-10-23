@@ -36,7 +36,7 @@ namespace Ragon.Client
 
       _registry.Cache();
 
-      _replicationRate = 1000.0f / replicationRate;
+      _replicationRate = (1000.0f / replicationRate) / 1000.0f;
     }
 
     public void CollectSceneEntities()
@@ -101,7 +101,7 @@ namespace Ragon.Client
     {
       if (_room == null) return;
 
-      _replicationTimer += Time.fixedTime;
+      _replicationTimer += Time.fixedDeltaTime;
       if (_replicationTimer > _replicationRate)
       {
         var changedEntities = 0;
@@ -114,15 +114,22 @@ namespace Ragon.Client
 
         foreach (var ent in _entitiesOwned)
         {
-          if (ent.AutoReplication && ent.PropertiesChanged)
+          if (
+            ent.IsAttached &&
+            ent.AutoReplication && 
+            ent.PropertiesChanged)
           {
             ent.ReplicateState(_serializer);
             changedEntities++;
           }
         }
 
-        _serializer.WriteUShort((ushort) changedEntities, offset);
-        _room.Connection.Send(_serializer);
+        if (changedEntities > 0)
+        {
+          Debug.Log("Time: " + _replicationTimer);
+          _serializer.WriteUShort((ushort) changedEntities, offset);
+          _room.Connection.Send(_serializer);
+        }
 
         _replicationTimer = 0.0f;
       }

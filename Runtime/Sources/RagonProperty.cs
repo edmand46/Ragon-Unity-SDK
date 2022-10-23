@@ -7,6 +7,7 @@ namespace Ragon.Client
   public class RagonProperty
   {
     public Action OnChanged;
+    public RagonEntity Entity => _entity;
     public bool IsDirty => _dirty;
     public bool IsFixed => _fixed;
     public int Id => _id;

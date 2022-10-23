@@ -7,7 +7,7 @@ namespace Ragon.Client
 {
   public class RagonRoom : IRagonRoom
   {
-    private RagonConnection _connection;
+    private IRagonConnection _connection;
     private RagonEntityManager _entityManager;
     private RagonSerializer _serializer = new();
     private List<RagonPlayer> _players = new();
@@ -22,14 +22,14 @@ namespace Ragon.Client
 
     public RagonPlayer Owner { get; private set; }
     public RagonPlayer LocalPlayer { get; private set; }
-    public RagonConnection Connection => _connection;
+    public IRagonConnection Connection => _connection;
 
     public ReadOnlyCollection<RagonPlayer> Players => _players.AsReadOnly();
     public IReadOnlyDictionary<uint, RagonPlayer> ConnectionsById => _connections;
     public IReadOnlyDictionary<string, RagonPlayer> PlayersById => _playersMap;
 
     public RagonRoom(
-      RagonConnection connection,
+      IRagonConnection connection,
       RagonEntityManager manager,
       string id,
       int min,

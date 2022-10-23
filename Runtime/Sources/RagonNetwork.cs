@@ -125,7 +125,7 @@ namespace Ragon.Client
       }
 
       ReadOnlySpan<byte> rawData = bytes.AsSpan();
-
+      
       _serializer.Clear();
       _serializer.FromSpan(ref rawData);
 

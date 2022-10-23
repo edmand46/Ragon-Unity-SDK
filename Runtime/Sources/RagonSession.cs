@@ -5,10 +5,10 @@ namespace Ragon.Client
 {
   public class RagonSession
   {
-    private RagonConnection _connection;
+    private IRagonConnection _connection;
     private RagonSerializer _serializer = new RagonSerializer();
     
-    public RagonSession(RagonConnection connection)
+    public RagonSession(IRagonConnection connection)
     {
       _connection = connection;
     }
