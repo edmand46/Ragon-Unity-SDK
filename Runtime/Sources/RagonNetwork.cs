@@ -350,7 +350,7 @@ namespace Ragon.Client
             var ownerPeerId = _serializer.ReadUShort();
             var player = _room.ConnectionsById[ownerPeerId];
             
-            _entityManager.OnEntityCreatedPredicted(entityId, staticId, entityType, player, _serializer);
+            _entityManager.OnEntityStaticCreated(entityId, staticId, entityType, player, _serializer);
           }
 
           _eventManager.OnJoined();
