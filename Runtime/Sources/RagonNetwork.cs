@@ -15,8 +15,11 @@ namespace Ragon.Client
   public class RagonNetwork : MonoBehaviour
   {
     private static RagonNetwork _instance;
+
+    [SerializeField] private RagonSocketType _socketType;
+    
     private RagonRoom _room;
-    private RagonConnection _connection;
+    private IRagonConnection _connection;
     private RagonSession _session;
     private RagonEntityManager _entityManager;
     private RagonEventManager _eventManager;
@@ -34,11 +37,26 @@ namespace Ragon.Client
       _instance = this;
       DontDestroyOnLoad(gameObject);
 
-      _connection = new RagonConnection();
-      _connection.OnData += OnData;
-      _connection.OnConnected += OnConnected;
-      _connection.OnDisconnected += OnDisconnected;
-      _connection.Prepare();
+      if (_socketType == RagonSocketType.UDP)
+      {
+        var conn = new RagonConnection();
+        conn.OnData += OnData;
+        conn.OnConnected += OnConnected;
+        conn.OnDisconnected += OnDisconnected;
+        conn.Prepare();
+        
+        _connection = conn;
+      }
+      else
+      {
+        var conn = new RagonWebSocketConnection();
+        conn.OnData += OnData;
+        conn.OnConnected += OnConnected;
+        conn.OnDisconnected += OnDisconnected;
+        
+        _connection = conn;
+      }
+      
 
       _session = new RagonSession(_connection);
       _eventRegistry = new RagonEventRegistry();
@@ -332,7 +350,7 @@ namespace Ragon.Client
             var ownerPeerId = _serializer.ReadUShort();
             var player = _room.ConnectionsById[ownerPeerId];
             
-            _entityManager.OnEntityStaticCreated(entityId, staticId, entityType, player, _serializer);
+            _entityManager.OnEntityCreatedPredicted(entityId, staticId, entityType, player, _serializer);
           }
 
           _eventManager.OnJoined();

@@ -10,12 +10,12 @@ namespace Ragon.Client
     public Action<byte[]> OnData;
     public Action OnConnected;
     public Action OnDisconnected;
-    
+
     public uint Ping { get; }
+    public RagonConnectionState ConnectionState { get; private set; }
     public double UpstreamBandwidth { get; }
     public double DownstreamBandwidth { get; }
-    public RagonConnectionState ConnectionState;
-    
+
     private WebSocket _webSocket;
     
     public RagonWebSocketConnection()
@@ -37,8 +37,17 @@ namespace Ragon.Client
     public async void Connect(string server, ushort port, uint protocol)
     {
       _webSocket = new WebSocket(server);
-      _webSocket.OnOpen += () => OnConnected?.Invoke();
-      _webSocket.OnClose += (code) => OnDisconnected?.Invoke();
+      _webSocket.OnOpen += () =>
+      {
+        ConnectionState = RagonConnectionState.CONNECTED;
+        OnConnected?.Invoke();
+      };
+      _webSocket.OnClose += (code) =>
+      {
+        ConnectionState = RagonConnectionState.DISCONNECTED;
+        OnDisconnected?.Invoke();
+      };
+      
       _webSocket.OnError += (err) => Debug.LogError(err);
       _webSocket.OnMessage += data => OnData?.Invoke(data);
       
@@ -48,13 +57,19 @@ namespace Ragon.Client
     public void Update()
     {
 #if !UNITY_WEBGL || UNITY_EDITOR
-      _webSocket.DispatchMessageQueue();
+      if (ConnectionState == RagonConnectionState.CONNECTED)
+      {
+        _webSocket.DispatchMessageQueue();
+      }
 #endif
     }
 
     public async void Dispose()
     {
-      await _webSocket.Close();
+      if (ConnectionState == RagonConnectionState.CONNECTED)
+      {
+        await _webSocket.Close();
+      }
     }
   }
 }

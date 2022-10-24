@@ -192,10 +192,10 @@ namespace Ragon.Client
       var evntId = RagonNetwork.Event.GetEventCode(evnt);
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
+      _serializer.WriteUShort(Id);
       _serializer.WriteUShort(evntId);
       _serializer.WriteByte((byte) replicationMode);
       _serializer.WriteByte((byte) target);
-      _serializer.WriteUShort((ushort) Id);
 
       evnt.Serialize(_serializer);
 

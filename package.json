@@ -11,7 +11,7 @@
     "authoritative",
     "netcode"
   ],
-  "version": "1.0.22-rc",
+  "version": "1.0.23-rc",
   "dependencies": {},
   "repository": {
     "type": "git",
