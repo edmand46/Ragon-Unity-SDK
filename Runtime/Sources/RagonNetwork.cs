@@ -285,21 +285,6 @@ namespace Ragon.Client
 
           break;
         }
-        case RagonOperation.REPLICATE_EVENT:
-        {
-          var executorPeerId = _serializer.ReadUShort();
-          var executionMode = (RagonReplicationMode) _serializer.ReadByte();
-          var eventCode = _serializer.ReadUShort();
-
-          if (_room.ConnectionsById.TryGetValue(executorPeerId, out var player)
-              && executionMode == RagonReplicationMode.LocalAndServer
-              && !player.IsMe)
-          {
-            _eventManager.OnEvent(player, eventCode, _serializer);
-          }
-
-          break;
-        }
         case RagonOperation.REPLICATE_ENTITY_EVENT:
         {
           var eventCode = _serializer.ReadUShort();

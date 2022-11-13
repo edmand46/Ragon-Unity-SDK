@@ -212,7 +212,6 @@ namespace Ragon.Client
     private void Update()
     {
       if (!_attached) return;
-
       if (_mine)
       {
         foreach (var behaviour in _behaviours)
