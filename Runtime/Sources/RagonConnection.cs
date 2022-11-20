@@ -64,6 +64,12 @@ namespace Ragon.Client
       Library.Initialize();
     }
 
+    public void Disconnect()
+    {
+      if (_peer.IsSet)
+        _peer.DisconnectNow(0);
+    }
+
     public void Connect(string server, ushort port, uint protocol)
     {
       _host = new Host();
@@ -152,13 +158,7 @@ namespace Ragon.Client
     
     public void Dispose()
     {
-      OnDisconnected?.Invoke();
       
-      if (_peer.IsSet)
-      {
-        _peer.DisconnectNow(0);
-      }
-
       if (_host.IsSet)
       {
         _host?.Flush();

@@ -6,7 +6,7 @@ namespace Ragon.Editor
 {
   public class RagonTools : EditorWindow
   {
-    [MenuItem("Ragon/Tools")]
+    [MenuItem("Services/Ragon/Tools")]
     private static void ShowWindow()
     {
       var window = GetWindow<RagonTools>();

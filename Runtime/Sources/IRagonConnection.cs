@@ -13,6 +13,7 @@ namespace Ragon.Client
     public void Send(RagonSerializer serializer, DeliveryType deliveryType = DeliveryType.Unreliable);
     public void Send(byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable);
     public void Connect(string address, ushort port, uint protocol);
+    public void Disconnect();
     public void Update();
   }
 }

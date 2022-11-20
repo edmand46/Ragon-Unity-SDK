@@ -125,7 +125,7 @@ namespace Ragon.Client
 
     public static void Disconnect()
     {
-      _instance._connection.Dispose();
+      _instance._connection.Disconnect();
     }
 
     private void OnData(byte[] bytes)
