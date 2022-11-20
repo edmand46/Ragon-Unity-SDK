@@ -23,7 +23,7 @@ namespace Ragon.Client
     public Action<byte[]> OnData;
     public Action OnConnected;
     public Action OnDisconnected;
-    public uint Ping => _peer.RoundTripTime;
+    public uint Ping => _peer.IsSet ? _peer.RoundTripTime : 0;
     public double UpstreamBandwidth => _upstreamBandwidth;
     public double DownstreamBandwidth => _downstreamBandwidth;
     public RagonConnectionState ConnectionState { get; private set; }

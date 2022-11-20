@@ -54,6 +54,11 @@ namespace Ragon.Client
       await _webSocket.Connect();
     }
 
+    public async void Disconnect()
+    {
+      await _webSocket.Close();
+    }
+
     public void Update()
     {
 #if !UNITY_WEBGL || UNITY_EDITOR

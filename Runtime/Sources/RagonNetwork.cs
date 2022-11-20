@@ -125,6 +125,7 @@ namespace Ragon.Client
 
     public static void Disconnect()
     {
+      _instance._entityManager.Cleanup();
       _instance._connection.Disconnect();
     }
 
