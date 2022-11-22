@@ -127,6 +127,7 @@ namespace Ragon.Client
     {
       _instance._entityManager.Cleanup();
       _instance._connection.Disconnect();
+      _instance.OnDisconnected();
     }
 
     private void OnData(byte[] bytes)
