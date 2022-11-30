@@ -80,6 +80,7 @@ namespace Ragon.Client
 
     private void OnDestroy()
     {
+      _connection.Disconnect();
       _connection.Dispose();
     }
 

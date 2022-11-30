@@ -30,12 +30,12 @@ namespace Ragon.Client
     private void Awake()
     {
       Instance = this;
-
+      
       _registry = Resources.Load<RagonPrefabRegistry>("RagonPrefabRegistry");
+      
       Assert.IsNotNull(_registry, "Can't load prefab registry, please create RagonPrefabRegistry in Resources folder");
-
+      
       _registry.Cache();
-
       _replicationRate = (1000.0f / replicationRate) / 1000.0f;
     }
 

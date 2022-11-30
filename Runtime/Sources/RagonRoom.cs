@@ -52,7 +52,7 @@ namespace Ragon.Client
 
     public void SetOwnerAndLocal(string ownerId, string localId)
     {
-      Debug.Log($"{ownerId} - {localId}");
+      Debug.Log($"{ownerId} - {localId} ");
       _ownerId = ownerId;
       _localId = localId;
     }
@@ -65,7 +65,7 @@ namespace Ragon.Client
       var isOwner = playerId == _ownerId;
       var isLocal = playerId == _localId;
 
-      Debug.Log($"Added player {playerId}|{playerName} IsOwner: {isOwner} isLocal: {isLocal}");
+      Debug.Log($"Added player {peerId}|{playerId}|{playerName} IsOwner: {isOwner} isLocal: {isLocal}");
 
       var player = new RagonPlayer(peerId, playerId, playerName, isOwner, isLocal);
 
