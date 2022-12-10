@@ -8,7 +8,7 @@ namespace Ragon.Client
   [Serializable]
   public struct EntityPrefab
   {
-    public ushort EntityType;
+    [HideInInspector] public ushort EntityType;
     public GameObject Prefab;
   }
 
