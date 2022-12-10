@@ -162,16 +162,21 @@ namespace Ragon.Client
     public void OnEntityCreated(ushort entityId, ushort entityType, RagonPlayer creator, RagonSerializer serializer)
     {
       var payload = Array.Empty<byte>();
+      
       if (serializer.Size > 0)
       {
         var size = serializer.ReadUShort();
         var entityPayload = serializer.ReadData(size);
         payload = entityPayload.ToArray();
       }
+      
+      if (!_registry.Prefabs.TryGetValue(entityType, out var prefab))
+      {
+        Debug.LogWarning($"Entity Id: {entityId} Type: {entityType} not found in Prefab Registry");
+        return;
+      }
 
-      var prefab = _registry.Prefabs[entityType];
       var go = Instantiate(prefab);
-
       var component = go.GetComponent<RagonEntity>();
       component.RetrieveProperties();
       component.Attach(_room, entityType, creator, entityId, payload);
