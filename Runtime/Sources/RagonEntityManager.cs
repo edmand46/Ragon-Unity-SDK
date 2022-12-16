@@ -20,6 +20,7 @@ namespace Ragon.Client
     private List<RagonEntity> _entitiesList = new List<RagonEntity>();
     private List<RagonEntity> _entitiesOwned = new List<RagonEntity>();
 
+    private IRagonEntityCollector _entityCollector;
     private RagonPrefabRegistry _registry;
     private RagonSerializer _serializer = new RagonSerializer();
     private RagonRoom _room;
@@ -32,6 +33,7 @@ namespace Ragon.Client
       Instance = this;
       
       _registry = Resources.Load<RagonPrefabRegistry>("RagonPrefabRegistry");
+      _entityCollector = new RagonEntityCollector();
       
       Assert.IsNotNull(_registry, "Can't load prefab registry, please create RagonPrefabRegistry in Resources folder");
       
@@ -39,20 +41,17 @@ namespace Ragon.Client
       _replicationRate = (1000.0f / replicationRate) / 1000.0f;
     }
 
-    public void CollectSceneEntities()
+    public void AddCustomSceneCollector(IRagonEntityCollector collector)
+    {
+      _entityCollector = collector;
+    }
+
+    public void FindSceneEntities()
     {
       _entitiesStatic.Clear();
 
-      var gameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
-      var objs = new List<RagonEntity>();
-
-      foreach (var go in gameObjects)
-      {
-        var entities = go.GetComponentsInChildren<RagonEntity>();
-        objs.AddRange(entities);
-      }
-
-      Debug.Log("Found scene entities: " + objs.Count);
+      var objs = _entityCollector.FindSceneEntities();
+      Debug.Log("Found scene entities: " + objs.Length);
       foreach (var entity in objs)
       {
         var sceneId = entity.SceneId;
@@ -229,9 +228,18 @@ namespace Ragon.Client
     public void OnOwnerShipChanged(RagonPlayer player, int entityId)
     {
       if (_entitiesDict.TryGetValue(entityId, out var entity))
+      {
         entity.ChangeOwner(player);
+
+        if (entity.IsMine)
+          _entitiesOwned.Add(entity);
+        else
+          _entitiesOwned.Remove(entity);
+      }
       else
+      {
         Debug.LogWarning("[OwnerShip] Entity not found");
+      }
     }
   }
 }

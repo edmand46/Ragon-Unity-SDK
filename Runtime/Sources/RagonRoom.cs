@@ -115,7 +115,7 @@ namespace Ragon.Client
 
     public void SceneLoaded()
     {
-      _entityManager.CollectSceneEntities();
+      _entityManager.FindSceneEntities();
 
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.SCENE_LOADED);

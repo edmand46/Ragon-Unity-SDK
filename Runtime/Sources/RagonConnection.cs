@@ -19,7 +19,6 @@ namespace Ragon.Client
     private Host _host;
     private Peer _peer;
     private Event _netEvent;
-    
     public Action<byte[]> OnData;
     public Action OnConnected;
     public Action OnDisconnected;
@@ -79,7 +78,6 @@ namespace Ragon.Client
       Address address = new Address();
       address.SetHost(server);
       address.Port = port;
-      
       _peer = _host.Connect(address, 2, protocol);
     }
     public void Update()
