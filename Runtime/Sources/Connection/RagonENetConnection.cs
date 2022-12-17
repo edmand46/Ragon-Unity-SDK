@@ -14,7 +14,7 @@ namespace Ragon.Client
     Unreliable,
   }
 
-  public class RagonConnection: IRagonConnection
+  public class RagonENetConnection: IRagonConnection
   {
     private Host _host;
     private Peer _peer;
