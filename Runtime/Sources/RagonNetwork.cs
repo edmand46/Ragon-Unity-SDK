@@ -99,26 +99,7 @@ namespace Ragon.Client
 
     public static void Connect(string url, ushort port, string protocol = "1.0.0")
     {
-      var strings = protocol.Split(".");
-      if (strings.Length < 3)
-      {
-        Debug.LogWarning("Wrong protocol passed to connect method");
-        return;
-      }
-
-      var parts = new uint[] { 0, 0, 0 };
-      for (int i = 0; i < parts.Length; i++)
-      {
-        if (!uint.TryParse(strings[i], out var v))
-        {
-          Debug.LogWarning("Wrong version passed to connect method");
-          return;
-        }
-
-        parts[i] = v;
-      }
-
-      uint encoded = (parts[0] << 16) | (parts[1] << 8) | parts[2];
+      var encoded = RagonVersion.Parse(protocol);
       _instance._connection.Connect(url, port, encoded);
     }
 

@@ -143,6 +143,7 @@ namespace Ragon.Client
         {
           serializer.WriteBool(true);
           prop.Write(serializer);
+          prop.Flush();
         }
         else
         {

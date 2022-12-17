@@ -41,7 +41,7 @@ namespace Ragon.Client
       _replicationRate = (1000.0f / replicationRate) / 1000.0f;
     }
 
-    public void AddCustomSceneCollector(IRagonSceneCollector collector)
+    public void SetCustomSceneCollector(IRagonSceneCollector collector)
     {
       _sceneCollector = collector;
     }

@@ -24,6 +24,7 @@ namespace Ragon.Client
     public RagonProperty(int priority)
     {
       _size = 0;
+      _priority = priority;
       _fixed = false;
     }
 
@@ -36,11 +37,16 @@ namespace Ragon.Client
     public void MarkAsChanged()
     {
       if (_dirty) return;
-
       _dirty = true;
 
       if (_entity)
         _entity.TrackChangedProperty(this);
+    }
+
+    public void Flush()
+    {
+      _dirty = false;
+      _ticks = 0;
     }
 
     public void AddTick()
@@ -72,9 +78,6 @@ namespace Ragon.Client
 
       var propSize = (ushort) (serializer.Lenght - propOffset);
       serializer.WriteUShort(propSize, sizeOffset);
-
-      _dirty = false;
-      _ticks = 0;
     }
 
     public virtual void Serialize(RagonSerializer serializer)
