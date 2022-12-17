@@ -1,6 +1,6 @@
 namespace Ragon.Client
 {
-  public interface IRagonEntityCollector
+  public interface IRagonSceneCollector
   {
     public RagonEntity[] FindSceneEntities();
   }

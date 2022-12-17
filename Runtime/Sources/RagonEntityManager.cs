@@ -20,7 +20,7 @@ namespace Ragon.Client
     private List<RagonEntity> _entitiesList = new List<RagonEntity>();
     private List<RagonEntity> _entitiesOwned = new List<RagonEntity>();
 
-    private IRagonEntityCollector _entityCollector;
+    private IRagonSceneCollector _sceneCollector;
     private RagonPrefabRegistry _registry;
     private RagonSerializer _serializer = new RagonSerializer();
     private RagonRoom _room;
@@ -33,7 +33,7 @@ namespace Ragon.Client
       Instance = this;
       
       _registry = Resources.Load<RagonPrefabRegistry>("RagonPrefabRegistry");
-      _entityCollector = new RagonEntityCollector();
+      _sceneCollector = new RagonSceneCollector();
       
       Assert.IsNotNull(_registry, "Can't load prefab registry, please create RagonPrefabRegistry in Resources folder");
       
@@ -41,16 +41,16 @@ namespace Ragon.Client
       _replicationRate = (1000.0f / replicationRate) / 1000.0f;
     }
 
-    public void AddCustomSceneCollector(IRagonEntityCollector collector)
+    public void AddCustomSceneCollector(IRagonSceneCollector collector)
     {
-      _entityCollector = collector;
+      _sceneCollector = collector;
     }
 
     public void FindSceneEntities()
     {
       _entitiesStatic.Clear();
 
-      var objs = _entityCollector.FindSceneEntities();
+      var objs = _sceneCollector.FindSceneEntities();
       Debug.Log("Found scene entities: " + objs.Length);
       foreach (var entity in objs)
       {

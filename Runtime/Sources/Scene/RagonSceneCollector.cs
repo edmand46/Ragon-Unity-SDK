@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 
 namespace Ragon.Client
 {
-  public class RagonEntityCollector: IRagonEntityCollector
+  public class RagonSceneCollector: IRagonSceneCollector
   {
     public RagonEntity[] FindSceneEntities()
     {
