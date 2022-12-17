@@ -45,6 +45,8 @@ namespace Ragon.Client
           conn.OnConnected += OnConnected;
           conn.OnDisconnected += OnDisconnected;
           conn.Prepare();
+          
+          _connection = conn;
           break;
         }
         case RagonSocketType.WebSocket:
@@ -53,6 +55,8 @@ namespace Ragon.Client
           conn.OnData += OnData;
           conn.OnConnected += OnConnected;
           conn.OnDisconnected += OnDisconnected;
+
+          _connection = conn;
           break;
         }
       }
