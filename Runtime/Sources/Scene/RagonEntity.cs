@@ -142,11 +142,11 @@ namespace Ragon.Client
         if (prop.IsDirty)
         {
           serializer.WriteBool(true);
-          prop.Pack(serializer);
-          prop.Clear();
+          prop.Write(serializer);
         }
         else
         {
+          prop.AddTick();
           serializer.WriteBool(false);
         }
       }

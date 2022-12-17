@@ -126,7 +126,9 @@ namespace Ragon.Client
         if (changedEntities > 0)
         {
           _serializer.WriteUShort((ushort) changedEntities, offset);
-          _room.Connection.Send(_serializer);
+          
+          var sendData = _serializer.ToArray();
+          _room.Connection.Send(sendData);
         }
 
         _replicationTimer = 0.0f;

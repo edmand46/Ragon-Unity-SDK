@@ -15,15 +15,15 @@ namespace Ragon.Client
     Y,
     Z
   }
-  
+
   [Serializable]
-  public class RagonVector3: RagonProperty 
+  public class RagonVector3 : RagonProperty
   {
     [SerializeField] private Vector3 _value;
-    
+
     public Vector3 Value
     {
-      get => _value; 
+      get => _value;
       set
       {
         _value = value;
@@ -31,14 +31,14 @@ namespace Ragon.Client
         MarkAsChanged();
       }
     }
-    
+
     private RagonAxis _axis;
-    
-    public RagonVector3(Vector3 initialValue, RagonAxis axis = RagonAxis.XYZ)
+
+    public RagonVector3(Vector3 initialValue, RagonAxis axis = RagonAxis.XYZ, int priority = 0) : base(priority)
     {
       _value = initialValue;
       _axis = axis;
-      
+
       switch (_axis)
       {
         case RagonAxis.XYZ:
@@ -49,14 +49,14 @@ namespace Ragon.Client
         case RagonAxis.YZ:
           SetFixedSize(8);
           break;
-        case RagonAxis.X :
+        case RagonAxis.X:
         case RagonAxis.Y:
-        case RagonAxis.Z :
+        case RagonAxis.Z:
           SetFixedSize(4);
           break;
       }
     }
-    
+
     public override void Serialize(RagonSerializer serializer)
     {
       switch (_axis)
@@ -78,13 +78,13 @@ namespace Ragon.Client
           serializer.WriteFloat(_value.y);
           serializer.WriteFloat(_value.z);
           break;
-        case RagonAxis.X :
+        case RagonAxis.X:
           serializer.WriteFloat(_value.x);
           break;
         case RagonAxis.Y:
           serializer.WriteFloat(_value.y);
           break;
-        case RagonAxis.Z :
+        case RagonAxis.Z:
           serializer.WriteFloat(_value.z);
           break;
       }
@@ -111,7 +111,7 @@ namespace Ragon.Client
           _value.y = serializer.ReadFloat();
           _value.z = serializer.ReadFloat();
           break;
-        case RagonAxis.X :
+        case RagonAxis.X:
           _value.x = serializer.ReadFloat();
           break;
         case RagonAxis.Y:
@@ -121,7 +121,7 @@ namespace Ragon.Client
           _value.z = serializer.ReadFloat();
           break;
       }
-      
+
       OnChanged?.Invoke();
     }
   }

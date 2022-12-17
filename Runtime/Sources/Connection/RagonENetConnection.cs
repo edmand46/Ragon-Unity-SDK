@@ -25,7 +25,7 @@ namespace Ragon.Client
     public uint Ping => _peer.IsSet ? _peer.RoundTripTime : 0;
     public double UpstreamBandwidth => _upstreamBandwidth;
     public double DownstreamBandwidth => _downstreamBandwidth;
-    public RagonConnectionState ConnectionState { get; private set; }
+    public RagonConnectionStatus Status { get; private set; }
     private double _upstreamBandwidth = 0d;
     private double _downstreamBandwidth = 0d;
     private ulong _upstreamData = 0;
@@ -101,15 +101,15 @@ namespace Ragon.Client
             break;
           case EventType.Connect:
             OnConnected?.Invoke();
-            ConnectionState = RagonConnectionState.CONNECTED;
+            Status = RagonConnectionStatus.CONNECTED;
             break;
           case EventType.Disconnect:
             OnDisconnected?.Invoke();
-            ConnectionState = RagonConnectionState.DISCONNECTED;
+            Status = RagonConnectionStatus.DISCONNECTED;
             break;
           case EventType.Timeout:
             OnDisconnected?.Invoke();
-            ConnectionState = RagonConnectionState.DISCONNECTED;
+            Status = RagonConnectionStatus.DISCONNECTED;
             break;
           case EventType.Receive:
             var data = new byte[_netEvent.Packet.Length];

@@ -20,7 +20,7 @@ namespace Ragon.Client
     
     [SerializeField] private bool _value;
     
-    public RagonBool(bool initialValue)
+    public RagonBool(bool initialValue, int priority = 0): base(priority)
     {
       _value = initialValue;
       SetFixedSize(1);

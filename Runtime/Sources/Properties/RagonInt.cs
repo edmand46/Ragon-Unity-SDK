@@ -19,8 +19,8 @@ namespace Ragon.Client
     }
     
     [SerializeField] private int _value;
-    
-    public RagonInt(int initialValue)
+
+    public RagonInt(int initialValue, int priority = 0) : base(priority)
     {
       _value = initialValue;
       SetFixedSize(4);

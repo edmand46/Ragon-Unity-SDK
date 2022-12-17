@@ -7,28 +7,13 @@ namespace Ragon.Client
 {
   public class RagonWebSocketConnection: IRagonConnection, IDisposable
   {
+    public RagonConnectionStatus Status { get; private set; }
     public Action<byte[]> OnData;
     public Action OnConnected;
     public Action OnDisconnected;
-
-    public uint Ping { get; }
-    public RagonConnectionState ConnectionState { get; private set; }
-    public double UpstreamBandwidth { get; }
-    public double DownstreamBandwidth { get; }
-
+    
     private WebSocket _webSocket;
     
-    public RagonWebSocketConnection()
-    {
-      
-    }
-    
-    public void Send(RagonSerializer serializer, DeliveryType deliveryType = DeliveryType.Unreliable)
-    {
-      var sendData = serializer.ToArray();
-      _webSocket.Send(sendData);
-    }
-
     public void Send(byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable)
     {
       _webSocket.Send(rawData);
@@ -39,12 +24,12 @@ namespace Ragon.Client
       _webSocket = new WebSocket(server);
       _webSocket.OnOpen += () =>
       {
-        ConnectionState = RagonConnectionState.CONNECTED;
+        Status = RagonConnectionStatus.CONNECTED;
         OnConnected?.Invoke();
       };
       _webSocket.OnClose += (code) =>
       {
-        ConnectionState = RagonConnectionState.DISCONNECTED;
+        Status = RagonConnectionStatus.DISCONNECTED;
         OnDisconnected?.Invoke();
       };
       
@@ -62,7 +47,7 @@ namespace Ragon.Client
     public void Update()
     {
 #if !UNITY_WEBGL || UNITY_EDITOR
-      if (ConnectionState == RagonConnectionState.CONNECTED)
+      if (Status == RagonConnectionStatus.CONNECTED)
       {
         _webSocket.DispatchMessageQueue();
       }
@@ -71,7 +56,7 @@ namespace Ragon.Client
 
     public async void Dispose()
     {
-      if (ConnectionState == RagonConnectionState.CONNECTED)
+      if (Status == RagonConnectionStatus.CONNECTED)
       {
         await _webSocket.Close();
       }

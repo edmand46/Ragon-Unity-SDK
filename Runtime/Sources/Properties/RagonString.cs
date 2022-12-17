@@ -20,7 +20,7 @@ namespace Ragon.Client
     
     [SerializeField] private string _value;
     
-    public RagonString(string initialValue)
+    public RagonString(string initialValue, int priority = 0): base(priority)
     {
       _value = initialValue;
     }
