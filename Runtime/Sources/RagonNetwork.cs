@@ -5,12 +5,6 @@ using UnityEngine;
 
 namespace Ragon.Client
 {
-  public enum RagonConnectionState
-  {
-    DISCONNECTED,
-    CONNECTED,
-  }
-
   [DefaultExecutionOrder(-1500), DisallowMultipleComponent]
   public class RagonNetwork : MonoBehaviour
   {
@@ -34,7 +28,7 @@ namespace Ragon.Client
     public static RagonSession Session => _instance._session;
     public static IRagonLog Log => _instance._log;
     public static RagonEventRegistry Event => _instance._eventRegistry;
-    public static RagonConnectionState State => _instance._connection.Status;
+    public static RagonConnectionStatus Status => _instance._connection.Status;
     public static IRagonRoom Room => _instance._room;
     public static IRagonConnection Connection => _instance._connection;
 

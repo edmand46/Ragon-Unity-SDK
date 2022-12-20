@@ -20,7 +20,7 @@ namespace Ragon.Client
     public Action<byte[]> OnDataReceived;
     public Action OnConnected;
     public Action OnDisconnected;
-    public RagonConnectionState Status { get; private set; }
+    public RagonConnectionStatus Status { get; private set; }
     private Host _host;
     private Peer _peer;
     private Event _netEvent;
@@ -99,15 +99,15 @@ namespace Ragon.Client
           case EventType.None:
             break;
           case EventType.Connect:
-            Status = RagonConnectionState.CONNECTED;
+            Status = RagonConnectionStatus.CONNECTED;
             OnConnected?.Invoke();
             break;
           case EventType.Disconnect:
-            Status = RagonConnectionState.DISCONNECTED;
+            Status = RagonConnectionStatus.DISCONNECTED;
             OnDisconnected?.Invoke();
             break;
           case EventType.Timeout:
-            Status = RagonConnectionState.DISCONNECTED;
+            Status = RagonConnectionStatus.DISCONNECTED;
             OnDisconnected?.Invoke();
             break;
           case EventType.Receive:

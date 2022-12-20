@@ -9,7 +9,7 @@ namespace Ragon.Client
     public Action<byte[]> OnDataReceived;
     public Action OnConnected;
     public Action OnDisconnected;
-    public RagonConnectionState Status { get; private set; }
+    public RagonConnectionStatus Status { get; private set; }
 
     private WebSocket _webSocket;
 
@@ -26,7 +26,7 @@ namespace Ragon.Client
     public void Update()
     {
 #if !UNITY_WEBGL || UNITY_EDITOR
-      if (Status == RagonConnectionState.CONNECTED)
+      if (Status == RagonConnectionStatus.CONNECTED)
       {
         _webSocket.DispatchMessageQueue();
       }
@@ -46,7 +46,7 @@ namespace Ragon.Client
 
     public async void Dispose()
     {
-      if (Status == RagonConnectionState.CONNECTED)
+      if (Status == RagonConnectionStatus.CONNECTED)
         await _webSocket.Close();
     }
 
@@ -54,7 +54,7 @@ namespace Ragon.Client
     {
       try
       {
-        Status = RagonConnectionState.CONNECTED;
+        Status = RagonConnectionStatus.CONNECTED;
         OnConnected?.Invoke();
       }
       catch (Exception ex)
@@ -67,7 +67,7 @@ namespace Ragon.Client
     {
       try
       {
-        Status = RagonConnectionState.DISCONNECTED;
+        Status = RagonConnectionStatus.DISCONNECTED;
         OnDisconnected?.Invoke();
       }
       catch (Exception ex)
@@ -92,7 +92,7 @@ namespace Ragon.Client
     {
       try
       {
-        Status = RagonConnectionState.DISCONNECTED;
+        Status = RagonConnectionStatus.DISCONNECTED;
         OnDisconnected?.Invoke();
       }
       catch (Exception ex)
