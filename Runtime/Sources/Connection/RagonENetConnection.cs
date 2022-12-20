@@ -1,8 +1,7 @@
 using System;
-using System.Diagnostics;
+using UnityEngine;
 using Ragon.Common;
 using ENet;
-using Debug = UnityEngine.Debug;
 using Event = ENet.Event;
 using EventType = ENet.EventType;
 
@@ -14,19 +13,18 @@ namespace Ragon.Client
     Unreliable,
   }
 
-  public class RagonConnection: IRagonConnection
+  public class RagonENetConnection: IRagonConnection
   {
+    private static bool _libraryLoaded = false;
+    
+    public Action<byte[]> OnDataReceived;
+    public Action OnConnected;
+    public Action OnDisconnected;
+    public RagonConnectionState Status { get; private set; }
     private Host _host;
     private Peer _peer;
     private Event _netEvent;
     
-    public Action<byte[]> OnData;
-    public Action OnConnected;
-    public Action OnDisconnected;
-    public uint Ping => _peer.IsSet ? _peer.RoundTripTime : 0;
-    public double UpstreamBandwidth => _upstreamBandwidth;
-    public double DownstreamBandwidth => _downstreamBandwidth;
-    public RagonConnectionState ConnectionState { get; private set; }
     private double _upstreamBandwidth = 0d;
     private double _downstreamBandwidth = 0d;
     private ulong _upstreamData = 0;
@@ -35,15 +33,9 @@ namespace Ragon.Client
     private double _deltaTime = 0d;
     private double _elapsedTime = 0d;
     private double _lastTime = 0d;
-    private const double interval = 1.0d;
-    private Stopwatch _timer;
+    private const double _interval = 1.0d;
+    private System.Diagnostics.Stopwatch _timer;
 
-    public void Send(RagonSerializer serializer, DeliveryType deliveryType = DeliveryType.Unreliable)
-    {
-      var data = serializer.ToArray();
-      Send(data, deliveryType);
-    }
-    
     public void Send(byte[] data, DeliveryType deliveryType = DeliveryType.Unreliable)
     {
       var packet = new Packet();
@@ -61,7 +53,11 @@ namespace Ragon.Client
     
     public void Prepare()
     {
-      Library.Initialize();
+      if (!_libraryLoaded)
+      {
+        Library.Initialize();
+        _libraryLoaded = true;
+      }
     }
 
     public void Disconnect()
@@ -74,13 +70,14 @@ namespace Ragon.Client
     {
       _host = new Host();
       _host.Create();
-      _timer = Stopwatch.StartNew();
+      _timer = System.Diagnostics.Stopwatch.StartNew();
       
       Address address = new Address();
       address.SetHost(server);
       address.Port = port;
       
       _peer = _host.Connect(address, 2, protocol);
+      _peer.Timeout(32, 5000, 5000);
     }
     public void Update()
     {
@@ -102,33 +99,36 @@ namespace Ragon.Client
           case EventType.None:
             break;
           case EventType.Connect:
+            Status = RagonConnectionState.CONNECTED;
             OnConnected?.Invoke();
-            ConnectionState = RagonConnectionState.CONNECTED;
             break;
           case EventType.Disconnect:
+            Status = RagonConnectionState.DISCONNECTED;
             OnDisconnected?.Invoke();
-            ConnectionState = RagonConnectionState.DISCONNECTED;
             break;
           case EventType.Timeout:
+            Status = RagonConnectionState.DISCONNECTED;
             OnDisconnected?.Invoke();
-            ConnectionState = RagonConnectionState.DISCONNECTED;
             break;
           case EventType.Receive:
             var data = new byte[_netEvent.Packet.Length];
+            
             _netEvent.Packet.CopyTo(data);
             _netEvent.Packet.Dispose();
-            OnData?.Invoke(data);
+            
+            OnDataReceived?.Invoke(data);
             break;
         }
       }
-      ComputeBandwidth();
+      
+      // ComputeBandwidth();
     }
 
     private void ComputeBandwidth()
     {
       _time += _deltaTime;
 
-      if (_time >= interval)
+      if (_time >= _interval)
       {
         var bytesSent = _peer.IsSet ? _peer.BytesSent : 0;
         var bytesReceived = _peer.IsSet ? _peer.BytesReceived : 0;
@@ -148,7 +148,7 @@ namespace Ragon.Client
         _upstreamData = bytesSent;
         _downstreamData = bytesReceived;
 
-        _time -= interval;
+        _time -= _interval;
       }
       
       _elapsedTime = _timer.ElapsedMilliseconds;
@@ -164,8 +164,9 @@ namespace Ragon.Client
         _host?.Flush();
         _host?.Dispose();
       }
-
-      Library.Deinitialize();
+      
+      if (_libraryLoaded)
+        Library.Deinitialize();
     }
   }
 }

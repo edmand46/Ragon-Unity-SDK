@@ -202,6 +202,24 @@ namespace Ragon.Client
       var sendData = _serializer.ToArray();
       _room.Connection.Send(sendData);
     }
+    
+    public void ReplicateEvent<TEvent>(TEvent evnt, RagonPlayer target, RagonReplicationMode replicationMode) where TEvent : IRagonEvent, new()
+    {
+      var evntId = RagonNetwork.Event.GetEventCode(evnt);
+      
+      _serializer.Clear();
+      _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
+      _serializer.WriteUShort(Id);
+      _serializer.WriteUShort(evntId);
+      _serializer.WriteByte((byte) replicationMode);
+      _serializer.WriteByte((byte) RagonTarget.Player);
+      _serializer.WriteUShort((ushort) target.PeerId);
+
+      evnt.Serialize(_serializer);
+
+      var sendData = _serializer.ToArray();
+      _room.Connection.Send(sendData);
+    }
 
     internal void ProcessEvent(RagonPlayer player, ushort eventCode, RagonSerializer data)
     {
@@ -212,6 +230,7 @@ namespace Ragon.Client
     private void Update()
     {
       if (!_attached) return;
+      
       if (_mine)
       {
         foreach (var behaviour in _behaviours)

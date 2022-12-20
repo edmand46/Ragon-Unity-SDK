@@ -54,8 +54,11 @@ namespace Ragon.Client
           if (comp != null)
           {
             sequencer++;
+            
             _prefabs.Add(new EntityPrefab() {Prefab = go, EntityType = sequencer});
             comp.SetType(sequencer);
+            
+            Undo.RecordObject(comp, "_sceneId");
           }
         }
       }

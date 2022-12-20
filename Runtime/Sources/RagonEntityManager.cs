@@ -20,6 +20,7 @@ namespace Ragon.Client
     private List<RagonEntity> _entitiesList = new List<RagonEntity>();
     private List<RagonEntity> _entitiesOwned = new List<RagonEntity>();
 
+    private IRagonEntityCollector _entityCollector;
     private RagonPrefabRegistry _registry;
     private RagonSerializer _serializer = new RagonSerializer();
     private RagonRoom _room;
@@ -32,6 +33,7 @@ namespace Ragon.Client
       Instance = this;
       
       _registry = Resources.Load<RagonPrefabRegistry>("RagonPrefabRegistry");
+      _entityCollector = new RagonEntityCollector();
       
       Assert.IsNotNull(_registry, "Can't load prefab registry, please create RagonPrefabRegistry in Resources folder");
       
@@ -39,20 +41,18 @@ namespace Ragon.Client
       _replicationRate = (1000.0f / replicationRate) / 1000.0f;
     }
 
-    public void CollectSceneEntities()
+    public void AddCustomSceneCollector(IRagonEntityCollector collector)
+    {
+      _entityCollector = collector;
+    }
+
+    public void FindSceneEntities()
     {
       _entitiesStatic.Clear();
 
-      var gameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
-      var objs = new List<RagonEntity>();
-
-      foreach (var go in gameObjects)
-      {
-        var entities = go.GetComponentsInChildren<RagonEntity>();
-        objs.AddRange(entities);
-      }
-
-      Debug.Log("Found scene entities: " + objs.Count);
+      var objs = _entityCollector.FindSceneEntities();
+      RagonNetwork.Log.Trace("Found scene entities: " + objs.Length);
+      
       foreach (var entity in objs)
       {
         var sceneId = entity.SceneId;
@@ -72,7 +72,7 @@ namespace Ragon.Client
         ragonObject.RetrieveProperties();
         ragonObject.WriteStateInfo(serializer);
 
-        Debug.Log($"[Scene Entity] Name; {ragonObject.name} Authority: {ragonObject.Authority} SceneId: {sceneId}");
+        RagonNetwork.Log.Trace($"[Scene Entity] Name; {ragonObject.name} Authority: {ragonObject.Authority} SceneId: {sceneId}");
       }
     }
 
@@ -127,7 +127,9 @@ namespace Ragon.Client
         if (changedEntities > 0)
         {
           _serializer.WriteUShort((ushort) changedEntities, offset);
-          _room.Connection.Send(_serializer);
+          
+          var sendData = _serializer.ToArray();
+          _room.Connection.Send(sendData, DeliveryType.Unreliable);
         }
 
         _replicationTimer = 0.0f;
@@ -136,7 +138,6 @@ namespace Ragon.Client
 
     public void OnEntityStaticCreated(ushort entityId, ushort staticId, ushort entityType, RagonPlayer creator, RagonSerializer serializer)
     {
-      Debug.Log($"OnCreate scene entity: {entityId} {staticId} {entityType}");
       if (_entitiesStatic.Remove(staticId, out var ragonEntity))
       {
         var payload = Array.Empty<byte>();
@@ -172,7 +173,7 @@ namespace Ragon.Client
       
       if (!_registry.Prefabs.TryGetValue(entityType, out var prefab))
       {
-        Debug.LogWarning($"Entity Id: {entityId} Type: {entityType} not found in Prefab Registry");
+        RagonNetwork.Log.Warn($"Entity Id: {entityId} Type: {entityType} not found in Prefab Registry");
         return;
       }
 
@@ -215,7 +216,7 @@ namespace Ragon.Client
       if (_entitiesDict.TryGetValue(entityId, out var ent))
         ent.ProcessEvent(player, evntCode, payload);
       else
-        Debug.LogWarning("[Event] Entity not found");
+        RagonNetwork.Log.Error("[Event] Entity not found");
     }
 
     public void OnEntityState(int entityId, RagonSerializer payload)
@@ -223,15 +224,24 @@ namespace Ragon.Client
       if (_entitiesDict.TryGetValue(entityId, out var ent))
         ent.ProcessState(payload);
       else
-        Debug.LogWarning("[State] Entity not found");
+        RagonNetwork.Log.Error("[State] Entity not found");
     }
 
     public void OnOwnerShipChanged(RagonPlayer player, int entityId)
     {
       if (_entitiesDict.TryGetValue(entityId, out var entity))
+      {
         entity.ChangeOwner(player);
+
+        if (entity.IsMine)
+          _entitiesOwned.Add(entity);
+        else
+          _entitiesOwned.Remove(entity);
+      }
       else
-        Debug.LogWarning("[OwnerShip] Entity not found");
+      {
+        RagonNetwork.Log.Error("[OwnerShip] Entity not found");
+      }
     }
   }
 }

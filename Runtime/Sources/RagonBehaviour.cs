@@ -44,7 +44,7 @@ namespace Ragon.Client
 
       if (_events.ContainsKey(eventCode))
       {
-        Debug.LogWarning($"Event already {eventCode} subscribed");
+        RagonNetwork.Log.Warn($"Event already {eventCode} subscribed");
         return;
       }
 

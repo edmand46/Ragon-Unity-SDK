@@ -52,7 +52,8 @@ namespace Ragon.Client
 
     public void SetOwnerAndLocal(string ownerId, string localId)
     {
-      Debug.Log($"{ownerId} - {localId} ");
+      RagonNetwork.Log.Trace($"Owner: {ownerId} Local: {localId} ");
+      
       _ownerId = ownerId;
       _localId = localId;
     }
@@ -65,7 +66,7 @@ namespace Ragon.Client
       var isOwner = playerId == _ownerId;
       var isLocal = playerId == _localId;
 
-      Debug.Log($"Added player {peerId}|{playerId}|{playerName} IsOwner: {isOwner} isLocal: {isLocal}");
+      RagonNetwork.Log.Trace($"Added player {peerId}|{playerId}|{playerName} IsOwner: {isOwner} isLocal: {isLocal}");
 
       var player = new RagonPlayer(peerId, playerId, playerName, isOwner, isLocal);
 
@@ -101,7 +102,7 @@ namespace Ragon.Client
     {
       if (!LocalPlayer.IsRoomOwner)
       {
-        Debug.LogWarning("Only owner can change map");
+        RagonNetwork.Log.Warn("Only owner can change map");
         return;
       }
 
@@ -115,7 +116,7 @@ namespace Ragon.Client
 
     public void SceneLoaded()
     {
-      _entityManager.CollectSceneEntities();
+      _entityManager.FindSceneEntities();
 
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.SCENE_LOADED);
@@ -137,7 +138,7 @@ namespace Ragon.Client
       var ragonEntity = prefab.GetComponent<RagonEntity>();
       if (!ragonEntity)
       {
-        Debug.LogError($"{prefab.name} has not Ragon Entity component");
+        RagonNetwork.Log.Error($"{prefab.name} has not Ragon Entity component");
         return;
       }
 
@@ -165,7 +166,7 @@ namespace Ragon.Client
       var hasEntity = gameObject.TryGetComponent<RagonEntity>(out var ragonObject);
       if (!hasEntity)
       {
-        Debug.LogError($"{gameObject.name} has not Ragon Entity component");
+        RagonNetwork.Log.Error($"{gameObject.name} has not Ragon Entity component");
         return;
       }
 

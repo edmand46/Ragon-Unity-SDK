@@ -24,10 +24,10 @@ namespace Ragon.Client
       var type = typeof(T);
       if (_types.Contains(type))
       {
-        Debug.LogWarning($"[Ragon] Event already registered: {type.Name}");
+        RagonNetwork.Log.Warn($"[Ragon] Event already registered: {type.Name}");
         return;
       }
-      Debug.Log($"[Ragon] Registered Event: {type.Name} - {_eventIdGenerator}");
+      RagonNetwork.Log.Trace($"[Ragon] Registered Event: {type.Name} - {_eventIdGenerator}");
       _eventsRegistryByType.Add(type, _eventIdGenerator);
       _codes.Add(_eventIdGenerator);
       _types.Add(type);
@@ -42,7 +42,9 @@ namespace Ragon.Client
         Debug.LogWarning($"[Ragon] Event already registered: {type.Name} - {evntCode}");
         return;
       }
-      Debug.Log($"[Ragon] Registered Event: {type.Name} - {evntCode}");
+      
+      RagonNetwork.Log.Trace($"[Ragon] Registered Event: {type.Name} - {evntCode}");
+      
       _codes.Add(evntCode);
       _types.Add(type);
       _eventsRegistryByType.Add(type, evntCode);

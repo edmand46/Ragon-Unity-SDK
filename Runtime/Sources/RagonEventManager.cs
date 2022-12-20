@@ -17,13 +17,7 @@ namespace Ragon.Client
     {
       _listeners.Remove(listener);
     }
-
-    public void OnEvent(RagonPlayer roomLocalPlayer, ushort evntCode, RagonSerializer serializer)
-    {
-      // foreach (var listener in _listeners)
-      //   listener.OnEvent(roomLocalPlayer, evntCode, serializer);
-    }
-
+    
     public void OnAuthorized(string playerId, string playerName)
     {
       foreach (var listener in _listeners)
