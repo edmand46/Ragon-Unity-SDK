@@ -8,7 +8,7 @@ namespace Ragon.Client
   {
     public Action OnChanged;
     public RagonEntity Entity => _entity;
-    public bool IsDirty => _dirty;
+    public bool IsDirty => _dirty && _ticks >= _priority;
     public bool IsFixed => _fixed;
     public int Id => _id;
     public int Size => _size;
@@ -18,10 +18,13 @@ namespace Ragon.Client
     private bool _dirty;
     private int _id;
     private int _size;
+    private int _ticks;
+    private int _priority;
 
-    public RagonProperty()
+    public RagonProperty(int priority)
     {
       _size = 0;
+      _priority = priority;
       _fixed = false;
     }
 
@@ -34,18 +37,23 @@ namespace Ragon.Client
     public void MarkAsChanged()
     {
       if (_dirty) return;
-
       _dirty = true;
 
       if (_entity)
         _entity.TrackChangedProperty(this);
     }
 
-    public void Clear()
+    public void Flush()
     {
       _dirty = false;
+      _ticks = 0;
     }
 
+    public void AddTick()
+    {
+      _ticks++;
+    }
+    
     public void Attach(RagonEntity obj, int propertyId)
     {
       _entity = obj;
@@ -54,7 +62,7 @@ namespace Ragon.Client
       MarkAsChanged();
     }
 
-    public void Pack(RagonSerializer serializer)
+    public void Write(RagonSerializer serializer)
     {
       if (_fixed)
       {

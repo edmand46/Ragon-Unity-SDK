@@ -21,7 +21,7 @@ namespace Ragon.Client
 
     [SerializeField] private float _value;
 
-    public RagonFloat(float initialValue)
+    public RagonFloat(float initialValue, int priority = 0): base(priority)
     {
       _value = initialValue;
       SetFixedSize(4);
