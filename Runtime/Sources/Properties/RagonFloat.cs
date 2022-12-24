@@ -13,9 +13,7 @@ namespace Ragon.Client
       set
       {
         _value = value;
-
-        MarkAsChanged();
-        OnChanged?.Invoke();
+        Changed(false);
       }
     }
 

@@ -232,11 +232,14 @@ namespace Ragon.Client
       if (_entitiesDict.TryGetValue(entityId, out var entity))
       {
         entity.ChangeOwner(player);
-
         if (entity.IsMine)
+        {
           _entitiesOwned.Add(entity);
+        }
         else
+        {
           _entitiesOwned.Remove(entity);
+        }
       }
       else
       {

@@ -34,8 +34,11 @@ namespace Ragon.Client
       _fixed = true;
     }
 
-    public void MarkAsChanged()
+    public void Changed(bool instantMode)
     {
+      if (instantMode)
+        OnChanged?.Invoke();
+        
       if (_dirty) return;
       _dirty = true;
 
@@ -59,7 +62,7 @@ namespace Ragon.Client
       _entity = obj;
       _id = propertyId;
 
-      MarkAsChanged();
+      Changed(false);
     }
 
     public void Write(RagonSerializer serializer)

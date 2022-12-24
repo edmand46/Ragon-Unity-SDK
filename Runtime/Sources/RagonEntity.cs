@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using System.Reflection;
 using Ragon.Common;
 using UnityEngine;
@@ -157,10 +158,10 @@ namespace Ragon.Client
 
     internal void ProcessState(RagonSerializer data)
     {
-      for (int i = 0; i < _propertiesList.Count; i++)
+      foreach (var property in _propertiesList)
       {
-        if (data.ReadBool())
-          _propertiesList[i].Deserialize(data);
+        if (data.ReadBool() && !IsMine)
+          property.Deserialize(data);
       }
     }
 
