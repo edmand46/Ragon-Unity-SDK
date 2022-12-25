@@ -27,13 +27,18 @@ namespace Ragon.Client
       set
       {
         _value = value;
-        Changed(false);
+        Changed();
       }
     }
 
     private RagonAxis _axis;
 
-    public RagonVector3(Vector3 initialValue, RagonAxis axis = RagonAxis.XYZ, int priority = 0) : base(priority)
+    public RagonVector3(
+      Vector3 initialValue,
+      RagonAxis axis = RagonAxis.XYZ,
+      bool invokeLocal = true,
+      int priority = 0
+    ) : base(priority, invokeLocal)
     {
       _value = initialValue;
       _axis = axis;
@@ -121,7 +126,8 @@ namespace Ragon.Client
           break;
       }
 
-      OnChanged?.Invoke();
+      if (!Entity.IsMine)
+        OnChanged?.Invoke();
     }
   }
 }

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Globalization;
 using System.Reflection;
 using Ragon.Common;
 using UnityEngine;
@@ -29,17 +28,17 @@ namespace Ragon.Client
     [SerializeField, ReadOnly] private bool _mine;
     [SerializeField, ReadOnly] private RagonPlayer _owner;
     [SerializeField, ReadOnly] private bool _attached;
-    [SerializeField, ReadOnly] private bool _replication;
     [SerializeField, ReadOnly] private int _properties;
-    [SerializeField, ReadOnly] private RagonBehaviour[] _behaviours;
-
-    private RagonRoom _room;
-    private RagonSerializer _serializer;
-    private List<RagonProperty> _propertiesList;
-    private bool _propertiesChanged;
+    [SerializeField, ReadOnly] private bool _replication;
+    
     private byte[] _spawnPayload;
     private byte[] _destroyPayload;
-
+    private RagonBehaviour[] _behaviours;
+    private List<RagonProperty> _propertiesList;
+    private bool _propertiesChanged;
+    private RagonRoom _room;
+    private RagonSerializer _writer;
+    
     internal void RetrieveProperties()
     {
       _propertiesList = new List<RagonProperty>();
@@ -53,7 +52,7 @@ namespace Ragon.Client
           break;
       }
 
-      _serializer = new RagonSerializer();
+      _writer = new RagonSerializer();
 
       foreach (var state in _behaviours)
       {
@@ -65,7 +64,7 @@ namespace Ragon.Client
         {
           if (baseProperty.IsAssignableFrom(field.FieldType))
           {
-            var property = (RagonProperty) field.GetValue(state);
+            var property = (RagonProperty)field.GetValue(state);
             _propertiesList.Add(property);
           }
         }
@@ -76,11 +75,11 @@ namespace Ragon.Client
 
     internal void WriteStateInfo(RagonSerializer serializer)
     {
-      serializer.WriteUShort((ushort) _propertiesList.Count);
+      serializer.WriteUShort((ushort)_propertiesList.Count);
       foreach (var property in _propertiesList)
       {
         serializer.WriteBool(property.IsFixed);
-        serializer.WriteUShort((ushort) property.Size);
+        serializer.WriteUShort((ushort)property.Size);
       }
     }
 
@@ -110,6 +109,7 @@ namespace Ragon.Client
         propertyIdGenerator++;
       }
 
+      RagonNetwork.Log.Trace($"Entity {entityId} attached");
       foreach (var behaviour in _behaviours)
         behaviour.Attach(this);
     }
@@ -160,7 +160,7 @@ namespace Ragon.Client
     {
       foreach (var property in _propertiesList)
       {
-        if (data.ReadBool() && !IsMine)
+        if (data.ReadBool())
           property.Deserialize(data);
       }
     }
@@ -189,37 +189,39 @@ namespace Ragon.Client
       return GetPayload<T>(_destroyPayload);
     }
 
-    public void ReplicateEvent<TEvent>(TEvent evnt, RagonTarget target, RagonReplicationMode replicationMode) where TEvent : IRagonEvent, new()
+    public void ReplicateEvent<TEvent>(TEvent evnt, RagonTarget target, RagonReplicationMode replicationMode)
+      where TEvent : IRagonEvent, new()
     {
       var evntId = RagonNetwork.Event.GetEventCode(evnt);
-      _serializer.Clear();
-      _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
-      _serializer.WriteUShort(Id);
-      _serializer.WriteUShort(evntId);
-      _serializer.WriteByte((byte) replicationMode);
-      _serializer.WriteByte((byte) target);
+      _writer.Clear();
+      _writer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
+      _writer.WriteUShort(Id);
+      _writer.WriteUShort(evntId);
+      _writer.WriteByte((byte)replicationMode);
+      _writer.WriteByte((byte)target);
 
-      evnt.Serialize(_serializer);
+      evnt.Serialize(_writer);
 
-      var sendData = _serializer.ToArray();
+      var sendData = _writer.ToArray();
       _room.Connection.Send(sendData);
     }
-    
-    public void ReplicateEvent<TEvent>(TEvent evnt, RagonPlayer target, RagonReplicationMode replicationMode) where TEvent : IRagonEvent, new()
+
+    public void ReplicateEvent<TEvent>(TEvent evnt, RagonPlayer target, RagonReplicationMode replicationMode)
+      where TEvent : IRagonEvent, new()
     {
       var evntId = RagonNetwork.Event.GetEventCode(evnt);
-      
-      _serializer.Clear();
-      _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
-      _serializer.WriteUShort(Id);
-      _serializer.WriteUShort(evntId);
-      _serializer.WriteByte((byte) replicationMode);
-      _serializer.WriteByte((byte) RagonTarget.Player);
-      _serializer.WriteUShort((ushort) target.PeerId);
 
-      evnt.Serialize(_serializer);
+      _writer.Clear();
+      _writer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
+      _writer.WriteUShort(Id);
+      _writer.WriteUShort(evntId);
+      _writer.WriteByte((byte)replicationMode);
+      _writer.WriteByte((byte)RagonTarget.Player);
+      _writer.WriteUShort((ushort)target.PeerId);
 
-      var sendData = _serializer.ToArray();
+      evnt.Serialize(_writer);
+
+      var sendData = _writer.ToArray();
       _room.Connection.Send(sendData);
     }
 
@@ -229,19 +231,50 @@ namespace Ragon.Client
         behaviour.ProcessEvent(player, eventCode, data);
     }
 
-    private void Update()
+
+    private void FixedUpdate()
     {
       if (!_attached) return;
-      
+
       if (_mine)
       {
         foreach (var behaviour in _behaviours)
-          behaviour.OnEntityTick();
+          behaviour.OnFixedUpdateEntity();
+
+        return;
+      }
+      
+      foreach (var behaviour in _behaviours)
+        behaviour.OnFixedUpdateProxy();
+    }
+
+    private void LateUpdate()
+    {
+      if (!_attached) return;
+      if (_mine)
+      {
+        foreach (var behaviour in _behaviours)
+          behaviour.OnLateUpdateEntity();
+        
+        return;
+      }
+        foreach (var behaviour in _behaviours)
+          behaviour.OnLateUpdateProxy();
+    }
+
+    private void Update()
+    {
+      if (!_attached) return;
+
+      if (_mine)
+      {
+        foreach (var behaviour in _behaviours)
+          behaviour.OnUpdateEntity();
       }
       else
       {
         foreach (var behaviour in _behaviours)
-          behaviour.OnProxyTick();
+          behaviour.OnUpdateProxy();
       }
     }
   }

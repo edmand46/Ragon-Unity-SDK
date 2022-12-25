@@ -4,13 +4,14 @@ using Ragon.Common;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 namespace Ragon.Client
 {
   [DefaultExecutionOrder(-10000)]
   public class RagonEntityManager : MonoBehaviour
   {
-    [Range(1.0f, 60.0f, order = 0)] public float replicationRate = 1.0f;
+    [SerializeField][Range(1.0f, 60.0f, order = 0)] private float _replicateRate = 1.0f;
 
     public static RagonEntityManager Instance { get; private set; }
 
@@ -31,28 +32,26 @@ namespace Ragon.Client
     private void Awake()
     {
       Instance = this;
-      
+
       _registry = Resources.Load<RagonPrefabRegistry>("RagonPrefabRegistry");
       _entityCollector = new RagonEntityCollector();
-      
+
       Assert.IsNotNull(_registry, "Can't load prefab registry, please create RagonPrefabRegistry in Resources folder");
-      
+
       _registry.Cache();
-      _replicationRate = (1000.0f / replicationRate) / 1000.0f;
+      _replicationRate = (1000.0f / _replicateRate) / 1000.0f;
     }
 
-    public void AddCustomSceneCollector(IRagonEntityCollector collector)
-    {
-      _entityCollector = collector;
-    }
+    public void AddCustomSceneCollector(IRagonEntityCollector collector) => _entityCollector = collector;
+    public RagonEntity FindEntityById(ushort id) => _entitiesDict[id];
 
-    public void FindSceneEntities()
+    internal void FindSceneEntities()
     {
       _entitiesStatic.Clear();
 
       var objs = _entityCollector.FindSceneEntities();
       RagonNetwork.Log.Trace("Found scene entities: " + objs.Length);
-      
+
       foreach (var entity in objs)
       {
         var sceneId = entity.SceneId;
@@ -60,33 +59,34 @@ namespace Ragon.Client
       }
     }
 
-    public void WriteSceneEntities(RagonSerializer serializer)
+    internal void WriteSceneEntities(RagonSerializer serializer)
     {
-      serializer.WriteUShort((ushort) _entitiesStatic.Count);
+      serializer.WriteUShort((ushort)_entitiesStatic.Count);
       foreach (var (sceneId, ragonObject) in _entitiesStatic)
       {
         serializer.WriteUShort(ragonObject.Type);
-        serializer.WriteByte((byte) ragonObject.Authority);
-        serializer.WriteUShort((ushort) sceneId);
+        serializer.WriteByte((byte)ragonObject.Authority);
+        serializer.WriteUShort((ushort)sceneId);
 
         ragonObject.RetrieveProperties();
         ragonObject.WriteStateInfo(serializer);
 
-        RagonNetwork.Log.Trace($"[Scene Entity] Name; {ragonObject.name} Authority: {ragonObject.Authority} SceneId: {sceneId}");
+        RagonNetwork.Log.Trace(
+          $"[Scene Entity] Name; {ragonObject.name} Authority: {ragonObject.Authority} SceneId: {sceneId}");
       }
     }
 
-    public void OnRoomCreated(RagonRoom room)
+    internal void OnRoomCreated(RagonRoom room)
     {
       _room = room;
     }
 
-    public void OnRoomDestroyed()
+    internal void OnRoomDestroyed()
     {
       _room = null;
     }
 
-    public void Cleanup()
+    internal void Cleanup()
     {
       foreach (var ent in _entitiesList)
         ent.Detach(Array.Empty<byte>());
@@ -97,7 +97,7 @@ namespace Ragon.Client
       _entitiesStatic.Clear();
     }
 
-    public void FixedUpdate()
+    internal void FixedUpdate()
     {
       if (_room == null) return;
 
@@ -116,7 +116,7 @@ namespace Ragon.Client
         {
           if (
             ent.IsAttached &&
-            ent.AutoReplication && 
+            ent.AutoReplication &&
             ent.PropertiesChanged)
           {
             ent.ReplicateState(_serializer);
@@ -126,8 +126,8 @@ namespace Ragon.Client
 
         if (changedEntities > 0)
         {
-          _serializer.WriteUShort((ushort) changedEntities, offset);
-          
+          _serializer.WriteUShort((ushort)changedEntities, offset);
+
           var sendData = _serializer.ToArray();
           _room.Connection.Send(sendData, DeliveryType.Unreliable);
         }
@@ -136,7 +136,8 @@ namespace Ragon.Client
       }
     }
 
-    public void OnEntityStaticCreated(ushort entityId, ushort staticId, ushort entityType, RagonPlayer creator, RagonSerializer serializer)
+    internal void OnEntityStaticCreated(ushort entityId, ushort staticId, ushort entityType, RagonPlayer creator,
+      RagonSerializer serializer)
     {
       if (_entitiesStatic.Remove(staticId, out var ragonEntity))
       {
@@ -160,17 +161,17 @@ namespace Ragon.Client
       }
     }
 
-    public void OnEntityCreated(ushort entityId, ushort entityType, RagonPlayer creator, RagonSerializer serializer)
+    internal void OnEntityCreated(ushort entityId, ushort entityType, RagonPlayer creator, RagonSerializer serializer)
     {
       var payload = Array.Empty<byte>();
-      
+
       if (serializer.Size > 0)
       {
         var size = serializer.ReadUShort();
         var entityPayload = serializer.ReadData(size);
         payload = entityPayload.ToArray();
       }
-      
+
       if (!_registry.Prefabs.TryGetValue(entityType, out var prefab))
       {
         RagonNetwork.Log.Warn($"Entity Id: {entityId} Type: {entityType} not found in Prefab Registry");
@@ -190,7 +191,7 @@ namespace Ragon.Client
         _entitiesOwned.Add(component);
     }
 
-    public void OnEntityDestroyed(int entityId, RagonSerializer serializer)
+    internal void OnEntityDestroyed(int entityId, RagonSerializer serializer)
     {
       if (_entitiesDict.Remove(entityId, out var ragonEntity))
       {
@@ -211,39 +212,36 @@ namespace Ragon.Client
       }
     }
 
-    public void OnEntityEvent(RagonPlayer player, int entityId, ushort evntCode, RagonSerializer payload)
+    internal void OnEntityEvent(RagonPlayer player, int entityId, ushort evntCode, RagonSerializer payload)
     {
       if (_entitiesDict.TryGetValue(entityId, out var ent))
         ent.ProcessEvent(player, evntCode, payload);
       else
-        RagonNetwork.Log.Error("[Event] Entity not found");
+        RagonNetwork.Log.Error($"[Event] Entity with Id {entityId} not found");
     }
 
-    public void OnEntityState(int entityId, RagonSerializer payload)
+    internal void OnEntityState(int entityId, RagonSerializer payload)
     {
       if (_entitiesDict.TryGetValue(entityId, out var ent))
         ent.ProcessState(payload);
       else
-        RagonNetwork.Log.Error("[State] Entity not found");
+        RagonNetwork.Log.Error($"[State] Entity with Id {entityId} not found ");
     }
 
-    public void OnOwnerShipChanged(RagonPlayer player, int entityId)
+    internal void OnOwnerShipChanged(RagonPlayer player, int entityId)
     {
       if (_entitiesDict.TryGetValue(entityId, out var entity))
       {
         entity.ChangeOwner(player);
+
         if (entity.IsMine)
-        {
           _entitiesOwned.Add(entity);
-        }
         else
-        {
           _entitiesOwned.Remove(entity);
-        }
       }
       else
       {
-        RagonNetwork.Log.Error("[OwnerShip] Entity not found");
+        RagonNetwork.Log.Error($"[OwnerShip] Entity with Id {entityId} not found");
       }
     }
   }

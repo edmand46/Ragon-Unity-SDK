@@ -23,12 +23,12 @@ namespace Ragon.Client
       _entity = ragonEntity;
       _mine = ragonEntity.IsMine;
 
-      OnCreatedEntity();
+      OnAttachedEntity();
     }
 
     internal void Detach()
     {
-      OnDestroyedEntity();
+      OnDetachedEntity();
     }
 
     internal void ProcessEvent(RagonPlayer player, ushort eventCode, RagonSerializer data)
@@ -82,19 +82,35 @@ namespace Ragon.Client
       _entity.ReplicateEvent(evnt, target, replicationMode);
     }
 
-    public virtual void OnCreatedEntity()
+    public virtual void OnAttachedEntity()
     {
     }
 
-    public virtual void OnDestroyedEntity()
+    public virtual void OnDetachedEntity()
     {
     }
 
-    public virtual void OnEntityTick()
+    public virtual void OnUpdateEntity()
     {
     }
 
-    public virtual void OnProxyTick()
+    public virtual void OnUpdateProxy()
+    {
+    }
+    
+    public virtual void OnLateUpdateEntity()
+    {
+    }
+    
+    public virtual void OnLateUpdateProxy()
+    {
+    }
+
+    public virtual void OnFixedUpdateEntity()
+    {
+    }
+    
+    public virtual void OnFixedUpdateProxy()
     {
     }
 

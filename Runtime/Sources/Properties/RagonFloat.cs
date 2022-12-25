@@ -13,13 +13,17 @@ namespace Ragon.Client
       set
       {
         _value = value;
-        Changed(false);
+        Changed();
       }
     }
 
     [SerializeField] private float _value;
 
-    public RagonFloat(float initialValue, int priority = 0): base(priority)
+    public RagonFloat(
+      float initialValue,
+      bool invokeLocal = true,
+      int priority = 0
+    ) : base(priority, invokeLocal)
     {
       _value = initialValue;
       SetFixedSize(4);
@@ -33,7 +37,9 @@ namespace Ragon.Client
     public override void Deserialize(RagonSerializer serializer)
     {
       _value = serializer.ReadFloat();
-      OnChanged?.Invoke();
+
+      if (!Entity.IsMine)
+        OnChanged?.Invoke();
     }
   }
 }

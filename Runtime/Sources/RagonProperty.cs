@@ -20,12 +20,14 @@ namespace Ragon.Client
     private int _size;
     private int _ticks;
     private int _priority;
-
-    public RagonProperty(int priority)
+    private bool _invokeLocal;
+    
+    public RagonProperty(int priority, bool invokeLocal)
     {
       _size = 0;
       _priority = priority;
       _fixed = false;
+      _invokeLocal = invokeLocal;
     }
 
     public void SetFixedSize(int size)
@@ -34,9 +36,9 @@ namespace Ragon.Client
       _fixed = true;
     }
 
-    public void Changed(bool instantMode)
+    public void Changed()
     {
-      if (instantMode)
+      if (_invokeLocal)
         OnChanged?.Invoke();
         
       if (_dirty) return;
@@ -62,7 +64,7 @@ namespace Ragon.Client
       _entity = obj;
       _id = propertyId;
 
-      Changed(false);
+      Changed();
     }
 
     public void Write(RagonSerializer serializer)

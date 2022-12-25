@@ -25,10 +25,11 @@ namespace Ragon.Client
     private bool _fallback = true;
     private RagonConnectionConfiguration _fallbackConfiguration;
 
+    public static RagonEntityManager Manager => _instance._entityManager;
     public static RagonSession Session => _instance._session;
-    public static IRagonLog Log => _instance._log;
     public static RagonEventRegistry Event => _instance._eventRegistry;
     public static RagonConnectionStatus Status => _instance._connection.Status;
+    public static IRagonLog Log => _instance._log;
     public static IRagonRoom Room => _instance._room;
     public static IRagonConnection Connection => _instance._connection;
 
@@ -142,6 +143,8 @@ namespace Ragon.Client
       _serializer.Clear();
       _serializer.FromSpan(ref rawData);
 
+      
+      
       var operation = _serializer.ReadOperation();
       switch (operation)
       {

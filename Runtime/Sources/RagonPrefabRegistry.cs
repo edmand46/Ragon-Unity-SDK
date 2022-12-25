@@ -13,11 +13,11 @@ namespace Ragon.Client
   }
 
   [ExecuteInEditMode]
-  [CreateAssetMenu()]
+  [CreateAssetMenu(fileName = "RagonPrefabRegistry")]
   public class RagonPrefabRegistry : ScriptableObject
   {
     [SerializeField] private List<EntityPrefab> _prefabs = new List<EntityPrefab>();
-    [SerializeField] private bool Scan = false;
+    [SerializeField] private bool _scan = false;
 
     public IReadOnlyDictionary<ushort, GameObject> Prefabs => _prefabsMap;
     private Dictionary<ushort, GameObject> _prefabsMap = new Dictionary<ushort, GameObject>();
