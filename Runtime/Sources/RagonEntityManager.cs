@@ -11,7 +11,7 @@ namespace Ragon.Client
   [DefaultExecutionOrder(-10000)]
   public class RagonEntityManager : MonoBehaviour
   {
-    [SerializeField][Range(1.0f, 60.0f, order = 0)] private float _replicateRate = 1.0f;
+    [SerializeField][Range(1.0f, 60.0f, order = 0)] private float _replicateRate = 20.0f;
 
     public static RagonEntityManager Instance { get; private set; }
 
