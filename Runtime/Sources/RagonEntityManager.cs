@@ -228,7 +228,7 @@ namespace Ragon.Client
         RagonNetwork.Log.Error($"[State] Entity with Id {entityId} not found ");
     }
 
-    internal void OnOwnerShipChanged(RagonPlayer player, int entityId)
+    internal void OnOwnershipChanged(RagonPlayer player, int entityId)
     {
       if (_entitiesDict.TryGetValue(entityId, out var entity))
       {

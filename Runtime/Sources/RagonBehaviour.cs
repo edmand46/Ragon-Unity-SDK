@@ -114,7 +114,7 @@ namespace Ragon.Client
     {
     }
 
-    public virtual void OnOwnerShipChanged(RagonPlayer player)
+    public virtual void OnOwnershipChanged(RagonPlayer player)
     {
       
     }

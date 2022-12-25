@@ -36,10 +36,10 @@ namespace Ragon.Client
         listener.OnFailed(message);
     }
 
-    public void OnOwnerShipChanged(RagonPlayer player)
+    public void OnOwnershipChanged(RagonPlayer player)
     {
       foreach (var listener in _listeners)
-        listener.OnOwnerShipChanged(player);
+        listener.OnOwnershipChanged(player);
     }
 
     public void OnPlayerLeft(RagonPlayer player)

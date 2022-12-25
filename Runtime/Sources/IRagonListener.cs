@@ -13,7 +13,7 @@ namespace Ragon.Client
     
     void OnPlayerJoined(RagonPlayer player);
     void OnPlayerLeft(RagonPlayer player);
-    void OnOwnerShipChanged(RagonPlayer player);
+    void OnOwnershipChanged(RagonPlayer player);
     
     void OnLevel(string sceneName);
   }

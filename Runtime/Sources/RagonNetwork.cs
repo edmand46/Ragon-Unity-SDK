@@ -194,13 +194,13 @@ namespace Ragon.Client
           var player = _room.PlayersById[newOwnerId];
 
           _room.OnOwnershipChanged(newOwnerId);
-          _eventManager.OnOwnerShipChanged(player);
+          _eventManager.OnOwnershipChanged(player);
 
           var entities = _serializer.ReadUShort();
           for (var i = 0; i < entities; i++)
           {
             var entityId = _serializer.ReadUShort();
-            _entityManager.OnOwnerShipChanged(player, entityId);
+            _entityManager.OnOwnershipChanged(player, entityId);
           }
 
           break;
