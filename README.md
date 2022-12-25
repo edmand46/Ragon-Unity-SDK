@@ -8,6 +8,6 @@
 
 # Ragon Client SDK for Unity
 
-<a href="https://ragon-server.com/docs/first-steps-box">View documentation</a>
+<a href="https://www.ragon-server.com/docs/installation">View documentation</a>
 ### License
 MIT
