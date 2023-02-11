@@ -192,21 +192,20 @@ namespace Ragon.Client
     public void ReplicateEvent<TEvent>(TEvent evnt, RagonTarget target, RagonReplicationMode replicationMode)
       where TEvent : IRagonEvent, new()
     {
-      var evntId = RagonNetwork.Event.GetEventCode(evnt);
-      _writer.Clear();
-      _writer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
-      _writer.WriteUShort(Id);
-      _writer.WriteUShort(evntId);
-      _writer.WriteByte((byte)replicationMode);
-      _writer.WriteByte((byte)target);
-
-      evnt.Serialize(_writer);
-
-      var sendData = _writer.ToArray();
-      _room.Connection.Send(sendData);
+      ReplicateEvent(evnt, null, target, replicationMode);
     }
 
-    public void ReplicateEvent<TEvent>(TEvent evnt, RagonPlayer target, RagonReplicationMode replicationMode)
+    public void ReplicateEvent<TEvent>(TEvent evnt, RagonPlayer player, RagonReplicationMode replicationMode)
+      where TEvent : IRagonEvent, new()
+    {
+      ReplicateEvent(evnt, player, RagonTarget.Player, replicationMode);
+    }
+
+    private void ReplicateEvent<TEvent>(
+      TEvent evnt, 
+      RagonPlayer player, 
+      RagonTarget target, 
+      RagonReplicationMode replicationMode)
       where TEvent : IRagonEvent, new()
     {
       var evntId = RagonNetwork.Event.GetEventCode(evnt);
@@ -216,8 +215,8 @@ namespace Ragon.Client
       _writer.WriteUShort(Id);
       _writer.WriteUShort(evntId);
       _writer.WriteByte((byte)replicationMode);
-      _writer.WriteByte((byte)RagonTarget.Player);
-      _writer.WriteUShort((ushort)target.PeerId);
+      _writer.WriteByte((byte)target);
+      _writer.WriteUShort((ushort)((player != null)? player.PeerId: 0));
 
       evnt.Serialize(_writer);
 
