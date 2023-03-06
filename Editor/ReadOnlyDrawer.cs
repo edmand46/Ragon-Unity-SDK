@@ -1,9 +1,7 @@
-#if UNITY_EDITOR
-using Ragon.Client;
 using UnityEditor;
 using UnityEngine;
 
-namespace Ragon.Editor
+namespace Ragon.Client.Unity
 {
   [CustomPropertyDrawer(typeof(ReadOnlyAttribute))]
   public class ReadOnlyDrawer : PropertyDrawer
@@ -11,13 +9,9 @@ namespace Ragon.Editor
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
       var previousGUIState = GUI.enabled;
- 
       GUI.enabled = false;
- 
       EditorGUI.PropertyField(position, property, label);
- 
       GUI.enabled = previousGUIState;
     }
   }
 }
-#endif
