@@ -1,0 +1,37 @@
+{
+  "runtimeTarget": {
+    "name": ".NETStandard,Version=v2.1/",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETStandard,Version=v2.1": {},
+    ".NETStandard,Version=v2.1/": {
+      "Ragon.Client/1.0.0": {
+        "dependencies": {
+          "Ragon.Protocol": "1.0.0"
+        },
+        "runtime": {
+          "Ragon.Client.dll": {}
+        }
+      },
+      "Ragon.Protocol/1.0.0": {
+        "runtime": {
+          "Ragon.Protocol.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Ragon.Client/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Ragon.Protocol/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
