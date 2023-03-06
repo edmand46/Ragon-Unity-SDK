@@ -35,7 +35,7 @@ namespace Ragon.Client.Unity
     public static RagonRoom Room => _instance._networkClient.Room;
     public static RagonSession Session => _instance._networkClient.Session;
     public static RagonClient Network => _instance._networkClient;
-
+    
     private void Awake()
     {
       DontDestroyOnLoad(gameObject);
@@ -102,16 +102,7 @@ namespace Ragon.Client.Unity
       
       _instance._links.Add(entity, link);
     }
-
-    public static void AddListener(IRagonListener listener)
-    {
-      _instance._networkClient.AddListener(listener);
-    }
-
-    public static void RemoveListener(IRagonListener listener)
-    {
-      _instance._networkClient.RemoveListener(listener);
-    }
+    
 
     public static void Connect()
     {
@@ -170,7 +161,46 @@ namespace Ragon.Client.Unity
         _instance._links.Remove(entity);
       }
     }
+    
+    public static void AddListener(IRagonListener listener) => _instance._networkClient.AddListener(listener);
 
+    public static void AddListener(IRagonAuthorizationListener listener) => _instance._networkClient.AddListener(listener);
+
+    public static void AddListener(IRagonConnectedListener listener) => _instance._networkClient.AddListener(listener);
+
+    public static void AddListener(IRagonFailedListener listener) => _instance._networkClient.AddListener(listener);
+
+    public static void AddListener(IRagonJoinListener listener) => _instance._networkClient.AddListener(listener);
+
+    public static void AddListener(IRagonLeftListener listener) => _instance._networkClient.AddListener(listener);
+
+    public static void AddListener(IRagonLevelListener listener) => _instance._networkClient.AddListener(listener);
+
+    public static void AddListener(IRagonOwnershipChangedListener listener) => _instance._networkClient.AddListener(listener);
+
+    public static void AddListener(IRagonPlayerJoinListener listener) => _instance._networkClient.AddListener(listener);
+
+    public static void AddListener(IRagonPlayerLeftListener listener) => _instance._networkClient.AddListener(listener);
+
+    public static void RemoveListener(IRagonListener listener) =>_instance._networkClient.RemoveListener(listener);
+
+    public static void RemoveListener(IRagonAuthorizationListener listener) =>_instance._networkClient.RemoveListener(listener);
+
+    public static void RemoveListener(IRagonConnectedListener listener) =>_instance._networkClient.RemoveListener(listener);
+
+    public static void RemoveListener(IRagonFailedListener listener) =>_instance._networkClient.RemoveListener(listener);
+
+    public static void RemoveListener(IRagonJoinListener listener) =>_instance._networkClient.RemoveListener(listener);
+
+    public static void RemoveListener(IRagonLeftListener listener) =>_instance._networkClient.RemoveListener(listener);
+
+    public static void RemoveListener(IRagonLevelListener listener) =>_instance._networkClient.RemoveListener(listener);
+
+    public static void RemoveListener(IRagonOwnershipChangedListener listener) =>_instance._networkClient.RemoveListener(listener);
+
+    public static void RemoveListener(IRagonPlayerJoinListener listener) =>_instance._networkClient.RemoveListener(listener);
+
+    public static void RemoveListener(IRagonPlayerLeftListener listener) =>_instance._networkClient.RemoveListener(listener);
     
   }
 }
