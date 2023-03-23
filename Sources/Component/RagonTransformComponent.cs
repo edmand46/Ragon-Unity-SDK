@@ -33,6 +33,9 @@ namespace Ragon.Client.Unity
 
     [SerializeField, ShowIf("positionReplication")]
     private float positionInterpolationSpeed = 10f;
+    
+    [SerializeField, ShowIf("positionReplication")]
+    private float positionThreshold = 0.1f;
 
     [SerializeField, RemoveFoldout, ShowIf("positionReplication"),
      ShowIf("positionAxis", RagonAxis.XYZ, RagonAxis.X, RagonAxis.XY, RagonAxis.XZ)]
@@ -53,6 +56,9 @@ namespace Ragon.Client.Unity
 
     [SerializeField, ShowIf("rotationReplication")]
     private float rotationInterpolationSpeed = 15f;
+    
+    [SerializeField, ShowIf("rotationReplication")]
+    private float rotationThreshold = 0.1f;
 
     [SerializeField, RemoveFoldout, ShowIf("rotationReplication"),
      ShowIf("rotationAxis", RagonAxis.XYZ, RagonAxis.X, RagonAxis.XY, RagonAxis.XZ)]
@@ -73,6 +79,9 @@ namespace Ragon.Client.Unity
 
     [SerializeField, ShowIf("scaleReplication")]
     private float scaleInterpolationSpeed = 15f;
+    
+    [SerializeField, ShowIf("scaleReplication")]
+    private float scaleThreshold = 0.1f;
 
     [SerializeField, RemoveFoldout, ShowIf("scaleReplication"),
      ShowIf("scaleAxis", RagonAxis.XYZ, RagonAxis.X, RagonAxis.XY, RagonAxis.XZ)]
@@ -161,21 +170,21 @@ namespace Ragon.Client.Unity
 
       if (positionReplication)
       {
-        var positionEqual = IsEqual(_position.Value, target.position, 0.1f);
+        var positionEqual = IsEqual(_position.Value, target.position, positionThreshold);
         if (!positionEqual)
           _position.Value = target.position;
       }
 
       if (rotationReplication)
       {
-        var rotationEqual = IsEqual(_rotation.Value, target.localRotation.eulerAngles, 0.1f);
+        var rotationEqual = IsEqual(_rotation.Value, target.localRotation.eulerAngles, rotationThreshold);
         if (!rotationEqual)
           _rotation.Value = target.localRotation.eulerAngles;
       }
 
       if (scaleReplication)
       {
-        var positionEqual = IsEqual(_scale.Value, target.localScale, 0.1f);
+        var positionEqual = IsEqual(_scale.Value, target.localScale, scaleThreshold);
         if (!positionEqual)
           _scale.Value = target.localScale;
       }
