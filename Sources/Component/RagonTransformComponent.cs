@@ -31,6 +31,9 @@ namespace Ragon.Client.Unity
     [SerializeField, ShowIf("positionReplication")]
     private RagonAxis positionAxis = RagonAxis.XYZ;
 
+    [SerializeField, ShowIf("positionReplication")]
+    private float positionInterpolationSpeed = 10f;
+
     [SerializeField, RemoveFoldout, ShowIf("positionReplication"),
      ShowIf("positionAxis", RagonAxis.XYZ, RagonAxis.X, RagonAxis.XY, RagonAxis.XZ)]
     private RagonFloatPropertyInfo positionX;
@@ -48,6 +51,9 @@ namespace Ragon.Client.Unity
     [SerializeField, ShowIf("rotationReplication")]
     private RagonAxis rotationAxis = RagonAxis.XYZ;
 
+    [SerializeField, ShowIf("rotationReplication")]
+    private float rotationInterpolationSpeed = 15f;
+
     [SerializeField, RemoveFoldout, ShowIf("rotationReplication"),
      ShowIf("rotationAxis", RagonAxis.XYZ, RagonAxis.X, RagonAxis.XY, RagonAxis.XZ)]
     private RagonFloatPropertyInfo rotationX;
@@ -64,6 +70,9 @@ namespace Ragon.Client.Unity
 
     [SerializeField, ShowIf("scaleReplication")]
     private RagonAxis scaleAxis = RagonAxis.XYZ;
+
+    [SerializeField, ShowIf("scaleReplication")]
+    private float scaleInterpolationSpeed = 15f;
 
     [SerializeField, RemoveFoldout, ShowIf("scaleReplication"),
      ShowIf("scaleAxis", RagonAxis.XYZ, RagonAxis.X, RagonAxis.XY, RagonAxis.XZ)]
@@ -87,7 +96,10 @@ namespace Ragon.Client.Unity
 
     [SerializeField, ReadOnly] private int bits;
 
-    public void SetTarget(Transform t) => target = t;
+    public void SetTarget(Transform t)
+    {
+      target = t;
+    }
 
     public override bool OnDiscovery(List<RagonProperty> properties)
     {
@@ -116,7 +128,7 @@ namespace Ragon.Client.Unity
         _positionBuffer = new LimitedQueue<Vector3>(3);
         _position = new RagonVector3(positionAxis, compressorX, compressorY, compressorZ, false);
         _position.Changed += () => _positionBuffer.Enqueue(_position.Value);
-        
+
         if (target)
           _position.Value = target.position;
 
@@ -132,7 +144,7 @@ namespace Ragon.Client.Unity
         _scaleBuffer = new LimitedQueue<Vector3>(3);
         _scale = new RagonVector3(scaleAxis, compressorX, compressorY, compressorZ, false);
         _scale.Changed += () => _scaleBuffer.Enqueue(_scale.Value);
-        
+
         if (target)
           _scale.Value = target.localScale;
 
@@ -144,6 +156,9 @@ namespace Ragon.Client.Unity
 
     public override void OnUpdateEntity()
     {
+      if (!target)
+        return;
+
       if (positionReplication)
       {
         var positionEqual = IsEqual(_position.Value, target.position, 0.1f);
@@ -168,15 +183,17 @@ namespace Ragon.Client.Unity
 
     public override void OnUpdateProxy()
     {
+      if (!target)
+        return;
+
       if (positionReplication)
-        target.position = Vector3.Lerp(target.position, _position.Value, Time.deltaTime * 10);
+        target.position = Vector3.Lerp(target.position, _position.Value, Time.deltaTime * positionInterpolationSpeed);
 
       if (rotationReplication)
-        target.localRotation =
-          Quaternion.Lerp(target.localRotation, Quaternion.Euler(_rotation.Value), Time.deltaTime * 15);
+        target.localRotation = Quaternion.Lerp(target.localRotation, Quaternion.Euler(_rotation.Value), Time.deltaTime * rotationInterpolationSpeed);
 
       if (scaleReplication)
-        target.localScale = Vector3.Lerp(target.localScale, _scale.Value, Time.deltaTime * 15);
+        target.localScale = Vector3.Lerp(target.localScale, _scale.Value, Time.deltaTime * scaleInterpolationSpeed);
     }
 
     public bool IsEqual(Vector3 v1, Vector3 v2, float precision)
