@@ -251,7 +251,7 @@ namespace Ragon.Client.Unity
         }
         case RagonAxis.Z:
         {
-          var compressedZ = _compressorZ.Compress(_value.y);
+          var compressedZ = _compressorZ.Compress(_value.z);
           
           buffer.Write(compressedZ, _compressorZ.RequiredBits);
           break;
