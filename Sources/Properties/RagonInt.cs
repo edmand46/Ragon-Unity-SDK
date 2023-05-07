@@ -82,10 +82,7 @@ namespace Ragon.Client.Unity
     {
       var compressedValue = buffer.Read(_compressor.RequiredBits);
       _value = _compressor.Decompress(compressedValue);
-      
-      if (!_invokeLocal)
-        return;
-
+ 
       InvokeChanged();
     }
   }
