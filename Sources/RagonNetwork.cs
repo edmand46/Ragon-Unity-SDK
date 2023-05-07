@@ -25,7 +25,7 @@ namespace Ragon.Client.Unity
     private static RagonNetwork _instance;
     private Dictionary<RagonEntity, RagonLink> _links;
     private RagonClient _networkClient;
-
+   
     [SerializeField] private RagonConfiguration _configuration;
     [SerializeField] private RagonPrefabRegistry _registry;
     
@@ -166,7 +166,7 @@ namespace Ragon.Client.Unity
 
     public static void AddListener(IRagonAuthorizationListener listener) => _instance._networkClient.AddListener(listener);
 
-    public static void AddListener(IRagonConnectedListener listener) => _instance._networkClient.AddListener(listener);
+    public static void AddListener(IRagonConnectionListener listener) => _instance._networkClient.AddListener(listener);
 
     public static void AddListener(IRagonFailedListener listener) => _instance._networkClient.AddListener(listener);
 
@@ -186,7 +186,7 @@ namespace Ragon.Client.Unity
 
     public static void RemoveListener(IRagonAuthorizationListener listener) =>_instance._networkClient.RemoveListener(listener);
 
-    public static void RemoveListener(IRagonConnectedListener listener) =>_instance._networkClient.RemoveListener(listener);
+    public static void RemoveListener(IRagonConnectionListener listener) =>_instance._networkClient.RemoveListener(listener);
 
     public static void RemoveListener(IRagonFailedListener listener) =>_instance._networkClient.RemoveListener(listener);
 

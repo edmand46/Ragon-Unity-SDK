@@ -62,10 +62,10 @@ namespace Ragon.Client.Unity
           break;
       }
       
-      var properties = new List<RagonProperty>();
+      var propertyList = new List<RagonProperty>();
       foreach (var behaviour in _behaviours)
       {
-        if (behaviour.OnDiscovery(properties))
+        if (behaviour.OnDiscovery(propertyList))
           continue;
 
         var fieldFlags = (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
@@ -78,12 +78,12 @@ namespace Ragon.Client.Unity
           {
             var property = (RagonProperty)field.GetValue(behaviour);
             property.SetName(field.Name);
-            properties.Add(property);
+            propertyList.Add(property);
           }
         }
       }
 
-      _properties = properties.ToArray();
+      _properties = propertyList.ToArray();
       return _properties;
     }
 
