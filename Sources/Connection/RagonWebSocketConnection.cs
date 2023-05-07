@@ -16,6 +16,7 @@
 
 using System;
 using NativeWebSocket;
+using Ragon.Protocol;
 using UnityEngine;
 
 namespace Ragon.Client.Unity
@@ -26,7 +27,7 @@ namespace Ragon.Client.Unity
         public INetworkChannel Unreliable { get; private set; }
         public Action<byte[]> OnData { get; set; }
         public Action OnConnected { get; set; }
-        public Action<DisconnectReason> OnDisconnected { get; set; }
+        public Action<RagonDisconnect> OnDisconnected { get; set; }
         public ulong BytesSent { get; }
         public ulong BytesReceived { get; }
         public int Ping { get; }
@@ -86,7 +87,7 @@ namespace Ragon.Client.Unity
         {
             try
             {
-                OnDisconnected?.Invoke(DisconnectReason.MANUAL);
+                OnDisconnected?.Invoke(RagonDisconnect.SERVER);
             }
             catch (Exception ex)
             {
@@ -110,7 +111,7 @@ namespace Ragon.Client.Unity
         {
             try
             {
-                OnDisconnected?.Invoke(DisconnectReason.TIMEOUT);
+                OnDisconnected?.Invoke(RagonDisconnect.TIMEOUT);
             }
             catch (Exception ex)
             {

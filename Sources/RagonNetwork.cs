@@ -73,7 +73,7 @@ namespace Ragon.Client.Unity
 
     private void Update()
     {
-      _networkClient.Update(Time.deltaTime);
+      _networkClient.Update(Time.unscaledTime);
     }
 
     private void OnDestroy()
