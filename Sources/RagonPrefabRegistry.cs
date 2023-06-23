@@ -82,6 +82,8 @@ namespace Ragon.Client.Unity
           }
         }
       }
+
+      EditorUtility.SetDirty(this);
     }
 #endif
   }
