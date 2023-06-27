@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// Modifications copyright (C) 2023 Oleg Dzhuraev <godlikeaurora@gmail.com>
+
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -27,13 +29,11 @@ namespace Ragon.Client.Unity
     [HideInInspector] public ushort EntityType;
     public GameObject Prefab;
   }
-
-  [ExecuteInEditMode]
+  
   [CreateAssetMenu(fileName = "RagonPrefabRegistry")]
   public class RagonPrefabRegistry : ScriptableObject
   {
     [SerializeField] private List<EntityPrefab> _prefabs = new List<EntityPrefab>();
-    [SerializeField] private bool _scan = false;
 
     public IReadOnlyDictionary<ushort, GameObject> Prefabs => _prefabsMap;
     private Dictionary<ushort, GameObject> _prefabsMap = new Dictionary<ushort, GameObject>();
@@ -46,7 +46,7 @@ namespace Ragon.Client.Unity
     }
     
 #if UNITY_EDITOR
-    private void OnValidate()
+    public void Rescan()
     {
       _prefabs.Clear();
       var guids = AssetDatabase.FindAssets("t:Prefab");
@@ -82,6 +82,8 @@ namespace Ragon.Client.Unity
           }
         }
       }
+
+      EditorUtility.SetDirty(this);
     }
 #endif
   }
