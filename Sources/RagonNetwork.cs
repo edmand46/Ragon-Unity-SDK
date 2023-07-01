@@ -158,7 +158,6 @@ namespace Ragon.Client.Unity
         return;
 
       var entity = link.Entity;
-      
       _instance._networkClient.Room.TransferEntity(entity, player);
     }
 
