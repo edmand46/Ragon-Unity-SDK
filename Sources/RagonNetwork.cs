@@ -15,6 +15,7 @@
  */
 
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 namespace Ragon.Client.Unity
@@ -24,52 +25,74 @@ namespace Ragon.Client.Unity
   {
     private static RagonNetwork _instance;
     private Dictionary<RagonEntity, RagonLink> _links;
+    private IRagonPrefabSpawner _spawner;
     private RagonClient _networkClient;
 
     [SerializeField] private RagonConfiguration _configuration;
     [SerializeField] private RagonPrefabRegistry _registry;
 
+    public static bool IsInitialized => _instance != null;
     public static RagonConfiguration Configuration => _instance._configuration;
     public static RagonStatus Status => _instance._networkClient.Status;
     public static RagonEventCache Event => _instance._networkClient.Event;
     public static RagonRoom Room => _instance._networkClient.Room;
     public static RagonSession Session => _instance._networkClient.Session;
     public static RagonClient Network => _instance._networkClient;
-
+    
     private void Awake()
     {
-      DontDestroyOnLoad(gameObject);
-
       _instance = this;
-
-      RagonLog.Set(new RagonUnityLogger());
-
+      
+      DontDestroyOnLoad(gameObject);
+      
+      var defaultLogger = new RagonUnityLogger();
+      RagonLog.Set(defaultLogger);
+  
       _links = new Dictionary<RagonEntity, RagonLink>();
       _registry.Cache();
 
-      var defaultSceneCollector = new RagonSceneCollector();
       switch (_configuration.Type)
       {
         case RagonConnectionType.UDP:
         {
           var enetConnection = new RagonENetConnection();
-          _networkClient = new RagonClient(enetConnection, this, defaultSceneCollector, _configuration.Rate);
+          _networkClient = new RagonClient(enetConnection, _configuration.Rate);
           break;
         }
         case RagonConnectionType.WebSocket:
         {
           var webSocketConnection = new RagonWebSocketConnection();
-          _networkClient = new RagonClient(webSocketConnection, this, defaultSceneCollector, _configuration.Rate);
+          _networkClient = new RagonClient(webSocketConnection, _configuration.Rate);
           break;
         }
         default:
         {
           var enetConnection = new RagonENetConnection();
-          _networkClient = new RagonClient(enetConnection, this, defaultSceneCollector, _configuration.Rate);
+          _networkClient = new RagonClient(enetConnection, _configuration.Rate);
           break;
         }
       }
+      
+      Configure(new RagonSceneCollector(), new RagonPrefabSpawner());
     }
+
+    public static void Configure(IRagonSceneCollector collector, IRagonPrefabSpawner spawner)
+    {
+      if (_instance._networkClient.Status != RagonStatus.DISCONNECTED)
+      {
+        RagonLog.Warn("You can't configure client when you connected to server");
+        return;
+      }
+
+      if (collector != null)
+        _instance._networkClient.Configure(collector);
+
+      if (spawner != null)
+        _instance._spawner = spawner;
+      
+      _instance._networkClient.Configure(_instance);
+    }
+
 
     private void Update()
     {
@@ -89,7 +112,7 @@ namespace Ragon.Client.Unity
         return;
       }
 
-      var go = Instantiate(prefab);
+      var go = _spawner.InstantiateEntityGameObject(entity, prefab);
       var link = go.GetComponent<RagonLink>();
       var properties = link.Discovery();
 
@@ -106,12 +129,6 @@ namespace Ragon.Client.Unity
 
     public static void Connect()
     {
-      if (_instance._networkClient == null)
-      {
-        Debug.LogError("Network client is null!");
-        return;
-      }
-
       var configuration = _instance._configuration;
       _instance._networkClient.Connect(configuration.Address, configuration.Port, configuration.Protocol);
     }
@@ -125,14 +142,17 @@ namespace Ragon.Client.Unity
     {
       if (prefab.TryGetComponent<RagonLink>(out var prefabLink))
       {
-        var go = Instantiate(prefab);
+        var spawner = _instance._spawner;
+        var entity = new RagonEntity(prefabLink.Type, prefabLink.StaticID);
+        entity.PreAttach(payload);
+        
+        var go = spawner.InstantiateEntityGameObject(entity, prefab);
         var link = go.GetComponent<RagonLink>();
         var properties = link.Discovery();
-
-        var entity = new RagonEntity(prefabLink.Type, prefabLink.StaticID);
+        
         foreach (var property in properties)
           entity.State.AddProperty(property);
-
+        
         entity.Attached += link.OnAttached;
         entity.Detached += link.OnDetached;
         entity.OwnershipChanged += link.OnOwnershipChanged;
@@ -146,10 +166,15 @@ namespace Ragon.Client.Unity
       return null;
     }
 
-    public static RagonLink FindByEntityId(ushort entityId)
+    public static bool TryGetLink(ushort entityId, out RagonLink link)
     {
-      var entity = _instance._networkClient.Entity.FindById(entityId);
-      return _instance._links[entity];
+      if (!_instance._networkClient.Entity.TryGetEntity(entityId, out var entity))
+      {
+        link = null;
+        return false;
+      }
+      
+      return _instance._links.TryGetValue(entity, out link);
     }
 
     public static void Transfer(GameObject go, RagonPlayer player)
