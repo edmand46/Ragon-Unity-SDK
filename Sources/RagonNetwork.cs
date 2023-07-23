@@ -144,7 +144,7 @@ namespace Ragon.Client.Unity
       {
         var spawner = _instance._spawner;
         var entity = new RagonEntity(prefabLink.Type, prefabLink.StaticID);
-        entity.PreAttach(payload);
+        entity.AttachPayload(payload);
         
         var go = spawner.InstantiateEntityGameObject(entity, prefab);
         var link = go.GetComponent<RagonLink>();
