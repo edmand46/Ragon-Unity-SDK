@@ -31,8 +31,8 @@ namespace Ragon.Client.Unity
 
     private bool _mine;
     private RagonEntity _entity;
-    private Dictionary<int, OnEventDelegate> _events = new();
-    private Dictionary<int, Action<RagonPlayer, IRagonEvent>> _localEvents = new();
+    private Dictionary<int, OnEventDelegate> _events = new Dictionary<int, OnEventDelegate>();
+    private Dictionary<int, Action<RagonPlayer, IRagonEvent>> _localEvents = new Dictionary<int, Action<RagonPlayer, IRagonEvent>>();
       
     internal void Attach(RagonEntity entity)
     {

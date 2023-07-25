@@ -8,10 +8,10 @@ namespace Ragon.Editor
 {
   public class Builder : UnityEditor.Editor
   {
-    public static Dictionary<BuildTarget, (string, string, string)> Executables = new()
+    public static Dictionary<BuildTarget, (string, string, string)> Executables = new Dictionary<BuildTarget, (string, string, string)>()
     {
-      {BuildTarget.StandaloneWindows64, ("Game", "Builds/Clients", ".exe")},
-      {BuildTarget.StandaloneOSX, ("Game", "Builds/Clients", "")},
+      { BuildTarget.StandaloneWindows64, ("Game", "Builds/Clients", ".exe") },
+      { BuildTarget.StandaloneOSX, ("Game", "Builds/Clients", "") },
     };
 
     public static void BuildClientMacOnly() => Build(BuildTarget.StandaloneOSX, null);
@@ -34,7 +34,7 @@ namespace Ragon.Editor
 
       EditorUserBuildSettings.SwitchActiveBuildTarget(targetGroup, target);
 
-      if (!string.IsNullOrEmpty(currentMap)) scenes = new[] {currentMap};
+      if (!string.IsNullOrEmpty(currentMap)) scenes = new[] { currentMap };
 
       var buildOptions = new BuildPlayerOptions();
       buildOptions.scenes = scenes;

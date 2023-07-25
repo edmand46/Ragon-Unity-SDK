@@ -33,7 +33,7 @@ namespace Ragon.Client.Unity
 
     [SerializeField, ShowIf("positionReplication")]
     private float positionInterpolationSpeed = 10f;
-    
+
     [SerializeField, ShowIf("positionReplication")]
     private float positionThreshold = 0.1f;
 
@@ -56,7 +56,7 @@ namespace Ragon.Client.Unity
 
     [SerializeField, ShowIf("rotationReplication")]
     private float rotationInterpolationSpeed = 15f;
-    
+
     [SerializeField, ShowIf("rotationReplication")]
     private float rotationThreshold = 0.1f;
 
@@ -79,7 +79,7 @@ namespace Ragon.Client.Unity
 
     [SerializeField, ShowIf("scaleReplication")]
     private float scaleInterpolationSpeed = 15f;
-    
+
     [SerializeField, ShowIf("scaleReplication")]
     private float scaleThreshold = 0.1f;
 
@@ -222,38 +222,85 @@ namespace Ragon.Client.Unity
 
       if (positionReplication)
       {
-        if (positionAxis is RagonAxis.XYZ or RagonAxis.X or RagonAxis.XY or RagonAxis.XZ)
+        if (positionAxis == RagonAxis.XYZ || 
+            positionAxis == RagonAxis.X || 
+            positionAxis == RagonAxis.XY || 
+            positionAxis == RagonAxis.XZ)
+        {
           ValidateProperty(positionX);
+        }
 
-        if (positionAxis is RagonAxis.XYZ or RagonAxis.Y or RagonAxis.XY or RagonAxis.YZ)
+        if (positionAxis == RagonAxis.XYZ ||
+            positionAxis == RagonAxis.Y ||
+            positionAxis == RagonAxis.YZ ||
+            positionAxis == RagonAxis.XY)
+        {
           ValidateProperty(positionY);
+        }
 
-        if (positionAxis is RagonAxis.XYZ or RagonAxis.Z or RagonAxis.XZ or RagonAxis.YZ)
+        if (positionAxis == RagonAxis.XYZ ||
+            positionAxis == RagonAxis.Z ||
+            positionAxis == RagonAxis.XZ ||
+            positionAxis == RagonAxis.YZ)
+        {
           ValidateProperty(positionZ);
+        }
       }
 
       if (rotationReplication)
       {
-        if (rotationAxis is RagonAxis.XYZ or RagonAxis.X or RagonAxis.XY or RagonAxis.XZ)
+        if (rotationAxis == RagonAxis.XYZ ||
+            rotationAxis == RagonAxis.X ||
+            rotationAxis == RagonAxis.XY ||
+            rotationAxis == RagonAxis.XZ)
+        {
           ValidateProperty(rotationX);
 
-        if (rotationAxis is RagonAxis.XYZ or RagonAxis.Y or RagonAxis.XY or RagonAxis.YZ)
+        }
+
+        if (rotationAxis == RagonAxis.XYZ ||
+            rotationAxis == RagonAxis.X ||
+            rotationAxis == RagonAxis.XY ||
+            rotationAxis == RagonAxis.XZ)
+        {
           ValidateProperty(rotationY);
 
-        if (rotationAxis is RagonAxis.XYZ or RagonAxis.Z or RagonAxis.XZ or RagonAxis.YZ)
+        }
+
+        if (rotationAxis == RagonAxis.XYZ ||
+            rotationAxis == RagonAxis.X ||
+            rotationAxis == RagonAxis.XY ||
+            rotationAxis == RagonAxis.XZ)
+        {
           ValidateProperty(rotationZ);
+        }
       }
 
       if (scaleReplication)
       {
-        if (scaleAxis is RagonAxis.XYZ or RagonAxis.X or RagonAxis.XY or RagonAxis.XZ)
+        if (scaleAxis == RagonAxis.XYZ ||
+            scaleAxis == RagonAxis.X ||
+            scaleAxis == RagonAxis.XY ||
+            scaleAxis == RagonAxis.XZ)
+        {
           ValidateProperty(scaleX);
+        }
 
-        if (scaleAxis is RagonAxis.XYZ or RagonAxis.Y or RagonAxis.XY or RagonAxis.YZ)
+        if (scaleAxis == RagonAxis.XYZ ||
+            scaleAxis == RagonAxis.X ||
+            scaleAxis == RagonAxis.XY ||
+            scaleAxis == RagonAxis.XZ)
+        {
           ValidateProperty(scaleY);
+        }
 
-        if (scaleAxis is RagonAxis.XYZ or RagonAxis.Z or RagonAxis.XZ or RagonAxis.YZ)
+        if (scaleAxis == RagonAxis.XYZ ||
+            scaleAxis == RagonAxis.X ||
+            scaleAxis == RagonAxis.XY ||
+            scaleAxis == RagonAxis.XZ)
+        {
           ValidateProperty(scaleZ);
+        }
       }
     }
 
