@@ -16,17 +16,7 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			if (enableIfAttribute.equalsAny == null || enableIfAttribute.equalsAny.Length == 0)
 			{
-				var boolProperty = property.GetPropertyByLocalPath(enableIfAttribute.checkPath);
-
-				bool isEnabled;
-				if (boolProperty == null)
-				{
-					isEnabled = (bool)property.InvokeFuncByLocalPath(enableIfAttribute.checkPath);
-				}
-				else
-				{
-					isEnabled = boolProperty.boolValue;
-				}
+				var isEnabled = property.GetResultByLocalPath<bool>(enableIfAttribute.checkPath);
 
 				if (currentPropertyData.isEnabledChanged)
 				{

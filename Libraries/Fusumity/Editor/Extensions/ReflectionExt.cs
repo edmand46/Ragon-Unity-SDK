@@ -22,6 +22,40 @@ namespace Fusumity.Editor.Extensions
 		private static readonly Dictionary<Type, Type[]> TYPES_WITH_NULL = new Dictionary<Type, Type[]>();
 		private static readonly Dictionary<Type, Type[]> TYPES_WITHOUT_NULL = new Dictionary<Type, Type[]>();
 
+		public static bool IsList(this Type type)
+		{
+			if (!type.IsGenericType)
+				return false;
+
+			var genericTypeDefinition = type.GetGenericTypeDefinition();
+			return genericTypeDefinition == typeof(List<>);
+		}
+
+		public static bool HasAttribute<T>(this MemberInfo memberInfo) where T: Attribute
+		{
+			return memberInfo.GetCustomAttribute<T>() != null;
+		}
+
+		public static List<FieldInfo> GetInstanceFields(this Type type, Type privateRestriction = null)
+		{
+			var fields = type.GetFields(FIELD_BINDING_FLAGS);
+			var result = new List<FieldInfo>(fields);
+
+			if (type != privateRestriction)
+			{
+				while (true)
+				{
+					type = type.BaseType;
+					if (type == null || type == privateRestriction)
+						break;
+					fields = type.GetFields(INTERNAL_FIELD_BINDING_FLAGS);
+					result.AddRange(fields);
+				}
+			}
+
+			return result;
+		}
+
 		public static Type[] GetInheritorTypes(this Type baseType, bool insertNull = false)
 		{
 			Type[] inheritorTypes;
@@ -130,6 +164,8 @@ namespace Fusumity.Editor.Extensions
 				else
 				{
 					var field = GetAnyField(target.GetType(), pathComponent);
+					if (field == null)
+						return null;
 					target = field.GetValue(target);
 				}
 			}
@@ -155,7 +191,7 @@ namespace Fusumity.Editor.Extensions
 				localPath = propertyPath.Remove(0, removeIndex + 1);
 				propertyPath = propertyPath.Remove(removeIndex, propertyPath.Length - removeIndex);
 
-				if (localPath[^1] != ARRAY_DATA_TERMINATOR)
+				if (localPath[localPath.Length - 1] != ARRAY_DATA_TERMINATOR)
 					return propertyPath;
 
 				// Remove "{field name}.Array"
@@ -188,7 +224,9 @@ namespace Fusumity.Editor.Extensions
 			while (field == null)
 			{
 				type = type.BaseType;
-				field = type.GetField(fieldName, INTERNAL_FIELD_BINDING_FLAGS);
+				if (type == null)
+					return null;
+				field = type?.GetField(fieldName, INTERNAL_FIELD_BINDING_FLAGS);
 			}
 
 			return field;
@@ -200,10 +238,26 @@ namespace Fusumity.Editor.Extensions
 			while (methodInfo == null)
 			{
 				type = type.BaseType;
+				if (type == null)
+					return null;
 				methodInfo = type.GetMethod(methodName, PRIVATE_METHOD_BINDING_FLAGS, null, new Type[]{}, null);
 			}
 
 			return methodInfo;
+		}
+
+		public static PropertyInfo GetAnyProperty(this Type type, string propertyName)
+		{
+			var propertyInfo = type.GetProperty(propertyName, METHOD_BINDING_FLAGS);
+			while (propertyInfo == null)
+			{
+				type = type.BaseType;
+				if (type == null)
+					return null;
+				propertyInfo = type.GetProperty(propertyName, METHOD_BINDING_FLAGS);
+			}
+
+			return propertyInfo;
 		}
 
 		public static object InvokeFuncByLocalPath(object source, string methodPath)
@@ -221,7 +275,25 @@ namespace Fusumity.Editor.Extensions
 			var target = GetObjectByLocalPath(source, targetPath);
 			var methodInfo = target.GetType().GetAnyMethod_WithoutArguments(methodName);
 
-			return methodInfo.Invoke(target, null);
+			return methodInfo?.Invoke(target, null);
+		}
+
+		public static object InvokePropertyByLocalPath(object source, string propertyPath)
+		{
+			var targetPath = "";
+			var propertyName = propertyPath;
+
+			var removeIndex = propertyPath.LastIndexOf(PATH_SPLIT_CHAR);
+			if (removeIndex >= 0)
+			{
+				targetPath = propertyPath.Remove(removeIndex, propertyPath.Length - removeIndex);
+				propertyName = propertyPath.Remove(0, removeIndex + 1);
+			}
+
+			var target = GetObjectByLocalPath(source, targetPath);
+			var propertyInfo = target.GetType().GetAnyProperty(propertyName);
+
+			return propertyInfo?.GetValue(target, null);
 		}
 
 		public static void InvokeMethodByLocalPath(object source, string methodPath)

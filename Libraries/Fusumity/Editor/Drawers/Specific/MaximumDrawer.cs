@@ -14,24 +14,25 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			var property = currentPropertyData.property;
 			var maxAttribute = (MaximumAttribute)attribute;
+			var intExclusively = maxAttribute.intExclusively;
 
-			var intmax = maxAttribute.maxInt;
-			var floatmax = maxAttribute.maxFloat;
+			var intMax = intExclusively && maxAttribute.maxInt > int.MinValue ? maxAttribute.maxInt - 1 : maxAttribute.maxInt;
+			var floatMax = maxAttribute.maxFloat;
 
 			if (!string.IsNullOrEmpty(maxAttribute.maxPath))
 			{
-				var maxProperty = property.GetPropertyByLocalPath(maxAttribute.maxPath);
-
-				switch (maxProperty?.propertyType)
+				var maxValue = property.GetResultByLocalPath(maxAttribute.maxPath);
+				switch (maxValue)
 				{
-					case SerializedPropertyType.Integer:
-						intmax = Math.Max(maxProperty.intValue, intmax);
-						floatmax = Math.Max((float)maxProperty.intValue, floatmax);
+					case int intValue:
+						if (intExclusively && intValue > int.MinValue)
+							intValue--;
+						intMax = Math.Min(intValue, intMax);
+						floatMax = Math.Min((float)intValue, floatMax);
 						break;
-					case SerializedPropertyType.Float:
-					case SerializedPropertyType.Vector2:
-						intmax = Math.Max((int)maxProperty.floatValue, intmax);
-						floatmax = Math.Max(maxProperty.floatValue, floatmax);
+					case float floatValue:
+						intMax = Math.Min((int)floatValue, intMax);
+						floatMax = Math.Min(floatValue, floatMax);
 						break;
 				}
 			}
@@ -39,27 +40,27 @@ namespace Fusumity.Editor.Drawers.Specific
 			switch (currentPropertyData.property.propertyType)
 			{
 				case SerializedPropertyType.Integer:
-					if (currentPropertyData.property.intValue >intmax)
+					if (currentPropertyData.property.intValue > intMax)
 					{
-						currentPropertyData.property.intValue = intmax;
+						currentPropertyData.property.intValue = intMax;
 					}
 					break;
 				case SerializedPropertyType.Float:
-					if (currentPropertyData.property.floatValue > floatmax)
+					if (currentPropertyData.property.floatValue > floatMax)
 					{
-						currentPropertyData.property.floatValue = floatmax;
+						currentPropertyData.property.floatValue = floatMax;
 					}
 					break;
 				case SerializedPropertyType.Vector2:
 					var vector = currentPropertyData.property.vector2Value;
-					if (vector.x > floatmax)
+					if (vector.x > floatMax)
 					{
-						vector.x = floatmax;
+						vector.x = floatMax;
 						currentPropertyData.property.vector2Value = vector;
 					}
-					if (vector.y > floatmax)
+					if (vector.y > floatMax)
 					{
-						vector.y = floatmax;
+						vector.y = floatMax;
 						currentPropertyData.property.vector2Value = vector;
 					}
 					break;

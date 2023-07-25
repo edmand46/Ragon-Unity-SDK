@@ -2,7 +2,7 @@
     "name": "Fusumity.Editor",
     "rootNamespace": "",
     "references": [
-        "GUID:19fc5afe82098794d8e30e2626eb60c0"
+        "Fusumity"
     ],
     "includePlatforms": [
         "Editor"

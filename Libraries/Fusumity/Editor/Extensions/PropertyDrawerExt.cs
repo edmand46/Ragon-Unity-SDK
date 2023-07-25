@@ -60,6 +60,9 @@ namespace Fusumity.Editor.Extensions
 
 		private static bool IsDrawerMethodOverriden(this FusumityPropertyDrawer drawer, string name)
 		{
+			if (!drawer.OverrideMethods)
+				return false;
+
 			var drawerType = drawer.GetType();
 			var methodInfo = drawerType.GetMethod(name, ReflectionExt.OVERRIDEN_METHOD_BINDING_FLAGS, null, new [] {typeof(Rect)}, null);
 

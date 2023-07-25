@@ -20,19 +20,38 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			if (!string.IsNullOrEmpty(minAttribute.minPath))
 			{
-				var minProperty = property.GetPropertyByLocalPath(minAttribute.minPath);
+				var minField = property.GetPropertyByLocalPath(minAttribute.minPath);
 
-				switch (minProperty?.propertyType)
+				if (minField != null)
 				{
-					case SerializedPropertyType.Integer:
-						intMin = Math.Max(minProperty.intValue, intMin);
-						floatMin = Math.Max((float)minProperty.intValue, floatMin);
-						break;
-					case SerializedPropertyType.Float:
-					case SerializedPropertyType.Vector2:
-						intMin = Math.Max((int)minProperty.floatValue, intMin);
-						floatMin = Math.Max(minProperty.floatValue, floatMin);
-						break;
+					switch (minField?.propertyType)
+					{
+						case SerializedPropertyType.Integer:
+							intMin = Math.Max(minField.intValue, intMin);
+							floatMin = Math.Max((float)minField.intValue, floatMin);
+							break;
+						case SerializedPropertyType.Float:
+						case SerializedPropertyType.Vector2:
+							intMin = Math.Max((int)minField.floatValue, intMin);
+							floatMin = Math.Max(minField.floatValue, floatMin);
+							break;
+					}
+				}
+				else
+				{
+					var maxValue = property.InvokePropertyByLocalPath(minAttribute.minPath);
+
+					switch (maxValue)
+					{
+						case int intValue:
+							intMin = Math.Max(intValue, intMin);
+							floatMin = Math.Max((float)intValue, floatMin);
+							break;
+						case float floatValue:
+							intMin = Math.Max((int)floatValue, intMin);
+							floatMin = Math.Max(floatValue, floatMin);
+							break;
+					}
 				}
 			}
 

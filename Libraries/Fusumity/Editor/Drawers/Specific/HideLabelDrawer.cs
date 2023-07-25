@@ -9,11 +9,11 @@ namespace Fusumity.Editor.Drawers.Specific
 		public override void ModifyPropertyData()
 		{
 			base.ModifyPropertyData();
-			
-			currentPropertyData.hasBody = false;
-			currentPropertyData.hasSubBody = false;
-			// currentPropertyData.hasLabel = false;
-			currentPropertyData.hasFoldout = false;
+
+			var labelAttribute = (HideLabelAttribute)attribute;
+
+			currentPropertyData.hasLabel = false;
+			currentPropertyData.hasFoldout = labelAttribute.hasFoldout;
 		}
 	}
 }

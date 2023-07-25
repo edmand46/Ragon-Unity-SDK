@@ -8,32 +8,40 @@ using UnityEngine;
 namespace Fusumity.Editor.Drawers.Specific
 {
 	[CustomPropertyDrawer(typeof(ReferenceSelectionAttribute))]
-	public class SerializeReferenceSelectorAttributeDrawer : FusumityPropertyDrawer
+	public class ReferenceSelectionAttributeDrawer : FusumityPropertyDrawer
 	{
+		private const float COPY_PASTE_BUTTONS_WIDTH = 50f;
+
 		private Type[] _currentTypes;
 		private Type _selectedType;
+
+		public override bool OverrideMethods => (currentPropertyData.property.propertyType == SerializedPropertyType.ManagedReference);
 
 		public override void ModifyPropertyData()
 		{
 			base.ModifyPropertyData();
 
+			var property = currentPropertyData.property;
+			if (!OverrideMethods || property.propertyType != SerializedPropertyType.ManagedReference)
+				return;
+
 			currentPropertyData.labelIntersectSubBody = false;
 			currentPropertyData.hasFoldout = _selectedType != null;
 			currentPropertyData.hasSubBody = true;
-			currentPropertyData.hasBody = true;
+			currentPropertyData.hasBody = property.GetManagedReferenceType() != null;
 		}
 
 		public override void DrawSubBody(Rect position)
 		{
 			var property = currentPropertyData.property;
-
-			var fieldType = fieldInfo.FieldType.IsArray ? fieldInfo.FieldType.GetElementType() : fieldInfo.FieldType;
-
 			if (property.propertyType != SerializedPropertyType.ManagedReference)
 			{
-				Debug.LogError($"The Property Type {fieldType.Name} is not Managed Reference.");
+				base.DrawSubBody(position);
 				return;
 			}
+
+			var fieldType = fieldInfo.FieldType.IsArray ? fieldInfo.FieldType.GetElementType() :
+				(fieldInfo.FieldType.IsList() ? fieldInfo.FieldType.GetGenericArguments()[0] : fieldInfo.FieldType);
 
 			var attr = (ReferenceSelectionAttribute)attribute;
 			var targetType = attr.type ?? fieldType;
@@ -45,14 +53,18 @@ namespace Fusumity.Editor.Drawers.Specific
 		protected void SelectType(Rect position, Type currentType, Type targetType, bool insertNull)
 		{
 			var property = currentPropertyData.property;
-
 			var propertyPath = property.propertyPath;
 
 			_selectedType = currentType;
 			_currentTypes ??= targetType.GetInheritorTypes(insertNull);
 
 			var typeName = currentType == null ? "None" : currentType.Name;
-			if (EditorGUI.DropdownButton(position, new GUIContent(typeName), default))
+
+			var dropdownPosition = position;
+			dropdownPosition.xMin += EditorGUI.indentLevel * EditorExt.INDENT_WIDTH;
+			dropdownPosition.xMax -= COPY_PASTE_BUTTONS_WIDTH;
+
+			if (EditorGUI.DropdownButton(dropdownPosition, new GUIContent(typeName), default))
 			{
 				position = new Rect(position.x, position.y + position.height, position.width, 200f);
 				var v = GUIUtility.GUIToScreenPoint(new Vector2(position.x, position.y));
@@ -77,6 +89,21 @@ namespace Fusumity.Editor.Drawers.Specific
 					popup.Item(ToCamelCaseSpace(_currentTypes[i].Name), item => { Select(propertyPath, item.order); }, true, i);
 				}
 				popup.Show();
+			}
+
+			var copyPosition = position;
+			copyPosition.xMin = copyPosition.xMax - COPY_PASTE_BUTTONS_WIDTH;
+			copyPosition.xMax = copyPosition.xMax - COPY_PASTE_BUTTONS_WIDTH / 2;
+			if (GUI.Button(copyPosition, "C"))
+			{
+				property.CopyManagedReferenceValue();
+			}
+
+			var pastPosition = position;
+			pastPosition.xMin = copyPosition.xMax;
+			if (GUI.Button(pastPosition, "P"))
+			{
+				property.PasteManagedReferenceValue();
 			}
 		}
 

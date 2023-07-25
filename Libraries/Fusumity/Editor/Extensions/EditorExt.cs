@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
@@ -6,11 +8,65 @@ namespace Fusumity.Editor.Extensions
 {
 	public static class EditorExt
 	{
-		private const float LINE_SPACING = 2f;
-		
+		public const float INDENT_WIDTH = 15f;
+		public const float LINE_SPACING = 2f;
+
 		private static Rect _positionCache;
 		private static GUIContent _labelCache;
 		private static bool _includeChildrenCache;
+
+		public static void DrawProperties(this SerializedObject serializedObject, Type inheritRestrictType = null)
+		{
+			var properties = serializedObject.GetProperties(inheritRestrictType);
+			serializedObject.DrawProperties(properties);
+		}
+
+		public static void DrawProperties(this SerializedObject serializedObject, SerializedProperty[] properties)
+		{
+			serializedObject.Update();
+			for (var i = 0; i < properties.Length; i++)
+			{
+				EditorGUILayout.PropertyField(properties[i]);
+			}
+			serializedObject.ApplyModifiedProperties();
+		}
+
+		public static SerializedProperty[] GetProperties(this SerializedObject serializedObject, Type inheritRestrictType = null)
+		{
+			var fieldsToDraw = serializedObject.GetFieldsToDraw(inheritRestrictType);
+			var result = new SerializedProperty[fieldsToDraw.Count];
+
+			for (var i = 0; i < fieldsToDraw.Count; i++)
+			{
+				result[i] = serializedObject.FindProperty(fieldsToDraw[i].Name);
+			}
+
+			return result;
+		}
+
+		public static List<FieldInfo> GetFieldsToDraw(this SerializedObject serializedObject, Type inheritRestrictType = null)
+		{
+			var restrictFields = inheritRestrictType?.GetInstanceFields(inheritRestrictType);
+			var restrictSet = restrictFields == null ? null : new HashSet<FieldInfo>(restrictFields);
+
+			var target = serializedObject.targetObject;
+			var targetType = target.GetType();
+			var fields = targetType.GetInstanceFields(inheritRestrictType);
+			var result = new List<FieldInfo>(fields.Count);
+
+			for (var i = 0; i < fields.Count; i++)
+			{
+				var field = fields[i];
+				if ((restrictSet == null || !restrictSet.Contains(field)) &&
+				    (field.IsPublic || field.HasAttribute<SerializeField>()) &&
+				    !field.HasAttribute<HideInInspector>())
+				{
+					result.Add(field);
+				}
+			}
+
+			return result;
+		}
 
 		public static bool IsStandardType(this SerializedProperty property)
 		{
@@ -37,12 +93,12 @@ namespace Fusumity.Editor.Extensions
 			return null;
 		}
 
-		public static object GetObjectByPath(SerializedObject serializedObject, string objectPath)
+		public static object GetObjectByPath(this SerializedObject serializedObject, string objectPath)
 		{
 			return ReflectionExt.GetObjectByLocalPath(serializedObject.targetObject, objectPath);
 		}
 
-		public static Type GetPropertyTypeByPath(SerializedObject serializedObject, string propertyPath)
+		public static Type GetPropertyTypeByPath(this SerializedObject serializedObject, string propertyPath)
 		{
 			return GetObjectByPath(serializedObject, propertyPath)?.GetType();
 		}
@@ -78,12 +134,37 @@ namespace Fusumity.Editor.Extensions
 		public static int GetElementIndex(this SerializedProperty property)
 		{
 			var path = property.propertyPath;
-			if (path[^1] != ']')
+			if (path[path.Length - 1] != ']')
 				return 0;
 			var beginIndex = path.LastIndexOf("[", StringComparison.Ordinal) + 1;
 			var indexString = path.Substring(beginIndex, path.Length - beginIndex - 1);
 
 			return int.Parse(indexString);
+		}
+
+		public static object GetResultByLocalPath(this SerializedProperty property, string localPath)
+		{
+			var result = property.GetPropertyObjectByLocalPath(localPath);
+			if (result != null)
+				return result;
+			result = property.InvokeFuncByLocalPath(localPath);
+			if (result != null)
+				return result;
+			result = property.InvokePropertyByLocalPath(localPath);
+
+			return result;
+		}
+
+		public static T GetResultByLocalPath<T>(this SerializedProperty property, string localPath)
+		{
+			if (property.GetPropertyObjectByLocalPath(localPath) is T value)
+				return value;
+			if (property.InvokeFuncByLocalPath(localPath) is T funcValue)
+				return funcValue;
+			if (property.InvokePropertyByLocalPath(localPath) is T propertyValue)
+				return propertyValue;
+
+			return default;
 		}
 
 		public static SerializedProperty GetPropertyByLocalPath(this SerializedProperty property, string localPath)
@@ -116,6 +197,14 @@ namespace Fusumity.Editor.Extensions
 			var fullMethodPath = parentPath.AppendPath(methodPath);
 
 			return ReflectionExt.InvokeFuncByLocalPath(property.serializedObject.targetObject, fullMethodPath);
+		}
+
+		public static object InvokePropertyByLocalPath(this SerializedProperty property, string propertyPath)
+		{
+			var parentPath = property.GetParentPropertyPath();
+			var fullPropertyPath = parentPath.AppendPath(propertyPath);
+
+			return ReflectionExt.InvokePropertyByLocalPath(property.serializedObject.targetObject, fullPropertyPath);
 		}
 
 		public static void DrawBody(this SerializedProperty property, Rect position)

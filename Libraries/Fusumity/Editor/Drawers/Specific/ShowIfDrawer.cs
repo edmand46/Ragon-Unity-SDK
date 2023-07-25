@@ -12,23 +12,11 @@ namespace Fusumity.Editor.Drawers.Specific
 			base.ModifyPropertyData();
 
 			var property = currentPropertyData.property;
-			var enableIfAttribute = (ShowIfAttribute)attribute;
+			var showIfAttribute = (ShowIfAttribute)attribute;
 
-			var and = currentPropertyData.drawPropertyChanged & currentPropertyData.drawProperty;
-
-			if (enableIfAttribute.equalsAny == null || enableIfAttribute.equalsAny.Length == 0)
+			if (showIfAttribute.equalsAny == null || showIfAttribute.equalsAny.Length == 0)
 			{
-				var boolProperty = property.GetPropertyByLocalPath(enableIfAttribute.checkPath);
-
-				bool isShow;
-				if (boolProperty == null)
-				{
-					isShow = (bool)property.InvokeFuncByLocalPath(enableIfAttribute.checkPath);
-				}
-				else
-				{
-					isShow = boolProperty.boolValue;
-				}
+				var isShow = property.GetResultByLocalPath<bool>(showIfAttribute.checkPath);
 
 				if (currentPropertyData.drawPropertyChanged)
 				{
@@ -42,8 +30,8 @@ namespace Fusumity.Editor.Drawers.Specific
 				return;
 			}
 
-			var checkObject = property.GetPropertyObjectByLocalPath(enableIfAttribute.checkPath);
-			foreach (var equalsObject in enableIfAttribute.equalsAny)
+			var checkObject = property.GetPropertyObjectByLocalPath(showIfAttribute.checkPath);
+			foreach (var equalsObject in showIfAttribute.equalsAny)
 			{
 				if ((checkObject == null && equalsObject == null) || (checkObject != null && checkObject.Equals(equalsObject)))
 				{

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Fusumity.Attributes;
 using Fusumity.Editor.Extensions;
@@ -13,8 +12,6 @@ namespace Fusumity.Editor.Drawers
 	[CustomPropertyDrawer(typeof(IFusumitySerializable), true)]
 	public class FusumityPropertyDrawer : PropertyDrawer
 	{
-		private const float INDENT_WIDTH = 15f;
-
 		private static readonly Type BASE_DRAWER_TYPE = typeof(FusumityPropertyDrawer);
 		private static readonly Type ATTRIBUTE_TYPE = typeof(FusumityDrawerAttribute);
 
@@ -28,16 +25,25 @@ namespace Fusumity.Editor.Drawers
 
 		protected PropertyData currentPropertyData;
 
+		public virtual bool OverrideMethods => true;
+
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
+			var parentPropertyPath = property.GetParentPropertyPath();
 			if (_currentPropertyPath.Contains(property.propertyPath))
 			{
 				// When you open the unity Object selection field the _currentPropertyPath will not cleaned in that frame :(
-				if (_currentPropertyPath.Contains(property.GetParentPropertyPath()))
+				if (_currentPropertyPath.Contains(parentPropertyPath))
 				{
-					return property.GetPropertyHeight_Cached();
+					var height = property.GetPropertyHeight_Cached();
+					_currentPropertyPath.Clear();
+					return height;
 				}
 				_currentPropertyPath.Clear();
+			}
+			else if (!_currentPropertyPath.Contains(parentPropertyPath))
+			{
+				_currentPropertyPath.Add(parentPropertyPath);
 			}
 
 			_currentPropertyPath.Add(property.propertyPath);
@@ -51,6 +57,8 @@ namespace Fusumity.Editor.Drawers
 			ExecuteModifyPropertyData();
 
 			_currentPropertyPath.Remove(property.propertyPath);
+			_currentPropertyPath.Remove(parentPropertyPath);
+
 			return currentPropertyData.GetTotalHeight();
 		}
 
@@ -64,7 +72,7 @@ namespace Fusumity.Editor.Drawers
 
 			SetupPropertyData(property.propertyPath);
 
-			if (!(currentPropertyData is { drawProperty: true }))
+			if (currentPropertyData == null || !currentPropertyData.drawProperty)
 				return;
 
 			_currentPropertyPath.Add(property.propertyPath);
@@ -78,6 +86,19 @@ namespace Fusumity.Editor.Drawers
 			GUI.enabled &= currentPropertyData.isEnabled;
 
 			EditorGUI.BeginChangeCheck();
+			EditorGUI.BeginProperty(position, label, property);
+
+			EditorGUI.indentLevel += currentPropertyData.indent;
+
+			position.yMin += currentPropertyData.drawOffsetY;
+			position.xMin += currentPropertyData.drawOffsetX;
+
+			var labelPrefixPosition = Rect.zero;
+			if (currentPropertyData.ShouldDrawLabelPrefix())
+			{
+				labelPrefixPosition = new Rect(position.x, position.y, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight);
+				position.xMin += currentPropertyData.labelPrefixWidth;
+			}
 
 			var propertyPosition = position;
 			if (currentPropertyData.hasBeforeExtension)
@@ -110,9 +131,33 @@ namespace Fusumity.Editor.Drawers
 
 			ExecuteValidateBeforeDrawing();
 
+			if (currentPropertyData.hasFoldout)
+			{
+#if UNITY_2022_3_OR_NEWER
+				if (EditorGUI.indentLevel > 0)
+					EditorGUI.indentLevel--;
+#endif
+				EditorGUI.indentLevel += currentPropertyData.foldoutIndent;
+				currentPropertyData.property.isExpanded = EditorGUI.Foldout(foldoutPosition, currentPropertyData.property.isExpanded, "");
+				EditorGUI.indentLevel -= currentPropertyData.foldoutIndent;
+#if UNITY_2022_3_OR_NEWER
+				EditorGUI.indentLevel++;
+#endif
+			}
+
 			if (currentPropertyData.hasBeforeExtension)
 			{
 				ExecuteDrawBeforeExtension(beforeExtensionPosition);
+			}
+
+			if (currentPropertyData.ShouldDrawLabelPrefix())
+			{
+				var isEnabled = GUI.enabled;
+				GUI.enabled = false;
+
+				DrawLabelPrefix(labelPrefixPosition);
+
+				GUI.enabled = isEnabled;
 			}
 
 			if (currentPropertyData.hasLabel)
@@ -120,16 +165,11 @@ namespace Fusumity.Editor.Drawers
 				ExecuteDrawLabel(labelPosition);
 			}
 
-			if (currentPropertyData.hasFoldout)
-			{
-				currentPropertyData.property.isExpanded = EditorGUI.Foldout(foldoutPosition, property.isExpanded, "");
-			}
-
 			if (currentPropertyData.ShouldDrawSubBody())
 			{
 				if (!currentPropertyData.hasLabel | !currentPropertyData.labelIntersectSubBody)
 				{
-					EditorGUIUtility.labelWidth = INDENT_WIDTH;
+					EditorGUIUtility.labelWidth = EditorExt.INDENT_WIDTH;
 				}
 
 				ExecuteDrawSubBody(subBodyPosition);
@@ -151,7 +191,12 @@ namespace Fusumity.Editor.Drawers
 			{
 				ExecuteDrawAfterExtension(afterExtensionPosition);
 			}
+#if UNITY_2022_3_OR_NEWER
+			if (currentPropertyData.hasFoldout && EditorGUI.indentLevel <= 1)
+				EditorGUI.indentLevel--;
+#endif
 
+			EditorGUI.EndProperty();
 			if (EditorGUI.EndChangeCheck())
 			{
 				ExecuteOnPropertyChanged();
@@ -169,7 +214,7 @@ namespace Fusumity.Editor.Drawers
 
 		private void LazyInitializeAttributes()
 		{
-			if (_fusumityAttributes is { Length: > 0 })
+			if (_fusumityAttributes != null && _fusumityAttributes.Length > 0)
 				return;
 
 			var attributes = new List<FusumityDrawerAttribute>();
@@ -189,7 +234,7 @@ namespace Fusumity.Editor.Drawers
 
 		private void LazyInitializeDrawers()
 		{
-			if (_fusumityDrawers is { Length: > 0 })
+			if (_fusumityDrawers != null && _fusumityDrawers.Length > 0)
 				return;
 
 			if (_attributeTypeToDrawerType == null)
@@ -238,7 +283,6 @@ namespace Fusumity.Editor.Drawers
 				_fusumityDrawers[i] = drawer;
 			}
 		}
-
 
 		private void LazyInitializePropertyData(string propertyPath)
 		{
@@ -376,6 +420,11 @@ namespace Fusumity.Editor.Drawers
 
 		public virtual void DrawBeforeExtension(ref Rect position) {}
 
+		public virtual void DrawLabelPrefix(Rect position)
+		{
+			EditorGUI.LabelField(position, currentPropertyData.labelPrefix, currentPropertyData.labelStyle);
+		}
+
 		public virtual void DrawLabel(Rect position)
 		{
 			EditorGUI.LabelField(position, currentPropertyData.label, currentPropertyData.labelStyle);
@@ -403,6 +452,9 @@ namespace Fusumity.Editor.Drawers
 		public SerializedProperty property;
 		public GUIContent label;
 
+		public string labelPrefix;
+		public float labelPrefixWidth;
+
 		public bool drawPropertyChanged;
 		public bool drawProperty;
 		public bool isEnabledChanged;
@@ -422,42 +474,62 @@ namespace Fusumity.Editor.Drawers
 		public float labelHeight;
 		public float bodyHeight;
 		public float afterExtensionHeight;
+
+		public float drawOffsetY;
+		public float drawOffsetX;
+		public int indent;
+		public int foldoutIndent;
+
 		public GUIStyle labelStyle;
 
 		public Color backgroundColor;
 
 		public void ResetData(SerializedProperty property, GUIContent label)
 		{
+			// GetPropertyHeight will singleLineHeight if no expanded
+			var isExpanded = property.isExpanded;
+			property.isExpanded = true;
+
 			this.property = property;
 			this.label = new GUIContent(label);
+
+			labelPrefix = string.Empty;
+			labelPrefixWidth = 0;
 
 			drawPropertyChanged = false;
 			drawProperty = true;
 			isEnabledChanged = false;
 			isEnabled = true;
 
-			var hasChildren = property.HasChildren();
+			beforeExtensionHeight = 0f;
+			labelHeight = EditorGUIUtility.singleLineHeight;
+			bodyHeight = property.GetPropertyHeight(true);
+			afterExtensionHeight = 0f;
+
+			drawOffsetY = 0f;
+			drawOffsetX = 0f;
+			indent = 0;
+			foldoutIndent = 0;
+
+			var hasChildren = bodyHeight > labelHeight && property.HasChildren();
 
 			hasBeforeExtension = false;
 			hasFoldout = hasChildren;
 			hasLabel = true;
 			hasSubBody = !hasChildren;
-			hasBody = hasChildren & property.isExpanded;
+			hasBody = hasChildren;
 			hasAfterExtension = false;
 
 			drawSubBodyWhenRollUp = true;
 			labelIntersectSubBody = true;
-
-			beforeExtensionHeight = 0f;
-			labelHeight = EditorGUIUtility.singleLineHeight;
-			bodyHeight = property.GetPropertyHeight(true);
-			afterExtensionHeight = 0f;
 			if (hasChildren)
 				bodyHeight -= labelHeight;
 
 			labelStyle = EditorStyles.label;
 
 			backgroundColor = GUI.backgroundColor;
+
+			property.isExpanded = isExpanded;
 		}
 
 		public float GetTotalHeight()
@@ -483,6 +555,10 @@ namespace Fusumity.Editor.Drawers
 				height += afterExtensionHeight;
 			}
 
+			if (hasFoldout && height == 0f)
+				height = EditorGUIUtility.singleLineHeight;
+
+			height += drawOffsetY;
 			return height;
 		}
 
@@ -494,6 +570,11 @@ namespace Fusumity.Editor.Drawers
 		public bool ShouldDrawBody()
 		{
 			return hasBody & (property.isExpanded | !hasFoldout);
+		}
+
+		public bool ShouldDrawLabelPrefix()
+		{
+			return labelPrefix != null && labelPrefixWidth > 0;
 		}
 	}
 }

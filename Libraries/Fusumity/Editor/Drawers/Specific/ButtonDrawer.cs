@@ -58,7 +58,7 @@ namespace Fusumity.Editor.Drawers.Specific
 
 		private void DrawButton(ref Rect position, ButtonAttribute boolButtonAttribute)
 		{
-			var drawPosition = position;
+			var drawPosition = EditorGUI.IndentedRect(position);
 			drawPosition.height = EditorGUIUtility.singleLineHeight;
 			position.yMin += EditorGUIUtility.singleLineHeight;
 
@@ -77,6 +77,7 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			Undo.RecordObject(currentPropertyData.property.serializedObject.targetObject, boolButtonAttribute.buttonName);
 			currentPropertyData.property.InvokeMethodByLocalPath(boolButtonAttribute.methodPath);
+			currentPropertyData.property.serializedObject.targetObject.SaveChanges();
 		}
 	}
 }

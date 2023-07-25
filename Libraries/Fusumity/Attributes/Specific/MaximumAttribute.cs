@@ -5,6 +5,7 @@ namespace Fusumity.Attributes.Specific
 		public float maxFloat;
 		public int maxInt;
 		public string maxPath;
+		public bool intExclusively;
 
 		public MaximumAttribute(float max, string path = null)
 		{
@@ -22,8 +23,8 @@ namespace Fusumity.Attributes.Specific
 
 		public MaximumAttribute(string path)
 		{
-			maxFloat = float.NegativeInfinity;
-			maxInt = int.MinValue;
+			maxFloat = float.PositiveInfinity;
+			maxInt = int.MaxValue;
 			maxPath = path;
 		}
 	}

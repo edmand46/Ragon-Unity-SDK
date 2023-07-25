@@ -1,3 +1,4 @@
+#if UNITY_2021_2_OR_NEWER
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
@@ -87,3 +88,4 @@ namespace Fusumity.Editor.Assistance
 		}
 	}
 }
+#endif
