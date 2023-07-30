@@ -30,6 +30,8 @@ namespace Ragon.Client.Unity
         var links = go.GetComponentsInChildren<RagonLink>();
         foreach (var link in links)
         {
+          if (link.StaticID == 0) continue;
+          
           var properties = link.Discovery();
           var entity = new RagonEntity(link.Type, link.StaticID);
           foreach (var property in properties)
