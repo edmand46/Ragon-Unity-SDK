@@ -27,9 +27,9 @@ namespace Ragon.Client.Unity
 
     public RagonPlayer Owner => _entity.Owner;
     public RagonEntity Entity => _entity;
-    public bool HasAuthority => _mine;
+    public bool HasAuthority => _authority;
 
-    private bool _mine;
+    private bool _authority;
     private RagonEntity _entity;
     private Dictionary<int, OnEventDelegate> _events = new Dictionary<int, OnEventDelegate>();
     private Dictionary<int, Action<RagonPlayer, IRagonEvent>> _localEvents = new Dictionary<int, Action<RagonPlayer, IRagonEvent>>();
@@ -37,7 +37,7 @@ namespace Ragon.Client.Unity
     internal void Attach(RagonEntity entity)
     {
       _entity = entity;
-      _mine = entity.HasAuthority;
+      _authority = entity.HasAuthority;
 
       OnAttachedEntity();
     }

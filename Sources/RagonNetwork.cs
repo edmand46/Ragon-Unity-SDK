@@ -15,6 +15,7 @@
  */
 
 using System.Collections.Generic;
+using Ragon.Protocol;
 using TMPro;
 using UnityEngine;
 
@@ -138,14 +139,25 @@ namespace Ragon.Client.Unity
       _instance._networkClient.Disconnect();
     }
 
-    public static GameObject Create(GameObject prefab, IRagonPayload payload = null)
+    public static GameObject Create(GameObject prefab, IRagonPayload spawnPayload = null)
     {
       if (prefab.TryGetComponent<RagonLink>(out var prefabLink))
       {
         var spawner = _instance._spawner;
         var entity = new RagonEntity(prefabLink.Type, prefabLink.StaticID);
-        entity.AttachPayload(payload);
         
+        RagonPayload payload = null;
+        if (spawnPayload != null)
+        {
+          var buffer = new RagonBuffer();
+          spawnPayload.Serialize(buffer);
+          
+          payload = new RagonPayload(buffer.WriteOffset);
+          payload.Read(buffer);
+          
+          entity.AttachPayload(payload);
+        }
+
         var go = spawner.InstantiateEntityGameObject(entity, prefab);
         var link = go.GetComponent<RagonLink>();
         var properties = link.Discovery();
