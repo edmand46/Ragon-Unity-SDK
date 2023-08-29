@@ -16,7 +16,7 @@
 
 using System.Collections.Generic;
 
-namespace Ragon.Client.Unity
+namespace Ragon.Client.Utility
 {
     public class LimitedQueue<T> : Queue<T>
     {

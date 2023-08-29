@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using Fusumity.Attributes.Specific;
 using Ragon.Client.Compressor;
+using Ragon.Client.Utility;
 using UnityEngine;
 
 namespace Ragon.Client.Unity
@@ -52,26 +53,11 @@ namespace Ragon.Client.Unity
     [SerializeField] private bool rotationReplication;
 
     [SerializeField, ShowIf("rotationReplication")]
-    private RagonAxis rotationAxis = RagonAxis.XYZ;
-
-    [SerializeField, ShowIf("rotationReplication")]
     private float rotationInterpolationSpeed = 15f;
 
     [SerializeField, ShowIf("rotationReplication")]
     private float rotationThreshold = 0.1f;
-
-    [SerializeField, RemoveFoldout, ShowIf("rotationReplication"),
-     ShowIf("rotationAxis", RagonAxis.XYZ, RagonAxis.X, RagonAxis.XY, RagonAxis.XZ)]
-    private RagonFloatPropertyInfo rotationX;
-
-    [SerializeField, RemoveFoldout, ShowIf("rotationReplication"),
-     ShowIf("rotationAxis", RagonAxis.XYZ, RagonAxis.Y, RagonAxis.YZ, RagonAxis.XY)]
-    private RagonFloatPropertyInfo rotationY;
-
-    [SerializeField, RemoveFoldout, ShowIf("rotationReplication"),
-     ShowIf("rotationAxis", RagonAxis.XYZ, RagonAxis.Z, RagonAxis.YZ, RagonAxis.YZ, RagonAxis.XZ)]
-    private RagonFloatPropertyInfo rotationZ;
-
+    
     [SerializeField] private bool scaleReplication;
 
     [SerializeField, ShowIf("scaleReplication")]
@@ -95,7 +81,7 @@ namespace Ragon.Client.Unity
      ShowIf("scaleAxis", RagonAxis.XYZ, RagonAxis.Z, RagonAxis.YZ, RagonAxis.YZ, RagonAxis.XZ)]
     private RagonFloatPropertyInfo scaleZ;
 
-    private RagonVector3 _rotation;
+    private RagonQuaternion _rotation;
     private RagonVector3 _position;
     private RagonVector3 _scale;
 
@@ -114,16 +100,12 @@ namespace Ragon.Client.Unity
     {
       if (rotationReplication)
       {
-        var compressorX = new FloatCompressor(rotationX.Min, rotationX.Max, rotationX.Precision);
-        var compressorY = new FloatCompressor(rotationY.Min, rotationY.Max, rotationY.Precision);
-        var compressorZ = new FloatCompressor(rotationZ.Min, rotationZ.Max, rotationZ.Precision);
-
         _rotationBuffer = new LimitedQueue<Quaternion>(3);
-        _rotation = new RagonVector3(rotationAxis, compressorX, compressorY, compressorZ, false);
-        _rotation.Changed += () => _rotationBuffer.Enqueue(Quaternion.Euler(_rotation.Value));
+        _rotation = new RagonQuaternion();
+        _rotation.Changed += () => _rotationBuffer.Enqueue(_rotation.Value);
 
         if (target)
-          _rotation.Value = target.localRotation.eulerAngles;
+          _rotation.Value = target.localRotation;
 
         properties.Add(_rotation);
       }
@@ -177,9 +159,9 @@ namespace Ragon.Client.Unity
 
       if (rotationReplication)
       {
-        var rotationEqual = IsEqual(_rotation.Value, target.localRotation.eulerAngles, rotationThreshold);
+        var rotationEqual = IsEqual(_rotation.Value, target.localRotation, rotationThreshold);
         if (!rotationEqual)
-          _rotation.Value = target.localRotation.eulerAngles;
+          _rotation.Value = target.localRotation;
       }
 
       if (scaleReplication)
@@ -196,13 +178,19 @@ namespace Ragon.Client.Unity
         return;
 
       if (positionReplication)
+      {
         target.position = Vector3.Lerp(target.position, _position.Value, Time.deltaTime * positionInterpolationSpeed);
+      }
 
       if (rotationReplication)
-        target.localRotation = Quaternion.Lerp(target.localRotation, Quaternion.Euler(_rotation.Value), Time.deltaTime * rotationInterpolationSpeed);
+      {
+        target.localRotation = Quaternion.Lerp(target.localRotation, _rotation.Value, Time.deltaTime * rotationInterpolationSpeed);
+      }
 
       if (scaleReplication)
+      {
         target.localScale = Vector3.Lerp(target.localScale, _scale.Value, Time.deltaTime * scaleInterpolationSpeed);
+      }
     }
 
     public bool IsEqual(Vector3 v1, Vector3 v2, float precision)
@@ -212,6 +200,18 @@ namespace Ragon.Client.Unity
       if (Mathf.Abs(v1.x - v2.x) > precision) equal = false;
       if (Mathf.Abs(v1.y - v2.y) > precision) equal = false;
       if (Mathf.Abs(v1.z - v2.z) > precision) equal = false;
+
+      return equal;
+    }
+    
+    public bool IsEqual(Quaternion v1, Quaternion v2, float precision)
+    {
+      bool equal = true;
+
+      if (Mathf.Abs(v1.x - v2.x) > precision) equal = false;
+      if (Mathf.Abs(v1.y - v2.y) > precision) equal = false;
+      if (Mathf.Abs(v1.z - v2.z) > precision) equal = false;
+      if (Mathf.Abs(v1.w - v2.w) > precision) equal = false;
 
       return equal;
     }
@@ -249,33 +249,9 @@ namespace Ragon.Client.Unity
 
       if (rotationReplication)
       {
-        if (rotationAxis == RagonAxis.XYZ ||
-            rotationAxis == RagonAxis.X ||
-            rotationAxis == RagonAxis.XY ||
-            rotationAxis == RagonAxis.XZ)
-        {
-          ValidateProperty(rotationX);
-
-        }
-
-        if (rotationAxis == RagonAxis.XYZ ||
-            rotationAxis == RagonAxis.X ||
-            rotationAxis == RagonAxis.XY ||
-            rotationAxis == RagonAxis.XZ)
-        {
-          ValidateProperty(rotationY);
-
-        }
-
-        if (rotationAxis == RagonAxis.XYZ ||
-            rotationAxis == RagonAxis.X ||
-            rotationAxis == RagonAxis.XY ||
-            rotationAxis == RagonAxis.XZ)
-        {
-          ValidateProperty(rotationZ);
-        }
+        bits += 8 * 4;
       }
-
+      
       if (scaleReplication)
       {
         if (scaleAxis == RagonAxis.XYZ ||
