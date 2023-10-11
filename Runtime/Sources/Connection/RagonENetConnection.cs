@@ -128,5 +128,10 @@ namespace Ragon.Client.Unity
       if (_libraryLoaded)
         Library.Deinitialize();
     }
+
+    public void Close()
+    {
+      _peer.DisconnectNow(0);
+    }
   }
 }
