@@ -111,7 +111,6 @@ namespace Ragon.Client.Unity
             _netEvent.Packet.Dispose();
 
             OnData?.Invoke(data);
-            
             break;
         }
       }

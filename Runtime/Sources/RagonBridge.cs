@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+using Ragon.Client;
+using Ragon.Client.Unity;
 using UnityEngine;
 
 namespace Ragon.Client.Unity
@@ -87,6 +89,7 @@ namespace Ragon.Client.Unity
 
     private void OnApplicationQuit()
     {
+      _client?.Disconnect();
       _client?.Dispose();
     }
   }
