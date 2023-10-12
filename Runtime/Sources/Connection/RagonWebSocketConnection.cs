@@ -118,5 +118,10 @@ namespace Ragon.Client.Unity
                 Debug.LogError(ex);
             }
         }
+
+        public async void Close()
+        {
+            await _webSocket.Close();
+        }
     }
 }

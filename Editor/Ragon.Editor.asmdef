@@ -1,0 +1,19 @@
+{
+    "name": "Ragon.Editor",
+    "rootNamespace": "",
+    "references": [
+        "Fusumity.Editor",
+        "Ragon.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

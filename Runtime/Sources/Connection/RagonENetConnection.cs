@@ -111,7 +111,6 @@ namespace Ragon.Client.Unity
             _netEvent.Packet.Dispose();
 
             OnData?.Invoke(data);
-            
             break;
         }
       }
@@ -127,6 +126,11 @@ namespace Ragon.Client.Unity
 
       if (_libraryLoaded)
         Library.Deinitialize();
+    }
+
+    public void Close()
+    {
+      _peer.DisconnectNow(0);
     }
   }
 }

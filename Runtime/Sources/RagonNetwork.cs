@@ -224,7 +224,16 @@ namespace Ragon.Client.Unity
     public static void Transfer(GameObject go, RagonPlayer player)
     {
       if (!go.TryGetComponent<RagonLink>(out var link))
+      {
+        RagonLog.Error($"{go.name} has not RagonLink component!");
         return;
+      }
+
+      if (!link.Entity.HasAuthority)
+      {
+        RagonLog.Error($"{go.name} have not authority!");
+        return;
+      }
 
       var entity = link.Entity;
       _instance._networkClient.Room.TransferEntity(entity, player);
@@ -234,6 +243,7 @@ namespace Ragon.Client.Unity
     {
       if (!go.TryGetComponent<RagonLink>(out var link))
       {
+        RagonLog.Error($"{go.name} has not RagonLink component!");
         return;
       }
 
