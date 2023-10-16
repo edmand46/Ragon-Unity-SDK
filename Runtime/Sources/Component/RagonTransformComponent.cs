@@ -22,7 +22,6 @@ using UnityEngine;
 
 namespace Ragon.Client.Unity
 {
-  [RequireComponent(typeof(RagonLink))]
   public class RagonTransformComponent : RagonBehaviour
   {
     [SerializeField] private Transform target;
