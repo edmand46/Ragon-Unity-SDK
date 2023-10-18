@@ -29,7 +29,7 @@ namespace Ragon.Client.Unity
     [HideInInspector] public ushort EntityType;
     public GameObject Prefab;
   }
-  
+
   [CreateAssetMenu(fileName = "RagonPrefabRegistry")]
   public class RagonPrefabRegistry : ScriptableObject
   {
@@ -37,6 +37,7 @@ namespace Ragon.Client.Unity
 
     public IReadOnlyDictionary<ushort, GameObject> Prefabs => _prefabsMap;
     private Dictionary<ushort, GameObject> _prefabsMap = new Dictionary<ushort, GameObject>();
+    private Dictionary<string, ushort> _prefabTypes = new Dictionary<string, ushort>();
 
     public void Cache()
     {
@@ -44,14 +45,14 @@ namespace Ragon.Client.Unity
       foreach (var entityPrefab in _prefabs)
         _prefabsMap.Add(entityPrefab.EntityType, entityPrefab.Prefab);
     }
-    
+
 #if UNITY_EDITOR
     public void Rescan()
     {
-      _prefabs.Clear();
       var guids = AssetDatabase.FindAssets("t:Prefab");
+      var links = new List<RagonLink>();
       ushort sequencer = 0;
-
+      
       foreach (var guid in guids)
       {
         var path = AssetDatabase.GUIDToAssetPath(guid);
@@ -60,27 +61,49 @@ namespace Ragon.Client.Unity
         {
           var go = obj as GameObject;
           if (go == null)
-          {
             continue;
-          }
 
           var comp = go.GetComponent<RagonLink>();
           if (comp != null)
           {
-            sequencer++;
+            links.Add(comp);
             
-            _prefabs.Add(new EntityPrefab() {Prefab = go, EntityType = sequencer});
-            comp.SetType(sequencer);
-            comp.Discovery();
-            
-            Undo.RecordObject(comp, "staticId");
-            Undo.RecordObject(comp, "type");
-            Undo.RecordObject(comp, "_behaviours");
-            Undo.RecordObject(comp, "_properties");
-            
-            EditorUtility.SetDirty(comp);
+            if (comp.Type > sequencer)
+            {
+              sequencer = comp.Type;
+            }
           }
         }
+      }
+      
+      _prefabs.Clear();
+      
+      foreach (var link in links)
+      {
+        if (!string.IsNullOrEmpty(link.PrefabId))
+        {
+          _prefabs.Add(new EntityPrefab() { Prefab = link.gameObject, EntityType = link.Type });
+          _prefabTypes.Add(link.PrefabId, link.Type);
+          continue;
+        }
+
+        RagonLog.Trace($"Found new prefab {link.gameObject.name}");
+        
+        var uuid = Guid.NewGuid().ToString();
+        link.SetPrefabId(uuid.ToString());
+
+        sequencer++;
+
+        _prefabs.Add(new EntityPrefab() { Prefab = link.gameObject, EntityType = sequencer });
+        _prefabTypes.Add(uuid, sequencer);
+
+        link.Discovery();
+
+        Undo.RecordObject(link, "prefabId");
+        Undo.RecordObject(link, "_behaviours");
+        Undo.RecordObject(link, "_properties");
+
+        EditorUtility.SetDirty(link);
       }
 
       EditorUtility.SetDirty(this);

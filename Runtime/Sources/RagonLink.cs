@@ -25,6 +25,7 @@ namespace Ragon.Client.Unity
   {
     public RagonEntity Entity { get; private set; }
 
+    public string PrefabId => prefabId;
     public ushort StaticID => staticId;
     public ushort Type => type;
 
@@ -33,6 +34,7 @@ namespace Ragon.Client.Unity
     [SerializeField] private bool autoDestroy = false;
     [SerializeField, ReadOnly] private ushort staticId;
     [SerializeField, ReadOnly] private ushort entityId;
+    [SerializeField, ReadOnly] private string prefabId;
     [SerializeField, ReadOnly] private ushort type;
     [SerializeField, ReadOnly] private bool hasAuthority;
     [SerializeField, ReadOnly] private bool attached;
@@ -40,15 +42,9 @@ namespace Ragon.Client.Unity
 
     private RagonProperty[] _properties;
 
-    public void SetStatic(ushort sceneId)
-    {
-      staticId = sceneId;
-    }
-
-    public void SetType(ushort entityType)
-    {
-      type = entityType;
-    }
+    public void SetStatic(ushort sceneId) => staticId = sceneId;
+    public void SetType(ushort entityType) => type = entityType;
+    public void SetPrefabId(string id) => prefabId = id;
 
     public RagonProperty[] Discovery()
     {
