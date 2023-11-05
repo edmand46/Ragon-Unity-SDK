@@ -83,7 +83,6 @@ namespace Ragon.Client.Unity
         if (!string.IsNullOrEmpty(link.PrefabId))
         {
           _prefabs.Add(new EntityPrefab() { Prefab = link.gameObject, EntityType = link.Type });
-          _prefabTypes.Add(link.PrefabId, link.Type);
           continue;
         }
 

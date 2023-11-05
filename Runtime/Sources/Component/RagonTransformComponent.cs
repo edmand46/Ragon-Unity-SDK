@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using Fusumity.Attributes.Specific;
 using Ragon.Client.Compressor;
@@ -22,7 +23,6 @@ using UnityEngine;
 
 namespace Ragon.Client.Unity
 {
-  [RequireComponent(typeof(RagonLink))]
   public class RagonTransformComponent : RagonBehaviour
   {
     [SerializeField] private Transform target;

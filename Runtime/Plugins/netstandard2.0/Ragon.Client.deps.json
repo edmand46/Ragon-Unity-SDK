@@ -10,7 +10,7 @@
       "Ragon.Client/1.0.0": {
         "dependencies": {
           "NETStandard.Library": "2.0.3",
-          "Ragon.Protocol": "1.2.4-rc"
+          "Ragon.Protocol": "1.0.0"
         },
         "runtime": {
           "Ragon.Client.dll": {}
@@ -22,7 +22,7 @@
           "Microsoft.NETCore.Platforms": "1.1.0"
         }
       },
-      "Ragon.Protocol/1.2.4-rc": {
+      "Ragon.Protocol/1.0.0": {
         "runtime": {
           "Ragon.Protocol.dll": {}
         }
@@ -49,7 +49,7 @@
       "path": "netstandard.library/2.0.3",
       "hashPath": "netstandard.library.2.0.3.nupkg.sha512"
     },
-    "Ragon.Protocol/1.2.4-rc": {
+    "Ragon.Protocol/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

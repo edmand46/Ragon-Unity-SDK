@@ -19,31 +19,43 @@ using UnityEngine.SceneManagement;
 
 namespace Ragon.Client.Unity
 {
-  public class RagonSceneCollector: IRagonSceneCollector
+  public class RagonSceneCollector : IRagonSceneCollector
   {
+    private RagonLinkFinder _finder;
+
+    public RagonSceneCollector(RagonLinkFinder finder)
+    {
+      _finder = finder;
+    }
+    
     public RagonEntity[] Collect()
     {
       var gameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
       var entities = new List<RagonEntity>();
       foreach (var go in gameObjects)
       {
+        if (!go.activeInHierarchy) continue;
+        
         var links = go.GetComponentsInChildren<RagonLink>();
         foreach (var link in links)
         {
           if (link.StaticID == 0) continue;
-          
+
           var properties = link.Discovery();
           var entity = new RagonEntity(link.Type, link.StaticID);
           foreach (var property in properties)
             entity.State.AddProperty(property);
-          
+
           entity.Attached += link.OnAttached;
           entity.Detached += link.OnDetached;
           entity.OwnershipChanged += link.OnOwnershipChanged;
-          
+
           entities.Add(entity);
+
+          _finder.Track(entity, link);
         }
       }
+
       return entities.ToArray();
     }
   }
