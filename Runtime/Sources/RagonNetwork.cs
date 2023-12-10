@@ -166,7 +166,7 @@ namespace Ragon.Client.Unity
     public static void Disconnect()
     {
       var client = _instance._networkClient;
-      client.Disconnect();
+      client?.Disconnect();
     }
 
     public static GameObject Create(GameObject prefab, IRagonPayload spawnPayload = null)

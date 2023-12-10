@@ -71,7 +71,6 @@ namespace Ragon.Client.Unity
       address.Port = port;
 
       _peer = _host.Connect(address, 2, protocol);
-      _peer.Timeout(32, 5000, 5000);
     }
 
     public void Update()
@@ -95,7 +94,6 @@ namespace Ragon.Client.Unity
             Statistics = new NetworkStatistics();
             Reliable = new ENetReliableChannel(_netEvent.Peer, 0);
             Unreliable = new ENetUnreliableChannel(_netEvent.Peer, 1);
-            
             OnConnected?.Invoke();
             break;
           case EventType.Disconnect:
