@@ -173,7 +173,7 @@ namespace Ragon.Client.Unity
     {
       if (_instance._networkClient.Status != RagonStatus.ROOM)
       {
-        RagonLog.Warn("You are not in room!");
+        RagonLog.Error("You should be in room for this create entities");
         return null;
       }
 
