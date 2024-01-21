@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Eduard Kargin <kargin.eduard@gmail.com>
+ * Copyright 2023-2024 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,12 +34,15 @@ namespace Ragon.Client.Unity
         MarkAsChanged();
       }
     }
-
+    
     public RagonBool(
+      bool value,
       bool invokeLocal = true,
       int priority = 0
     ) : base(priority, invokeLocal)
     {
+      _value = value;
+      
       SetFixedSize(1);
     }
 

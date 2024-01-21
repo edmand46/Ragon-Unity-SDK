@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Eduard Kargin <kargin.eduard@gmail.com>
+ * Copyright 2023-2024 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ namespace Ragon.Client.Unity
   public class RagonString : RagonProperty
   {
     [SerializeField] private string _value;
-    
+
     public string Value
     {
       get => _value;
@@ -34,39 +34,44 @@ namespace Ragon.Client.Unity
         _value = value;
         if (value.Length > _max)
           _value = value.Substring(0, _max);
-        
+
         MarkAsChanged();
       }
     }
-    
+
     private readonly UTF8Encoding _utf8Encoding = new UTF8Encoding(false, true);
     private int _max;
-    
+
     public RagonString(
+      string value,
       int max = 32,
       bool invokeLocal = true,
       int priority = 0
     ) : base(priority, invokeLocal)
     {
+      _value = value;
       _max = max;
+      
+      if (_value.Length > _max)
+        _value = _value.Substring(0, _max);
     }
 
     public override void Serialize(RagonBuffer buffer)
     {
       var data = _utf8Encoding.GetBytes(_value);
-      var len = (uint) data.Length;
-      
+      var len = (uint)data.Length;
+
       buffer.Write(len, 16);
       buffer.WriteBytes(data);
     }
 
     public override void Deserialize(RagonBuffer buffer)
     {
-      var len = (int) buffer.Read(16);
+      var len = (int)buffer.Read(16);
       var data = buffer.ReadBytes(len);
-      
+
       _value = _utf8Encoding.GetString(data);
-      
+
       InvokeChanged();
     }
   }

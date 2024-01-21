@@ -21,8 +21,9 @@ namespace Ragon.Client.Unity
 
     private readonly FloatCompressor _compressor;
 
-    public RagonQuaternion(bool invokeLocal = false, int priority = 0) : base(priority, invokeLocal)
+    public RagonQuaternion(Quaternion value, bool invokeLocal = false, int priority = 0) : base(priority, invokeLocal)
     {
+      _value = value;
       _compressor = new FloatCompressor(-1.0f, 1f, 0.01f);
       
       SetFixedSize(_compressor.RequiredBits * 4);
