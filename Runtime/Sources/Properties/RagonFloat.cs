@@ -31,6 +31,13 @@ namespace Ragon.Client.Unity
       get => _value;
       set
       {
+#if UNITY_EDITOR
+        if (!Entity.HasAuthority)
+        {
+          Debug.LogWarning("You can't assign value for property of entity, because you not owner");
+        }
+#endif
+
         _value = value;
 
         if (_value < _min)
@@ -45,7 +52,7 @@ namespace Ragon.Client.Unity
     private FloatCompressor _compressor;
     private float _min;
     private float _max;
-    
+
     public RagonFloat(
       float value,
       float min = -1024.0f,

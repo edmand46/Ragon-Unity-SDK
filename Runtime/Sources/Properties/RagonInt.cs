@@ -31,6 +31,13 @@ namespace Ragon.Client.Unity
       get => _value;
       set
       {
+#if UNITY_EDITOR
+        if (!Entity.HasAuthority)
+        {
+          Debug.LogWarning("You can't assign value for property of entity, because you not owner");
+        }
+#endif
+        
         _value = value;
         
         if (_value < _min)
