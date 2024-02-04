@@ -66,7 +66,7 @@ namespace Ragon.Client.Unity
       RagonAxis axis = RagonAxis.XYZ,
       float min = -1024.0f,
       float max = 1024.0f,
-      float precision = 0.1f,
+      float precision = 0.01f,
       bool invokeLocal = true,
       int priority = 0
     ) : base(priority, invokeLocal)
