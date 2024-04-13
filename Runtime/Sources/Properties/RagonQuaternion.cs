@@ -13,13 +13,6 @@ namespace Ragon.Client.Unity
       get => _value;
       set
       {
-#if UNITY_EDITOR
-        if (!Entity.HasAuthority)
-        {
-          Debug.LogWarning("You can't assign value for property of entity, because you not owner");
-        }
-#endif
-          
         _value = value;
 
         MarkAsChanged();
@@ -28,11 +21,15 @@ namespace Ragon.Client.Unity
 
     private readonly FloatCompressor _compressor;
 
-    public RagonQuaternion(Quaternion value, bool invokeLocal = false, int priority = 0) : base(priority, invokeLocal)
+    public RagonQuaternion(
+      Quaternion value,
+      bool invokeLocal = true,
+      int priority = 0
+    ) : base(priority, invokeLocal)
     {
       _value = value;
       _compressor = new FloatCompressor(-1.0f, 1f, 0.01f);
-      
+
       SetFixedSize(_compressor.RequiredBits * 4);
     }
 
@@ -60,9 +57,9 @@ namespace Ragon.Client.Unity
       var y = _compressor.Decompress(compressedY);
       var z = _compressor.Decompress(compressedZ);
       var w = _compressor.Decompress(compressedW);
-      
+
       _value = new Quaternion(x, y, z, w);
-      
+
       InvokeChanged();
     }
   }

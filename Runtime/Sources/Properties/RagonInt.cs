@@ -31,13 +31,6 @@ namespace Ragon.Client.Unity
       get => _value;
       set
       {
-#if UNITY_EDITOR
-        if (!Entity.HasAuthority)
-        {
-          Debug.LogWarning("You can't assign value for property of entity, because you not owner");
-        }
-#endif
-        
         _value = value;
         
         if (_value < _min)
@@ -57,7 +50,7 @@ namespace Ragon.Client.Unity
       int value,
       int min = -1000,
       int max = 1000,
-      bool invokeLocal = false,
+      bool invokeLocal = true,
       int priority = 0
     ) : base(priority, invokeLocal)
     {

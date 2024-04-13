@@ -24,19 +24,11 @@ namespace Ragon.Client.Unity
   public class RagonBool : RagonProperty
   {
     [SerializeField] private bool _value;
-    
     public bool Value
     {
       get => _value;
       set
       {
-#if UNITY_EDITOR
-        if (!Entity.HasAuthority)
-        {
-          Debug.LogWarning("You can't assign value for property of entity, because you not owner");
-        } 
-#endif
-          
         _value = value;
         
         MarkAsChanged();

@@ -282,6 +282,8 @@ namespace Ragon.Client.Unity
     public static void AddListener(IRagonPlayerLeftListener listener) => _instance._networkClient.AddListener(listener);
 
     public static void AddListener(IRagonDataListener listener) => _instance._networkClient.AddListener(listener);
+    
+    public static void AddListener(IRagonRoomListListener listener) => _instance._networkClient.AddListener(listener);
 
     public static void RemoveListener(IRagonListener listener) => _instance._networkClient.RemoveListener(listener);
 
@@ -306,5 +308,6 @@ namespace Ragon.Client.Unity
     public static void RemoveListener(IRagonPlayerLeftListener listener) => _instance._networkClient.RemoveListener(listener);
 
     public static void RemoveListener(IRagonDataListener listener) => _instance._networkClient.RemoveListener(listener);
+    public static void RemoveListener(IRagonRoomListListener listener) => _instance._networkClient.RemoveListener(listener);
   }
 }
