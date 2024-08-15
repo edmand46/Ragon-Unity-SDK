@@ -42,6 +42,11 @@ namespace Ragon.Client.Unity
     private readonly UTF8Encoding _utf8Encoding = new UTF8Encoding(false, true);
     private int _max;
 
+    public RagonString(): base(0, false)
+    {
+      
+    }
+    
     public RagonString(
       string value,
       int max = 32,

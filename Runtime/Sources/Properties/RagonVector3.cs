@@ -53,7 +53,12 @@ namespace Ragon.Client.Unity
     private FloatCompressor _compressorX;
     private FloatCompressor _compressorY;
     private FloatCompressor _compressorZ;
-
+    
+    public RagonVector3(): base(0, false)
+    {
+        
+    }
+    
     public RagonVector3(
       Vector3 value,
       RagonAxis axis = RagonAxis.XYZ,
